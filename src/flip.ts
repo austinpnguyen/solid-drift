@@ -2,21 +2,21 @@ import {
   animate,
   type AnimateOptions,
   type AnimationControls,
-} from "./animate.js"
-import { prefersReducedMotion } from "./reduced-motion.js"
+} from "./animate.js";
+import { prefersReducedMotion } from "./reduced-motion.js";
 
 export interface FlipOptions {
   /** Duration in milliseconds. Default 400. */
-  duration?: number
+  duration?: number;
   /** Delay before starting, in milliseconds. Default 0. */
-  delay?: number
+  delay?: number;
   /** Easing function or name. Default "easeOutCubic". */
-  easing?: AnimateOptions["easing"]
+  easing?: AnimateOptions["easing"];
   /**
    * Also animate the size delta as scale, so growing or shrinking
    * elements morph instead of just sliding. Default true.
    */
-  scale?: boolean
+  scale?: boolean;
 }
 
 /**
@@ -58,77 +58,77 @@ export function animateFlip(
     delay = 0,
     easing = "easeOutCubic",
     scale = true,
-  } = options
+  } = options;
 
-  let resolveFinished!: () => void
+  let resolveFinished!: () => void;
   const finished = new Promise<void>((resolve) => {
-    resolveFinished = resolve
-  })
-  let done = false
+    resolveFinished = resolve;
+  });
+  let done = false;
   const finish = () => {
-    if (done) return
-    done = true
-    resolveFinished()
-  }
+    if (done) return;
+    done = true;
+    resolveFinished();
+  };
 
-  const el = ref()
+  const el = ref();
   if (typeof window === "undefined" || !el || prefersReducedMotion()) {
-    mutate()
-    finish()
-    return { stop: () => {}, finished }
+    mutate();
+    finish();
+    return { stop: () => {}, finished };
   }
-  const target = el as HTMLElement
-  const prevTransform = target.style.transform
+  const target = el as HTMLElement;
+  const prevTransform = target.style.transform;
 
-  const first = target.getBoundingClientRect()
-  mutate()
+  const first = target.getBoundingClientRect();
+  mutate();
 
-  let stopped = false
-  let step: AnimationControls | null = null
+  let stopped = false;
+  let step: AnimationControls | null = null;
   const controls: AnimationControls = {
     stop: () => {
-      stopped = true
-      step?.stop()
-      target.style.transform = prevTransform
-      finish()
+      stopped = true;
+      step?.stop();
+      target.style.transform = prevTransform;
+      finish();
     },
     finished,
-  }
+  };
 
   // Two frames: one for Solid's DOM update to flush, one to measure it.
   requestAnimationFrame(() =>
     requestAnimationFrame(() => {
       if (stopped) {
-        finish()
-        return
+        finish();
+        return;
       }
-      const last = target.getBoundingClientRect()
-      const dx = first.left - last.left
-      const dy = first.top - last.top
-      const sx = scale && last.width > 0 ? first.width / last.width : 1
-      const sy = scale && last.height > 0 ? first.height / last.height : 1
+      const last = target.getBoundingClientRect();
+      const dx = first.left - last.left;
+      const dy = first.top - last.top;
+      const sx = scale && last.width > 0 ? first.width / last.width : 1;
+      const sy = scale && last.height > 0 ? first.height / last.height : 1;
 
       const moved =
         Math.abs(dx) >= 0.5 ||
         Math.abs(dy) >= 0.5 ||
         Math.abs(sx - 1) >= 0.001 ||
-        Math.abs(sy - 1) >= 0.001
+        Math.abs(sy - 1) >= 0.001;
       if (!moved) {
-        finish()
-        return
+        finish();
+        return;
       }
 
       const render = (eased: number) => {
-        const rest = 1 - eased
+        const rest = 1 - eased;
         target.style.transform =
           `translate3d(${(dx * rest).toFixed(2)}px, ${(dy * rest).toFixed(2)}px, 0)` +
           (scale
             ? ` scale(${(1 + (sx - 1) * rest).toFixed(4)}, ${(1 + (sy - 1) * rest).toFixed(4)})`
-            : "")
-      }
-      render(0)
+            : "");
+      };
+      render(0);
       // Force the inverted state to apply before the animation runs.
-      void target.offsetHeight
+      void target.offsetHeight;
 
       step = animate(0, 1, {
         duration,
@@ -136,12 +136,12 @@ export function animateFlip(
         easing,
         onUpdate: render,
         onComplete: () => {
-          target.style.transform = prevTransform
-          finish()
+          target.style.transform = prevTransform;
+          finish();
         },
-      })
+      });
     }),
-  )
+  );
 
-  return controls
+  return controls;
 }

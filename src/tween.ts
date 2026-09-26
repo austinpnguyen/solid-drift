@@ -4,20 +4,20 @@ import {
   onCleanup,
   untrack,
   type Accessor,
-} from "solid-js"
-import { now, schedule } from "./engine.js"
-import { resolveEasing, type Easing, type EasingName } from "./easing.js"
-import { prefersReducedMotion } from "./reduced-motion.js"
+} from "solid-js";
+import { now, schedule } from "./engine.js";
+import { resolveEasing, type Easing, type EasingName } from "./easing.js";
+import { prefersReducedMotion } from "./reduced-motion.js";
 
 export interface TweenOptions {
   /** Duration in milliseconds. Default 300. */
-  duration?: number
+  duration?: number;
   /** Delay before starting, in milliseconds. Default 0. */
-  delay?: number
+  delay?: number;
   /** Easing function or name. Default "easeOutCubic". */
-  easing?: Easing | EasingName
+  easing?: Easing | EasingName;
   /** Called when the tween reaches its target. */
-  onComplete?: () => void
+  onComplete?: () => void;
 }
 
 /**
@@ -35,40 +35,40 @@ export function createTween(
   source: Accessor<number>,
   options: TweenOptions = {},
 ): Accessor<number> {
-  const { duration = 300, delay = 0, onComplete } = options
-  const easing = resolveEasing(options.easing ?? "easeOutCubic")
+  const { duration = 300, delay = 0, onComplete } = options;
+  const easing = resolveEasing(options.easing ?? "easeOutCubic");
 
-  const [value, setValue] = createSignal(untrack(source))
-  let cancel: (() => void) | null = null
+  const [value, setValue] = createSignal(untrack(source));
+  let cancel: (() => void) | null = null;
 
   createEffect(() => {
-    const to = source()
-    const from = untrack(value)
-    cancel?.()
-    cancel = null
+    const to = source();
+    const from = untrack(value);
+    cancel?.();
+    cancel = null;
 
     if (prefersReducedMotion() || duration <= 0 || from === to) {
       // Accessibility: jump straight to the target, no animation.
-      setValue(to)
-      onComplete?.()
-      return
+      setValue(to);
+      onComplete?.();
+      return;
     }
 
-    const startAt = now() + delay
+    const startAt = now() + delay;
     cancel = schedule((t: number): boolean => {
-      if (t < startAt) return true
-      const p = Math.min((t - startAt) / duration, 1)
-      setValue(from + (to - from) * easing(p))
+      if (t < startAt) return true;
+      const p = Math.min((t - startAt) / duration, 1);
+      setValue(from + (to - from) * easing(p));
       if (p >= 1) {
-        cancel = null
-        onComplete?.()
-        return false
+        cancel = null;
+        onComplete?.();
+        return false;
       }
-      return true
-    })
-  })
+      return true;
+    });
+  });
 
-  onCleanup(() => cancel?.())
+  onCleanup(() => cancel?.());
 
-  return value
+  return value;
 }

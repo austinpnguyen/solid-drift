@@ -4,21 +4,21 @@ import {
   onCleanup,
   untrack,
   type Accessor,
-} from "solid-js"
-import { now, schedule } from "./engine.js"
-import { prefersReducedMotion } from "./reduced-motion.js"
+} from "solid-js";
+import { now, schedule } from "./engine.js";
+import { prefersReducedMotion } from "./reduced-motion.js";
 
 export interface SpringOptions {
   /** Spring stiffness. Default 170. */
-  stiffness?: number
+  stiffness?: number;
   /** Damping coefficient. Default 26. */
-  damping?: number
+  damping?: number;
   /** Mass. Default 1. */
-  mass?: number
+  mass?: number;
   /** Rest threshold for value and velocity. Default 0.01. */
-  precision?: number
+  precision?: number;
   /** Called once the spring settles at its target. */
-  onRest?: () => void
+  onRest?: () => void;
 }
 
 /**
@@ -45,62 +45,62 @@ export function createSpring(
     mass = 1,
     precision = 0.01,
     onRest,
-  } = options
+  } = options;
 
-  const [value, setValue] = createSignal(untrack(source))
-  let current = untrack(source)
-  let velocity = 0
-  let cancel: (() => void) | null = null
-  let lastTime = 0
+  const [value, setValue] = createSignal(untrack(source));
+  let current = untrack(source);
+  let velocity = 0;
+  let cancel: (() => void) | null = null;
+  let lastTime = 0;
 
   const step = (t: number): boolean => {
-    const dt = Math.min(Math.max((t - lastTime) / 1000, 0), 0.064)
-    lastTime = t
-    const target = untrack(source)
+    const dt = Math.min(Math.max((t - lastTime) / 1000, 0), 0.064);
+    lastTime = t;
+    const target = untrack(source);
 
     // Semi-implicit Euler: stable for the stiffness ranges used in UI.
-    const force = -stiffness * (current - target) - damping * velocity
-    velocity += (force / mass) * dt
-    current += velocity * dt
-    setValue(current)
+    const force = -stiffness * (current - target) - damping * velocity;
+    velocity += (force / mass) * dt;
+    current += velocity * dt;
+    setValue(current);
 
     const settled =
-      Math.abs(current - target) < precision && Math.abs(velocity) < precision
+      Math.abs(current - target) < precision && Math.abs(velocity) < precision;
     if (settled) {
-      current = target
-      velocity = 0
-      setValue(target)
-      cancel = null
-      onRest?.()
-      return false
+      current = target;
+      velocity = 0;
+      setValue(target);
+      cancel = null;
+      onRest?.();
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
   const kick = () => {
-    if (cancel) return // already running, step() reads the live target
-    lastTime = now()
-    cancel = schedule(step)
-  }
+    if (cancel) return; // already running, step() reads the live target
+    lastTime = now();
+    cancel = schedule(step);
+  };
 
   createEffect(() => {
-    const target = source() // track
+    const target = source(); // track
     if (prefersReducedMotion()) {
       // Accessibility: skip the animation, land exactly on the target.
-      cancel?.()
-      cancel = null
-      current = target
-      velocity = 0
-      setValue(target)
-      onRest?.()
-      return
+      cancel?.();
+      cancel = null;
+      current = target;
+      velocity = 0;
+      setValue(target);
+      onRest?.();
+      return;
     }
-    kick()
-  })
+    kick();
+  });
 
-  onCleanup(() => cancel?.())
+  onCleanup(() => cancel?.());
 
-  return value
+  return value;
 }
 
 /**
@@ -122,4 +122,4 @@ export const springPresets = {
   wobbly: { stiffness: 180, damping: 11 },
   /** Heavy and deliberate, like moving through syrup. */
   molasses: { stiffness: 55, damping: 16 },
-} satisfies Record<string, SpringOptions>
+} satisfies Record<string, SpringOptions>;

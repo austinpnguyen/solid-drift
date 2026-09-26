@@ -1,10 +1,10 @@
-import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js"
+import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js";
 
 /** What to measure scroll progress against: the whole page or one element. */
-export type ScrollTarget = "page" | (() => Element | null | undefined)
+export type ScrollTarget = "page" | (() => Element | null | undefined);
 
 function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v
+  return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
 /**
@@ -33,51 +33,51 @@ export function createScrollProgress(
   target: ScrollTarget = "page",
 ): Accessor<number> {
   // SSR: no window, no scrolling, so it reports the top of the page.
-  if (typeof window === "undefined") return () => 0
+  if (typeof window === "undefined") return () => 0;
 
-  const [progress, setProgress] = createSignal(0)
-  let rafId = 0
+  const [progress, setProgress] = createSignal(0);
+  let rafId = 0;
 
   const compute = () => {
     if (target === "page") {
-      const max = document.documentElement.scrollHeight - window.innerHeight
-      setProgress(max > 0 ? clamp01(window.scrollY / max) : 0)
-      return
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(max > 0 ? clamp01(window.scrollY / max) : 0);
+      return;
     }
-    const el = target()
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const viewport = window.innerHeight
-    const travel = viewport + rect.height
-    setProgress(travel > 0 ? clamp01((viewport - rect.top) / travel) : 0)
-  }
+    const el = target();
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const viewport = window.innerHeight;
+    const travel = viewport + rect.height;
+    setProgress(travel > 0 ? clamp01((viewport - rect.top) / travel) : 0);
+  };
 
   const requestCompute = () => {
     if (typeof requestAnimationFrame === "undefined") {
-      compute()
-      return
+      compute();
+      return;
     }
-    if (rafId) return // a measurement is already queued for this frame
+    if (rafId) return; // a measurement is already queued for this frame
     rafId = requestAnimationFrame(() => {
-      rafId = 0
-      compute()
-    })
-  }
+      rafId = 0;
+      compute();
+    });
+  };
 
   // Track the element accessor so late-bound refs start measuring too.
   createEffect(() => {
-    if (target !== "page") target()
-    compute()
-  })
+    if (target !== "page") target();
+    compute();
+  });
 
-  window.addEventListener("scroll", requestCompute, { passive: true })
-  window.addEventListener("resize", requestCompute, { passive: true })
+  window.addEventListener("scroll", requestCompute, { passive: true });
+  window.addEventListener("resize", requestCompute, { passive: true });
 
   onCleanup(() => {
-    window.removeEventListener("scroll", requestCompute)
-    window.removeEventListener("resize", requestCompute)
-    if (rafId) cancelAnimationFrame(rafId)
-  })
+    window.removeEventListener("scroll", requestCompute);
+    window.removeEventListener("resize", requestCompute);
+    if (rafId) cancelAnimationFrame(rafId);
+  });
 
-  return progress
+  return progress;
 }

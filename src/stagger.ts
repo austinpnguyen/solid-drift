@@ -16,6 +16,6 @@ export function createStagger(
   count: number,
   delayMs: number,
 ): (index: number) => number {
-  void count
-  return (index: number) => index * delayMs
+  void count;
+  return (index: number) => index * delayMs;
 }

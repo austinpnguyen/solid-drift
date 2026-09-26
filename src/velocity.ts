@@ -4,23 +4,23 @@ import {
   onCleanup,
   untrack,
   type Accessor,
-} from "solid-js"
-import { now, schedule } from "./engine.js"
-import { prefersReducedMotion } from "./reduced-motion.js"
+} from "solid-js";
+import { now, schedule } from "./engine.js";
+import { prefersReducedMotion } from "./reduced-motion.js";
 
 export interface VelocityOptions {
   /**
    * Exponential smoothing of the raw velocity, 0 to 1. Higher values
    * react slower and ride smoother. Default 0.8.
    */
-  smoothing?: number
+  smoothing?: number;
   /** Multiplier applied to the raw units per second. Default 1. */
-  scale?: number
+  scale?: number;
   /**
    * Seconds of stillness after which the velocity settles to exactly 0.
    * Default 0.12.
    */
-  settleAfter?: number
+  settleAfter?: number;
 }
 
 /**
@@ -56,65 +56,65 @@ export function createVelocity(
   options: VelocityOptions = {},
 ): Accessor<number> {
   if (typeof window === "undefined" || prefersReducedMotion()) {
-    return () => 0
+    return () => 0;
   }
 
-  const { smoothing = 0.8, scale = 1, settleAfter = 0.12 } = options
-  const read: Accessor<number> = source ?? (() => window.scrollY)
-  const [velocity, setVelocity] = createSignal(0)
+  const { smoothing = 0.8, scale = 1, settleAfter = 0.12 } = options;
+  const read: Accessor<number> = source ?? (() => window.scrollY);
+  const [velocity, setVelocity] = createSignal(0);
 
-  let current = 0
-  let lastValue = untrack(read)
-  let lastT = now()
-  let lastChangeT = lastT
-  let cancel: (() => void) | null = null
+  let current = 0;
+  let lastValue = untrack(read);
+  let lastT = now();
+  let lastChangeT = lastT;
+  let cancel: (() => void) | null = null;
 
   const loop = (t: number): boolean => {
-    const value = untrack(read)
-    const dt = Math.max((t - lastT) / 1000, 0.0001)
+    const value = untrack(read);
+    const dt = Math.max((t - lastT) / 1000, 0.0001);
     if (value !== lastValue) {
-      const instant = ((value - lastValue) / dt) * scale
-      current = current * smoothing + instant * (1 - smoothing)
-      lastValue = value
-      lastChangeT = t
+      const instant = ((value - lastValue) / dt) * scale;
+      current = current * smoothing + instant * (1 - smoothing);
+      lastValue = value;
+      lastChangeT = t;
     } else if (t - lastChangeT > settleAfter * 1000) {
-      current = 0
+      current = 0;
     } else {
       // Coast down smoothly between samples instead of holding stale speed.
-      current *= Math.pow(0.02, dt)
+      current *= Math.pow(0.02, dt);
     }
-    lastT = t
-    setVelocity(current)
+    lastT = t;
+    setVelocity(current);
 
     const settled =
-      Math.abs(current) < 0.001 && t - lastChangeT > settleAfter * 1000
+      Math.abs(current) < 0.001 && t - lastChangeT > settleAfter * 1000;
     if (settled) {
-      setVelocity(0)
-      cancel = null
-      return false
+      setVelocity(0);
+      cancel = null;
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
   const kick = () => {
-    if (cancel) return
-    lastT = now()
-    cancel = schedule(loop)
-  }
+    if (cancel) return;
+    lastT = now();
+    cancel = schedule(loop);
+  };
 
   createEffect(() => {
-    read() // track the source so any change kicks the loop
-    kick()
-  })
+    read(); // track the source so any change kicks the loop
+    kick();
+  });
 
   if (!source) {
     // The default page-scroll source is not a reactive signal, so scroll
     // events kick the loop explicitly.
-    window.addEventListener("scroll", kick, { passive: true })
-    onCleanup(() => window.removeEventListener("scroll", kick))
+    window.addEventListener("scroll", kick, { passive: true });
+    onCleanup(() => window.removeEventListener("scroll", kick));
   }
 
-  onCleanup(() => cancel?.())
+  onCleanup(() => cancel?.());
 
-  return velocity
+  return velocity;
 }

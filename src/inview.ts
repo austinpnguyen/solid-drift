@@ -1,10 +1,10 @@
-import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js"
+import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js";
 
 export interface InViewOptions {
   /** Visibility ratio that counts as "in view". Default 0.15. */
-  threshold?: number
+  threshold?: number;
   /** Stop observing after the first intersection. Default true. */
-  once?: boolean
+  once?: boolean;
 }
 
 /**
@@ -28,38 +28,38 @@ export function createInView(
   ref: () => Element | null | undefined,
   options: InViewOptions = {},
 ): Accessor<boolean> {
-  const { threshold = 0.15, once = true } = options
+  const { threshold = 0.15, once = true } = options;
 
   // SSR (or browsers without IntersectionObserver): never "in view".
   if (
     typeof window === "undefined" ||
     typeof IntersectionObserver === "undefined"
   ) {
-    return () => false
+    return () => false;
   }
 
-  const [inView, setInView] = createSignal(false)
+  const [inView, setInView] = createSignal(false);
 
   createEffect(() => {
-    const el = ref()
-    if (!el) return
+    const el = ref();
+    if (!el) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            setInView(true)
-            if (once) observer.disconnect()
+            setInView(true);
+            if (once) observer.disconnect();
           } else if (!once) {
-            setInView(false)
+            setInView(false);
           }
         }
       },
       { threshold },
-    )
-    observer.observe(el)
-    onCleanup(() => observer.disconnect())
-  })
+    );
+    observer.observe(el);
+    onCleanup(() => observer.disconnect());
+  });
 
-  return inView
+  return inView;
 }

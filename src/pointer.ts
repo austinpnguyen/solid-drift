@@ -1,41 +1,41 @@
-import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js"
-import { createSpring, type SpringOptions } from "./spring.js"
-import { prefersReducedMotion } from "./reduced-motion.js"
+import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js";
+import { createSpring, type SpringOptions } from "./spring.js";
+import { prefersReducedMotion } from "./reduced-motion.js";
 
 export interface MagneticOptions {
   /**
    * Attraction radius in pixels around the element's center. Outside the
    * radius the element springs back to rest. Default 140.
    */
-  radius?: number
+  radius?: number;
   /** Pull strength at the center, 0 to 1. Default 0.35. */
-  strength?: number
+  strength?: number;
   /** Spring physics for the pull and the release. */
-  spring?: SpringOptions
+  spring?: SpringOptions;
 }
 
 export interface MagneticResult {
   /** Horizontal pull in pixels, spring-smoothed. */
-  x: Accessor<number>
+  x: Accessor<number>;
   /** Vertical pull in pixels, spring-smoothed. */
-  y: Accessor<number>
+  y: Accessor<number>;
 }
 
 export interface TiltOptions {
   /** Maximum tilt in degrees at the element's edge. Default 10. */
-  maxAngle?: number
+  maxAngle?: number;
   /** Spring physics for the tilt and the settle-back. */
-  spring?: SpringOptions
+  spring?: SpringOptions;
 }
 
 export interface TiltResult {
   /** Tilt around the horizontal axis in degrees, spring-smoothed. */
-  rotateX: Accessor<number>
+  rotateX: Accessor<number>;
   /** Tilt around the vertical axis in degrees, spring-smoothed. */
-  rotateY: Accessor<number>
+  rotateY: Accessor<number>;
 }
 
-const zero = () => 0
+const zero = () => 0;
 
 /**
  * Magnetic attraction toward the pointer.
@@ -61,40 +61,40 @@ export function createMagnetic(
   options: MagneticOptions = {},
 ): MagneticResult {
   if (typeof window === "undefined" || prefersReducedMotion()) {
-    return { x: zero, y: zero }
+    return { x: zero, y: zero };
   }
 
-  const { radius = 140, strength = 0.35, spring } = options
-  const [targetX, setTargetX] = createSignal(0)
-  const [targetY, setTargetY] = createSignal(0)
-  const x = createSpring(targetX, spring)
-  const y = createSpring(targetY, spring)
+  const { radius = 140, strength = 0.35, spring } = options;
+  const [targetX, setTargetX] = createSignal(0);
+  const [targetY, setTargetY] = createSignal(0);
+  const x = createSpring(targetX, spring);
+  const y = createSpring(targetY, spring);
 
   const onMove = (event: PointerEvent) => {
-    const el = ref()
+    const el = ref();
     if (!el) {
-      setTargetX(0)
-      setTargetY(0)
-      return
+      setTargetX(0);
+      setTargetY(0);
+      return;
     }
-    const rect = el.getBoundingClientRect()
-    const dx = event.clientX - (rect.left + rect.width / 2)
-    const dy = event.clientY - (rect.top + rect.height / 2)
-    const dist = Math.hypot(dx, dy)
+    const rect = el.getBoundingClientRect();
+    const dx = event.clientX - (rect.left + rect.width / 2);
+    const dy = event.clientY - (rect.top + rect.height / 2);
+    const dist = Math.hypot(dx, dy);
     if (dist >= radius) {
-      setTargetX(0)
-      setTargetY(0)
-      return
+      setTargetX(0);
+      setTargetY(0);
+      return;
     }
-    const falloff = 1 - dist / radius
-    setTargetX(dx * strength * falloff)
-    setTargetY(dy * strength * falloff)
-  }
+    const falloff = 1 - dist / radius;
+    setTargetX(dx * strength * falloff);
+    setTargetY(dy * strength * falloff);
+  };
 
-  window.addEventListener("pointermove", onMove, { passive: true })
-  onCleanup(() => window.removeEventListener("pointermove", onMove))
+  window.addEventListener("pointermove", onMove, { passive: true });
+  onCleanup(() => window.removeEventListener("pointermove", onMove));
 
-  return { x, y }
+  return { x, y };
 }
 
 /**
@@ -126,50 +126,50 @@ export function createTilt(
   options: TiltOptions = {},
 ): TiltResult {
   if (typeof window === "undefined" || prefersReducedMotion()) {
-    return { rotateX: zero, rotateY: zero }
+    return { rotateX: zero, rotateY: zero };
   }
 
-  const { maxAngle = 10, spring } = options
-  const [targetRX, setTargetRX] = createSignal(0)
-  const [targetRY, setTargetRY] = createSignal(0)
-  const rotateX = createSpring(targetRX, spring)
-  const rotateY = createSpring(targetRY, spring)
+  const { maxAngle = 10, spring } = options;
+  const [targetRX, setTargetRX] = createSignal(0);
+  const [targetRY, setTargetRY] = createSignal(0);
+  const rotateX = createSpring(targetRX, spring);
+  const rotateY = createSpring(targetRY, spring);
 
   const onMove = (event: PointerEvent) => {
-    const el = ref()
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    if (rect.width === 0 || rect.height === 0) return
+    const el = ref();
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
     if (
       event.clientX < rect.left ||
       event.clientX > rect.right ||
       event.clientY < rect.top ||
       event.clientY > rect.bottom
     ) {
-      return // outside: pointerleave resets the tilt
+      return; // outside: pointerleave resets the tilt
     }
-    const px = (event.clientX - rect.left) / rect.width - 0.5
-    const py = (event.clientY - rect.top) / rect.height - 0.5
-    setTargetRY(px * 2 * maxAngle)
-    setTargetRX(-py * 2 * maxAngle)
-  }
+    const px = (event.clientX - rect.left) / rect.width - 0.5;
+    const py = (event.clientY - rect.top) / rect.height - 0.5;
+    setTargetRY(px * 2 * maxAngle);
+    setTargetRX(-py * 2 * maxAngle);
+  };
 
   const onLeave = () => {
-    setTargetRX(0)
-    setTargetRY(0)
-  }
+    setTargetRX(0);
+    setTargetRY(0);
+  };
 
-  window.addEventListener("pointermove", onMove, { passive: true })
+  window.addEventListener("pointermove", onMove, { passive: true });
 
   // Late-bound refs (Solid assigns `ref` after mount) still get the reset.
   createEffect(() => {
-    const el = ref()
-    if (!el) return
-    el.addEventListener("pointerleave", onLeave)
-    onCleanup(() => el.removeEventListener("pointerleave", onLeave))
-  })
+    const el = ref();
+    if (!el) return;
+    el.addEventListener("pointerleave", onLeave);
+    onCleanup(() => el.removeEventListener("pointerleave", onLeave));
+  });
 
-  onCleanup(() => window.removeEventListener("pointermove", onMove))
+  onCleanup(() => window.removeEventListener("pointermove", onMove));
 
-  return { rotateX, rotateY }
+  return { rotateX, rotateY };
 }

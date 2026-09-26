@@ -5,28 +5,28 @@
  * retargeting mid-flight is seamless by design.
  */
 
-export { createSpring, type SpringOptions, springPresets } from "./spring.js"
-export { createTween, type TweenOptions } from "./tween.js"
+export { createSpring, type SpringOptions, springPresets } from "./spring.js";
+export { createTween, type TweenOptions } from "./tween.js";
 export {
   animate,
   type AnimateOptions,
   type AnimationControls,
-} from "./animate.js"
-export { drift, type DriftProps } from "./directive.js"
-export { createScrollProgress, type ScrollTarget } from "./scroll.js"
-export { createInView, type InViewOptions } from "./inview.js"
+} from "./animate.js";
+export { drift, type DriftProps } from "./directive.js";
+export { createScrollProgress, type ScrollTarget } from "./scroll.js";
+export { createInView, type InViewOptions } from "./inview.js";
 export {
   usePrefersReducedMotion,
   prefersReducedMotion,
-} from "./reduced-motion.js"
-export { createStagger } from "./stagger.js"
+} from "./reduced-motion.js";
+export { createStagger } from "./stagger.js";
 export {
   createHorizontalScroll,
   type HorizontalScrollOptions,
   type HorizontalScrollResult,
-} from "./horizontal.js"
-export { createScrub, type ScrubKeyframe, type ScrubOptions } from "./scrub.js"
-export { createVelocity, type VelocityOptions } from "./velocity.js"
+} from "./horizontal.js";
+export { createScrub, type ScrubKeyframe, type ScrubOptions } from "./scrub.js";
+export { createVelocity, type VelocityOptions } from "./velocity.js";
 export {
   createMagnetic,
   type MagneticOptions,
@@ -34,15 +34,61 @@ export {
   createTilt,
   type TiltOptions,
   type TiltResult,
-} from "./pointer.js"
-export { createTrail, type TrailOptions } from "./trail.js"
+} from "./pointer.js";
+export { createTrail, type TrailOptions } from "./trail.js";
 export {
   createTimeline,
   type TimelineStep,
   type TimelineStatus,
   type TimelineControls,
-} from "./timeline.js"
-export { animateFlip, type FlipOptions } from "./flip.js"
+} from "./timeline.js";
+export { animateFlip, type FlipOptions } from "./flip.js";
+export {
+  createSquashStretch,
+  type SquashStretchOptions,
+  type SquashStretchResult,
+  createFollowThrough,
+  type FollowThroughOptions,
+  createAnticipation,
+  type AnticipationOptions,
+  createWobble,
+  type WobbleOptions,
+  type WobbleResult,
+} from "./cartoon.js";
+export {
+  createGravity,
+  type GravityOptions,
+  type GravityResult,
+  createPendulum,
+  type PendulumOptions,
+  type PendulumResult,
+  createFling,
+  type FlingOptions,
+  type FlingResult,
+} from "./physics.js";
+export {
+  createFontSwap,
+  type FontSwapOptions,
+  type FontSwapResult,
+  createTyping,
+  type TypingOptions,
+  type TypingResult,
+  createTextPhysics,
+  type TextPhysicsOptions,
+  type TextPhysicsResult,
+  createTextTunnel,
+  type TextTunnelOptions,
+  type TextTunnelResult,
+  createTextCutout,
+  type TextCutoutOptions,
+  createTextGradient,
+  type TextGradientOptions,
+  createTextScramble,
+  type TextScrambleOptions,
+  type TextScrambleResult,
+  createTextWave,
+  type TextWaveOptions,
+} from "./typography.js";
 export {
   easings,
   cubicBezier,
@@ -58,7 +104,11 @@ export {
   easeInOutQuart,
   easeOutExpo,
   easeOutBack,
+  easeInBack,
+  easeInOutBack,
+  easeOutElastic,
+  easeOutBounce,
   resolveEasing,
   type Easing,
   type EasingName,
-} from "./easing.js"
+} from "./easing.js";

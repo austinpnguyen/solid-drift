@@ -6,22 +6,22 @@
  * Tasks return `false` when finished and are removed automatically.
  */
 
-export type AnimationTask = (now: number) => boolean
+export type AnimationTask = (now: number) => boolean;
 
-const tasks = new Set<AnimationTask>()
-let rafId = 0
+const tasks = new Set<AnimationTask>();
+let rafId = 0;
 
 function tick(now: number): void {
   for (const task of tasks) {
-    let alive = false
+    let alive = false;
     try {
-      alive = task(now)
+      alive = task(now);
     } catch {
-      alive = false
+      alive = false;
     }
-    if (!alive) tasks.delete(task)
+    if (!alive) tasks.delete(task);
   }
-  rafId = tasks.size > 0 ? requestAnimationFrame(tick) : 0
+  rafId = tasks.size > 0 ? requestAnimationFrame(tick) : 0;
 }
 
 /**
@@ -29,15 +29,15 @@ function tick(now: number): void {
  * Safe to call during SSR (no-op without requestAnimationFrame).
  */
 export function schedule(task: AnimationTask): () => void {
-  if (typeof requestAnimationFrame === "undefined") return () => {}
-  tasks.add(task)
-  if (!rafId) rafId = requestAnimationFrame(tick)
+  if (typeof requestAnimationFrame === "undefined") return () => {};
+  tasks.add(task);
+  if (!rafId) rafId = requestAnimationFrame(tick);
   return () => {
-    tasks.delete(task)
-  }
+    tasks.delete(task);
+  };
 }
 
 /** Monotonic clock in milliseconds. */
 export function now(): number {
-  return typeof performance !== "undefined" ? performance.now() : Date.now()
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
 }

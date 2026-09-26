@@ -1,31 +1,74 @@
 /** Easing function: maps progress [0, 1] to eased progress [0, 1]. */
-export type Easing = (t: number) => number
+export type Easing = (t: number) => number;
 
-export const linear: Easing = (t) => t
+export const linear: Easing = (t) => t;
 
-export const easeInQuad: Easing = (t) => t * t
-export const easeOutQuad: Easing = (t) => 1 - (1 - t) * (1 - t)
+export const easeInQuad: Easing = (t) => t * t;
+export const easeOutQuad: Easing = (t) => 1 - (1 - t) * (1 - t);
 export const easeInOutQuad: Easing = (t) =>
-  t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+  t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-export const easeInCubic: Easing = (t) => t * t * t
-export const easeOutCubic: Easing = (t) => 1 - Math.pow(1 - t, 3)
+export const easeInCubic: Easing = (t) => t * t * t;
+export const easeOutCubic: Easing = (t) => 1 - Math.pow(1 - t, 3);
 export const easeInOutCubic: Easing = (t) =>
-  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-export const easeInQuart: Easing = (t) => t * t * t * t
-export const easeOutQuart: Easing = (t) => 1 - Math.pow(1 - t, 4)
+export const easeInQuart: Easing = (t) => t * t * t * t;
+export const easeOutQuart: Easing = (t) => 1 - Math.pow(1 - t, 4);
 export const easeInOutQuart: Easing = (t) =>
-  t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2
+  t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
 
 export const easeOutExpo: Easing = (t) =>
-  t >= 1 ? 1 : 1 - Math.pow(2, -10 * t)
+  t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
 
 export const easeOutBack: Easing = (t) => {
-  const c1 = 1.70158
-  const c3 = c1 + 1
-  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2)
-}
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+};
+
+/**
+ * Anticipation easing: dips below the start value before climbing to 1.
+ * The classic cartoon wind-up, a character crouching before the jump.
+ */
+export const easeInBack: Easing = (t) => {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return c3 * t * t * t - c1 * t * t;
+};
+
+/** Overshoot at both ends: winds up, fires past the target, settles back. */
+export const easeInOutBack: Easing = (t) => {
+  const c1 = 1.70158;
+  const c2 = c1 * 1.525;
+  return t < 0.5
+    ? (Math.pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2
+    : (Math.pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2;
+};
+
+/**
+ * Elastic wobble: overshoots and oscillates with decaying amplitude,
+ * like a plucked rubber band or a jelly landing.
+ */
+export const easeOutElastic: Easing = (t) => {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  const c4 = (2 * Math.PI) / 3;
+  return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+};
+
+/**
+ * Cartoon bounce: hits the end value with a series of shrinking hops,
+ * like a dropped rubber ball.
+ */
+export const easeOutBounce: Easing = (t) => {
+  const n1 = 7.5625;
+  const d1 = 2.75;
+  if (t < 1 / d1) return n1 * t * t;
+  if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75;
+  if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375;
+  return n1 * (t -= 2.625 / d1) * t + 0.984375;
+};
 
 /**
  * Cubic bezier easing, same parameters as CSS `cubic-bezier(x1, y1, x2, y2)`.
@@ -37,38 +80,38 @@ export function cubicBezier(
   y2: number,
 ): Easing {
   // Newton-Raphson + bisection fallback, adapted from the CSS spec approach.
-  const cx = 3 * x1
-  const bx = 3 * (x2 - x1) - cx
-  const ax = 1 - cx - bx
-  const cy = 3 * y1
-  const by = 3 * (y2 - y1) - cy
-  const ay = 1 - cy - by
+  const cx = 3 * x1;
+  const bx = 3 * (x2 - x1) - cx;
+  const ax = 1 - cx - bx;
+  const cy = 3 * y1;
+  const by = 3 * (y2 - y1) - cy;
+  const ay = 1 - cy - by;
 
-  const sampleX = (t: number) => ((ax * t + bx) * t + cx) * t
-  const sampleY = (t: number) => ((ay * t + by) * t + cy) * t
-  const sampleDX = (t: number) => (3 * ax * t + 2 * bx) * t + cx
+  const sampleX = (t: number) => ((ax * t + bx) * t + cx) * t;
+  const sampleY = (t: number) => ((ay * t + by) * t + cy) * t;
+  const sampleDX = (t: number) => (3 * ax * t + 2 * bx) * t + cx;
 
   return (x: number) => {
-    let t = x
+    let t = x;
     for (let i = 0; i < 5; i++) {
-      const dx = sampleDX(t)
-      if (Math.abs(dx) < 1e-6) break
-      const err = sampleX(t) - x
-      t -= err / dx
+      const dx = sampleDX(t);
+      if (Math.abs(dx) < 1e-6) break;
+      const err = sampleX(t) - x;
+      t -= err / dx;
     }
     // Fallback bisection if Newton diverged.
-    let lo = 0
-    let hi = 1
-    t = Math.min(Math.max(t, 0), 1)
+    let lo = 0;
+    let hi = 1;
+    t = Math.min(Math.max(t, 0), 1);
     while (hi - lo > 1e-6) {
-      const v = sampleX(t)
-      if (Math.abs(v - x) < 1e-6) break
-      if (v < x) lo = t
-      else hi = t
-      t = (lo + hi) / 2
+      const v = sampleX(t);
+      if (Math.abs(v - x) < 1e-6) break;
+      if (v < x) lo = t;
+      else hi = t;
+      t = (lo + hi) / 2;
     }
-    return sampleY(t)
-  }
+    return sampleY(t);
+  };
 }
 
 export const easings = {
@@ -84,15 +127,19 @@ export const easings = {
   easeInOutQuart,
   easeOutExpo,
   easeOutBack,
-} as const
+  easeInBack,
+  easeInOutBack,
+  easeOutElastic,
+  easeOutBounce,
+} as const;
 
-export type EasingName = keyof typeof easings
+export type EasingName = keyof typeof easings;
 
 /** Accept an easing function or its name. Throws on unknown names. */
 export function resolveEasing(easing: Easing | EasingName | undefined): Easing {
-  if (!easing) return easeOutCubic
-  if (typeof easing === "function") return easing
-  const fn = (easings as Record<string, Easing>)[easing]
-  if (!fn) throw new Error(`[solid-drift] unknown easing: "${easing}"`)
-  return fn
+  if (!easing) return easeOutCubic;
+  if (typeof easing === "function") return easing;
+  const fn = (easings as Record<string, Easing>)[easing];
+  if (!fn) throw new Error(`[solid-drift] unknown easing: "${easing}"`);
+  return fn;
 }
