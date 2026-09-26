@@ -7,6 +7,7 @@ import {
 } from "solid-js";
 import { now, schedule } from "./engine.js";
 import { resolveEasing, type Easing, type EasingName } from "./easing.js";
+import { prefersReducedMotion } from "./reduced-motion.js";
 
 export interface TweenOptions {
   /** Duration in milliseconds. Default 300. */
@@ -46,7 +47,8 @@ export function createTween(
     cancel?.();
     cancel = null;
 
-    if (duration <= 0 || from === to) {
+    if (prefersReducedMotion() || duration <= 0 || from === to) {
+      // Accessibility: jump straight to the target, no animation.
       setValue(to);
       onComplete?.();
       return;

@@ -1,5 +1,6 @@
 import { now, schedule } from "./engine.js";
 import { resolveEasing, type Easing, type EasingName } from "./easing.js";
+import { prefersReducedMotion } from "./reduced-motion.js";
 
 export interface AnimateOptions {
   /** Duration in milliseconds. Default 300. */
@@ -53,6 +54,13 @@ export function animate(
     if (completed) onComplete?.();
     resolveFinished();
   };
+
+  // Accessibility: skip the animation entirely, deliver the end value.
+  if (prefersReducedMotion()) {
+    onUpdate?.(to);
+    finish(true);
+    return { stop: () => finish(false), finished };
+  }
 
   const startAt = now() + delay;
   const span = Math.max(duration, 0.001);

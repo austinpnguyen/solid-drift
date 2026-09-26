@@ -6,6 +6,7 @@ import {
   type Accessor,
 } from "solid-js";
 import { now, schedule } from "./engine.js";
+import { prefersReducedMotion } from "./reduced-motion.js";
 
 export interface SpringOptions {
   /** Spring stiffness. Default 170. */
@@ -84,7 +85,17 @@ export function createSpring(
   };
 
   createEffect(() => {
-    source(); // track
+    const target = source(); // track
+    if (prefersReducedMotion()) {
+      // Accessibility: skip the animation, land exactly on the target.
+      cancel?.();
+      cancel = null;
+      current = target;
+      velocity = 0;
+      setValue(target);
+      onRest?.();
+      return;
+    }
     kick();
   });
 

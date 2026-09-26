@@ -13,6 +13,13 @@ export {
   type AnimationControls,
 } from "./animate.js";
 export { drift, type DriftProps } from "./directive.js";
+export { createScrollProgress, type ScrollTarget } from "./scroll.js";
+export { createInView, type InViewOptions } from "./inview.js";
+export {
+  usePrefersReducedMotion,
+  prefersReducedMotion,
+} from "./reduced-motion.js";
+export { createStagger } from "./stagger.js";
 export {
   easings,
   cubicBezier,
