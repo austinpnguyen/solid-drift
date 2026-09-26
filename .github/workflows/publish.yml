@@ -1,0 +1,62 @@
+# Publish solid-drift to npm via Trusted Publishing (OIDC).
+#
+# npm only allows trusted publisher configuration after a package exists,
+# so the very first publish is done manually with a one-time token.
+# Every publish after that goes through this workflow - no npm tokens involved.
+#
+# Trigger manually from the Actions tab, or push a tag like v0.2.1
+# (the tag must match the version in package.json).
+
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (sanity check against package.json)"
+        required: true
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write # required for npm OIDC trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run build
+
+      - name: Check version matches tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag_version="${GITHUB_REF#refs/tags/v}"
+          pkg_version="$(node -p "require('./package.json').version")"
+          if [ "$tag_version" != "$pkg_version" ]; then
+            echo "Tag v$tag_version does not match package.json version $pkg_version"
+            exit 1
+          fi
+
+      - name: Check version matches input
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          pkg_version="$(node -p "require('./package.json').version")"
+          if [ "${{ inputs.version }}" != "$pkg_version" ]; then
+            echo "Input version ${{ inputs.version }} does not match package.json version $pkg_version"
+            exit 1
+          fi
+
+      - run: npm publish --access public
