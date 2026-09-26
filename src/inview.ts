@@ -16,7 +16,7 @@ export interface InViewOptions {
  * A boolean signal reporting whether an element is visible in the viewport.
  *
  * Built on IntersectionObserver: cheap, off-main-thread, and exact. With
- * `once: true` (default) the signal latches on first visibility — ideal
+ * `once: true` (default) the signal latches on first visibility, ideal
  * for entrance animations. Set `once: false` for a live in/out signal.
  *
  * The observer is created when the ref resolves and disconnected on

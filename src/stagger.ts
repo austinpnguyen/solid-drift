@@ -3,7 +3,7 @@
  *
  * Given an item index, returns its delay in milliseconds (`index * delayMs`).
  * Pair with `createTween`'s `delay` option (or `animate`) so items entrance
- * one after another instead of all at once. `count` is informational — the
+ * one after another instead of all at once. `count` is informational: the
  * number of items being staggered.
  *
  * ```ts

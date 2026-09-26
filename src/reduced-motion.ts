@@ -13,7 +13,7 @@ function queryMatches(): boolean {
 /**
  * Non-reactive check: does the user currently prefer reduced motion?
  *
- * SSR-safe — always `false` on the server. `createSpring`, `createTween`
+ * SSR-safe: always `false` on the server. `createSpring`, `createTween`
  * and `animate` sample this whenever they (re)start: when reduced motion
  * is preferred they jump straight to the target value instead of animating.
  */

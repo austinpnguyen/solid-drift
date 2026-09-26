@@ -131,7 +131,7 @@ describe("reduced motion honoring", () => {
     });
     expect(value()).toBe(0);
     setTarget(100);
-    // No frames needed — already there.
+    // No frames needed. Already there.
     expect(value()).toBe(100);
   });
 
@@ -183,7 +183,7 @@ describe("reduced motion honoring", () => {
       value = createSpring(target, { stiffness: 170, damping: 26 });
     });
     setTarget(100);
-    // Not instant — the spring needs frames to travel.
+    // Not instant. The spring needs frames to travel.
     expect(value()).toBe(0);
     clock.frames(300);
     expect(value()).toBeGreaterThan(99);
@@ -202,7 +202,7 @@ describe("reduced motion honoring", () => {
     });
     setTarget(100);
     expect(value()).toBe(0);
-    clock.frames(5); // 80ms — mid-tween
+    clock.frames(5); // 80ms, mid-tween
     expect(value()).toBeGreaterThan(0);
     expect(value()).toBeLessThan(100);
     clock.frames(20); // well past the duration

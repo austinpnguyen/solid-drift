@@ -23,7 +23,7 @@ export interface TweenOptions {
 /**
  * A signal that tweens toward a source signal's value over a fixed duration.
  *
- * Interrupting mid-tween retargets from the current value — no snapping.
+ * Interrupting mid-tween retargets from the current value, with no snapping.
  *
  * ```tsx
  * const [open, setOpen] = createSignal(false);

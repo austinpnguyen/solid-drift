@@ -1,5 +1,5 @@
 /**
- * solid-drift — signal-native animation for SolidJS.
+ * solid-drift: signal-native animation for SolidJS.
  *
  * Animate values, not elements: springs and tweens follow your signals, and
  * retargeting mid-flight is seamless by design.
@@ -20,6 +20,11 @@ export {
   prefersReducedMotion,
 } from "./reduced-motion.js";
 export { createStagger } from "./stagger.js";
+export {
+  createHorizontalScroll,
+  type HorizontalScrollOptions,
+  type HorizontalScrollResult,
+} from "./horizontal.js";
 export {
   easings,
   cubicBezier,

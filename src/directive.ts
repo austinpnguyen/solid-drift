@@ -33,7 +33,7 @@ function resolve<T>(value: MaybeAccessor<T>): T {
 
 /**
  * Directive that binds animated values straight to an element's style.
- * Each prop can be a plain number or any signal — combine with
+ * Each prop can be a plain number or any signal. Combine with
  * `createSpring` / `createTween` for buttery motion:
  *
  * ```tsx

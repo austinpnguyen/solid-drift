@@ -18,7 +18,7 @@ function clamp01(v: number): number {
  * - `"page"` (default): 0 at the very top of the page, 1 when the bottom
  *   of the page reaches the bottom of the viewport.
  * - element accessor: 0 when the element's top edge touches the bottom of
- *   the viewport, 1 when its bottom edge touches the top — i.e. the
+ *   the viewport, 1 when its bottom edge touches the top (that is, the
  *   element's full traversal through the viewport.
  *
  * Updates are rAF-throttled: no matter how many scroll/resize events fire,
@@ -37,7 +37,7 @@ function clamp01(v: number): number {
 export function createScrollProgress(
   target: ScrollTarget = "page",
 ): Accessor<number> {
-  // SSR: no window, no scrolling — report the top of the page.
+  // SSR: no window, no scrolling, so it reports the top of the page.
   if (typeof window === "undefined") return () => 0;
 
   const [progress, setProgress] = createSignal(0);

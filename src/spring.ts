@@ -25,7 +25,7 @@ export interface SpringOptions {
  * A signal that smoothly follows a source signal with spring physics.
  *
  * Retargeting is seamless: if the source changes mid-flight, the spring
- * keeps its current velocity and bends toward the new target — no jumps,
+ * keeps its current velocity and bends toward the new target, no jumps,
  * no restarts.
  *
  * ```tsx
