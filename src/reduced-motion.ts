@@ -1,13 +1,13 @@
-import { createSignal, onCleanup, type Accessor } from "solid-js";
+import { createSignal, onCleanup, type Accessor } from "solid-js"
 
-const QUERY = "(prefers-reduced-motion: reduce)";
+const QUERY = "(prefers-reduced-motion: reduce)"
 
 function queryMatches(): boolean {
   return (
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia(QUERY).matches
-  );
+  )
 }
 
 /**
@@ -18,7 +18,7 @@ function queryMatches(): boolean {
  * is preferred they jump straight to the target value instead of animating.
  */
 export function prefersReducedMotion(): boolean {
-  return queryMatches();
+  return queryMatches()
 }
 
 /**
@@ -28,19 +28,22 @@ export function prefersReducedMotion(): boolean {
  * SSR-safe: `false` on the server.
  *
  * ```tsx
- * const reduced = usePrefersReducedMotion();
- * const duration = () => (reduced() ? 0 : 400);
+ * const reduced = usePrefersReducedMotion()
+ * const duration = () => (reduced() ? 0 : 400)
  * ```
  */
 export function usePrefersReducedMotion(): Accessor<boolean> {
-  const [reduced, setReduced] = createSignal(queryMatches());
+  const [reduced, setReduced] = createSignal(queryMatches())
 
-  if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
-    const mq = window.matchMedia(QUERY);
-    const onChange = () => setReduced(mq.matches);
-    mq.addEventListener("change", onChange);
-    onCleanup(() => mq.removeEventListener("change", onChange));
+  if (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function"
+  ) {
+    const mq = window.matchMedia(QUERY)
+    const onChange = () => setReduced(mq.matches)
+    mq.addEventListener("change", onChange)
+    onCleanup(() => mq.removeEventListener("change", onChange))
   }
 
-  return reduced;
+  return reduced
 }

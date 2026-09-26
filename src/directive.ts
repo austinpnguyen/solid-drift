@@ -1,34 +1,34 @@
-import { createEffect, type Accessor } from "solid-js";
+import { createEffect, type Accessor } from "solid-js"
 
-type MaybeAccessor<T> = T | Accessor<T>;
+type MaybeAccessor<T> = T | Accessor<T>
 
 export interface DriftProps {
   /** Horizontal offset in px. */
-  x?: MaybeAccessor<number>;
+  x?: MaybeAccessor<number>
   /** Vertical offset in px. */
-  y?: MaybeAccessor<number>;
+  y?: MaybeAccessor<number>
   /** Opacity 0–1. */
-  opacity?: MaybeAccessor<number>;
+  opacity?: MaybeAccessor<number>
   /** Uniform scale. */
-  scale?: MaybeAccessor<number>;
+  scale?: MaybeAccessor<number>
   /** Horizontal scale. */
-  scaleX?: MaybeAccessor<number>;
+  scaleX?: MaybeAccessor<number>
   /** Vertical scale. */
-  scaleY?: MaybeAccessor<number>;
+  scaleY?: MaybeAccessor<number>
   /** Rotation in degrees. */
-  rotate?: MaybeAccessor<number>;
+  rotate?: MaybeAccessor<number>
 }
 
 declare module "solid-js" {
   namespace JSX {
     interface Directives {
-      drift: DriftProps | Accessor<DriftProps>;
+      drift: DriftProps | Accessor<DriftProps>
     }
   }
 }
 
 function resolve<T>(value: MaybeAccessor<T>): T {
-  return typeof value === "function" ? (value as Accessor<T>)() : value;
+  return typeof value === "function" ? (value as Accessor<T>)() : value
 }
 
 /**
@@ -37,40 +37,47 @@ function resolve<T>(value: MaybeAccessor<T>): T {
  * `createSpring` / `createTween` for buttery motion:
  *
  * ```tsx
- * import { drift } from "solid-drift";
+ * import { drift } from "solid-drift"
  *
- * const [open, setOpen] = createSignal(false);
- * const y = createSpring(() => (open() ? 0 : 24));
- * const opacity = createTween(() => (open() ? 1 : 0), { duration: 250 });
+ * const [open, setOpen] = createSignal(false)
+ * const y = createSpring(() => (open() ? 0 : 24))
+ * const opacity = createTween(() => (open() ? 1 : 0), { duration: 250 })
  *
  * <div use:drift={{ y, opacity }}>slides and fades</div>
  * ```
  *
  * Note: importing this module registers the `drift` directive type globally.
  */
-export function drift(
-  el: HTMLElement,
-  props: Accessor<DriftProps>,
-): void {
+export function drift(el: HTMLElement, props: Accessor<DriftProps>): void {
   createEffect(() => {
-    const p = props();
+    const p = props()
 
-    const parts: string[] = [];
-    const x = p.x !== undefined ? resolve(p.x) : 0;
-    const y = p.y !== undefined ? resolve(p.y) : 0;
-    if (x !== 0 || y !== 0) parts.push(`translate3d(${x}px, ${y}px, 0)`);
+    const parts: string[] = []
+    const x = p.x !== undefined ? resolve(p.x) : 0
+    const y = p.y !== undefined ? resolve(p.y) : 0
+    if (x !== 0 || y !== 0) parts.push(`translate3d(${x}px, ${y}px, 0)`)
 
-    const rotate = p.rotate !== undefined ? resolve(p.rotate) : 0;
-    if (rotate !== 0) parts.push(`rotate(${rotate}deg)`);
+    const rotate = p.rotate !== undefined ? resolve(p.rotate) : 0
+    if (rotate !== 0) parts.push(`rotate(${rotate}deg)`)
 
-    const sx = p.scaleX !== undefined ? resolve(p.scaleX) : p.scale !== undefined ? resolve(p.scale) : 1;
-    const sy = p.scaleY !== undefined ? resolve(p.scaleY) : p.scale !== undefined ? resolve(p.scale) : 1;
-    if (sx !== 1 || sy !== 1) parts.push(`scale(${sx}, ${sy})`);
+    const sx =
+      p.scaleX !== undefined
+        ? resolve(p.scaleX)
+        : p.scale !== undefined
+          ? resolve(p.scale)
+          : 1
+    const sy =
+      p.scaleY !== undefined
+        ? resolve(p.scaleY)
+        : p.scale !== undefined
+          ? resolve(p.scale)
+          : 1
+    if (sx !== 1 || sy !== 1) parts.push(`scale(${sx}, ${sy})`)
 
-    el.style.transform = parts.join(" ");
+    el.style.transform = parts.join(" ")
 
     if (p.opacity !== undefined) {
-      el.style.opacity = String(resolve(p.opacity));
+      el.style.opacity = String(resolve(p.opacity))
     }
-  });
+  })
 }

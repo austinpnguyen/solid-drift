@@ -7,15 +7,15 @@
  * number of items being staggered.
  *
  * ```ts
- * const at = createStagger(5, 80); // 5 items, 80ms apart
- * at(0); // 0
- * at(3); // 240
+ * const at = createStagger(5, 80) // 5 items, 80ms apart
+ * at(0) // 0
+ * at(3) // 240
  * ```
  */
 export function createStagger(
   count: number,
   delayMs: number,
 ): (index: number) => number {
-  void count;
-  return (index: number) => index * delayMs;
+  void count
+  return (index: number) => index * delayMs
 }
