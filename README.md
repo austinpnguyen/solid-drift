@@ -1803,6 +1803,26 @@ const reveal = createScrollReveal(3, { stagger: 90 });
 - `createViewTransition()`: `{ supported, transitioning, transition }`. Wraps `document.startViewTransition`: `transition(update)` animates between old and new DOM when supported, otherwise runs the update directly. SSR-safe (`supported()` is false on the server).
 - `createScrollReveal(count, options?)`: `{ items, replay, reset }`. Each `items[i]` has `ref`, `revealed`, and `style` (empty on the server so content stays visible without JS). Staggered entrance (`stagger`, default 60ms), variants (`fade`, `fade-up`, `fade-down`, `fade-left`, `fade-right`, `scale`, `none`), `once` semantics (default true), and instant reveal under reduced motion.
 
+### Offline queue
+
+```tsx
+import { createOfflineQueue } from "solid-drift";
+
+const outbox = createOfflineQueue({
+  send: (payload) =>
+    fetch("/api/messages", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }).then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    }),
+  storageKey: "my-app:outbox", // persist across reloads
+});
+outbox.enqueue({ text: "hello" }); // sends now, or when back online
+```
+
+`createOfflineQueue({ send, online?, maxAttempts?, retryDelayMs?, storageKey?, capacity?, onDrain?, onDead? })`: `{ queue, dead, pending, status, error, enqueue, flush, remove, retryDead, clear }`. `enqueue()` sends immediately when online, otherwise waits for reconnect; the queue replays in order with exponential backoff (`retryDelayMs`, default 1000, doubled per attempt). Mutations that exhaust `maxAttempts` (default 5) are parked in `dead()` for the UI to surface, and `retryDead(id)` puts one back. `status()` is `"online"`, `"offline"`, or `"flushing"`. Online state defaults to the window `online`/`offline` events (assumes online on the server); pass your own `online` accessor to override. `storageKey` persists the queue to localStorage (payloads must be JSON-serializable). SSR-safe.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

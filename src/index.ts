@@ -499,3 +499,10 @@ export type {
   ScrollRevealItem,
   ScrollRevealControls,
 } from "./presence.js";
+export { createOfflineQueue } from "./offline.js";
+export type {
+  OfflineQueueStatus,
+  QueuedMutation,
+  OfflineQueueOptions,
+  OfflineQueueControls,
+} from "./offline.js";
