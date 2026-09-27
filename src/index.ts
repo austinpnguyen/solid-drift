@@ -418,3 +418,5 @@ export type {
   ScanlineOptions,
   ScanlineState,
 } from "./hardware.js";
+export { createOptimistic } from "./optimistic.js";
+export type { OptimisticControls } from "./optimistic.js";

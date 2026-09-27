@@ -1600,6 +1600,23 @@ scanline.start();
 - `createShake(options?)` detects shake gestures from `devicemotion`: `{ supported, needsPermission, listening, shakes, error, requestPermission, start, stop }`. A shake counts when the acceleration delta exceeds `threshold` (default 15 m/s^2), rate-limited by `cooldown` (default 800ms); `onShake` fires per shake.
 - `createScanline(options?)` is the animated line of a QR/barcode viewfinder: `{ progress, running, start, stop }`. `progress()` sweeps 0..1 on the shared clock (`direction: "down" | "up" | "alternate"`); bind it to the line's position. Under reduced motion it freezes mid-frame. Every primitive is SSR-safe: server renders get `supported: false` and safe no-op actions.
 
+### Optimistic updates
+
+```tsx
+import { createOptimistic } from "solid-drift";
+
+const feed = createOptimistic<Bid[], Bid>([], (bids, bid) =>
+  bids.some((b) => b.id === bid.id) ? bids : [...bids, bid],
+);
+
+// in an event handler:
+await feed.commit(bid, (b) => sendBidTx(b)).catch(() => {
+  // already rolled back; read feed.error() for a toast
+});
+```
+
+`createOptimistic(initial, apply)` gives `{ value, setBase, pending, pendingCount, error, commit, reset }`. `commit(update, task)` applies the update instantly, then runs the task; on success the update is promoted into the base truth (no flicker while the server catches up), and on failure it is rolled back, `error()` is set, and the error is rethrown. `setBase()` folds fresh server truth in (after a refetch); write `apply` idempotently, for example upsert by id, so truth that already includes an optimistic update does not duplicate it. `reset()` drops in-flight updates. Pure signals, SSR-safe.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

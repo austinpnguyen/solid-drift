@@ -165,6 +165,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createGyro()` - device orientation: `{ supported, needsPermission, alpha, beta, gamma, absolute, listening, error, requestPermission, start, stop }`; iOS permission flow built in.
 - `createShake(options?)` - shake detection from devicemotion: `{ supported, needsPermission, listening, shakes, error, requestPermission, start, stop }`; threshold/cooldown/onShake options.
 - `createScanline(options?)` - QR viewfinder scan line: `{ progress, running, start, stop }`; 0..1 sweep on the shared clock, down/up/alternate; freezes under reduced motion.
+- `createOptimistic(initial, apply)` - optimistic updates with rollback: `{ value, setBase, pending, pendingCount, error, commit, reset }`; `commit(update, task)` applies instantly, promotes to base on success, rolls back and rethrows on failure; write `apply` idempotently.
 
 **Utilities**
 
