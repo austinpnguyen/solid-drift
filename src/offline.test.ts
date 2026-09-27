@@ -245,4 +245,37 @@ describe("createOfflineQueue", () => {
     expect(() => q.clear()).not.toThrow();
     dispose();
   });
+
+  it("keeps mutations enqueued while a send is pending", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const sent: string[] = [];
+    let calls = 0;
+    const send = vi.fn(async (payload: string) => {
+      calls += 1;
+      if (calls === 1) await gate;
+      sent.push(payload);
+    });
+    const [online] = createSignal(true);
+    let q!: OfflineQueueControls<string>;
+    const dispose = createRoot((d) => {
+      q = createOfflineQueue<string>({ send, online });
+      return d;
+    });
+
+    q.enqueue("a");
+    await flushMicrotasks();
+    expect(send).toHaveBeenCalledTimes(1);
+    // Enqueue while send("a") is still in flight: the flush must not drop it.
+    q.enqueue("b");
+    release();
+    await flushMicrotasks();
+    await flushMicrotasks();
+    expect(sent).toEqual(["a", "b"]);
+    expect(q.pending()).toBe(0);
+    expect(q.queue()).toEqual([]);
+    dispose();
+  });
 });

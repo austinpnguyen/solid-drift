@@ -221,22 +221,27 @@ export function createOfflineQueue<T = unknown>(
     clearRetryTimer();
     setStatus("flushing");
     try {
-      let remaining = queue();
       let sent = 0;
-      while (remaining.length > 0) {
-        const mutation = remaining[0];
+      for (;;) {
+        // Read the head fresh on every iteration: a mutation enqueued while
+        // a send() is pending joins this flush instead of being dropped.
+        const mutation = queue()[0];
+        if (!mutation) break;
         try {
           await send(mutation.payload, mutation);
           sent += 1;
-          remaining = remaining.slice(1);
-          setQueue(remaining);
+          // Remove by id through an updater, never by overwriting the queue
+          // from a stale snapshot taken before send() was awaited.
+          setQueue((q) => {
+            const at = q.findIndex((m) => m.id === mutation.id);
+            return at < 0 ? q : [...q.slice(0, at), ...q.slice(at + 1)];
+          });
           persist();
         } catch (err) {
           const attempts = mutation.attempts + 1;
           setError(err);
           if (attempts >= Math.max(1, maxAttempts)) {
-            remaining = remaining.slice(1);
-            setQueue(remaining);
+            setQueue((q) => q.filter((m) => m.id !== mutation.id));
             const deadOne: QueuedMutation<T> = {
               ...mutation,
               attempts,
@@ -246,25 +251,19 @@ export function createOfflineQueue<T = unknown>(
             persist();
             onDead?.(deadOne);
           } else {
-            const failed: QueuedMutation<T> = {
-              ...mutation,
-              attempts,
-              lastError: err,
-            };
-            remaining = [failed, ...remaining.slice(1)];
-            setQueue(remaining);
+            setQueue((q) =>
+              q.map((m) =>
+                m.id === mutation.id ? { ...m, attempts, lastError: err } : m,
+              ),
+            );
             persist();
             scheduleRetry(attempts);
             break;
           }
         }
       }
-      if (remaining.length === 0 && sent > 0) {
-        setStatus(isOnline() ? "online" : "offline");
-        onDrain?.();
-      } else {
-        setStatus(isOnline() ? "online" : "offline");
-      }
+      if (queue().length === 0 && sent > 0) onDrain?.();
+      setStatus(isOnline() ? "online" : "offline");
     } finally {
       flushing = false;
     }
