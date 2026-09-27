@@ -154,6 +154,17 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createTTS(options?)` - `speechSynthesis` by default, cloud upgrade via `provider: { speak(text, { signal }) }`; `{ supported, speaking, voices, speak, cancel }`.
 - `createThinking(options?)` - animated thinking indicator cycling phrases and dots: `{ text, running, start, stop }`.
 - `createPrompt(options?)` - voice-enabled prompt input: `{ value, setValue, listening, interim, supported, toggleMic, submit, clear }`; mic finals append to the value; pairs with `createChatModel`.
+- `createBattery()` - Battery Status API: `{ supported, charging, level, chargingTime, dischargingTime, error }`; level 0..1; live change events.
+- `createNetwork()` - `navigator.onLine` + Network Information API: `{ online, effectiveType, downlink, rtt, saveData, supported }`.
+- `createWakeLock()` - Screen Wake Lock: `{ supported, active, error, request, release }`; auto re-acquires on visibility return.
+- `createContactPick()` - Contact Picker API: `{ supported, contacts, error, pick }`; `pick({ multiple })` resolves normalized `{ name, tel, email }` arrays.
+- `createOTP()` - WebOTP SMS codes: `{ supported, code, error, wait, abort }`; `wait({ transport })` resolves the code or null on abort.
+- `createShare()` - Web Share API: `{ supported, canShare, error, share }`; user dismissal is not an error.
+- `createNFC()` - Web NFC (Chrome Android, secure context): `{ supported, scanning, message, error, scan, write, abort }`; decoded text/url records + serialNumber.
+- `createTorch()` - camera flashlight: `{ supported, on, error, attach, set, toggle }`; `attach(trackOrStream)` checks the `torch` capability.
+- `createGyro()` - device orientation: `{ supported, needsPermission, alpha, beta, gamma, absolute, listening, error, requestPermission, start, stop }`; iOS permission flow built in.
+- `createShake(options?)` - shake detection from devicemotion: `{ supported, needsPermission, listening, shakes, error, requestPermission, start, stop }`; threshold/cooldown/onShake options.
+- `createScanline(options?)` - QR viewfinder scan line: `{ progress, running, start, stop }`; 0..1 sweep on the shared clock, down/up/alternate; freezes under reduced motion.
 
 **Utilities**
 

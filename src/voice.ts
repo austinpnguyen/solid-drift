@@ -745,7 +745,7 @@ export interface ThinkingControls {
 }
 
 /**
- * An animated "thinking" indicator for voice/AI latency: cycles
+ * An animated "thinking" indicator for voice reply latency: cycles
  * trailing dots, then moves through phrases.
  *
  * ```ts

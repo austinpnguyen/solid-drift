@@ -1571,6 +1571,35 @@ const prompt = createPrompt({
 - `createThinking(options?)` cycles `"Thinking"`, `"Thinking."`, ... through `phrases` at `interval` ms: `{ text, running, start, stop }`.
 - `createPrompt(options?)` is the voice-enabled input: `{ value, setValue, listening, interim, supported, toggleMic, submit, clear }`. Mic finals are appended to the value as they arrive; `submit()` fires `onSubmit` and clears by default. Everything is SSR-safe: unsupported primitives report `supported: false` and their actions no-op on the server.
 
+### Mobile hardware
+
+```tsx
+import { createBattery, createShare, createScanline } from "solid-drift";
+
+const battery = createBattery();
+const share = createShare();
+const scanline = createScanline({ duration: 1800 });
+
+scanline.start();
+// in your scanner viewfinder:
+// <div class="line" style={{ top: `${scanline.progress() * 100}%` }} />
+
+<p>Battery: {Math.round(battery.level() * 100)}% {battery.charging() ? "(charging)" : ""}</p>
+<button onClick={() => share.share({ title: "solid-drift", url: location.href })}>Share</button>
+```
+
+- `createBattery()` wraps `navigator.getBattery()`: `{ supported, charging, level, chargingTime, dischargingTime, error }`. Level is 0..1; times are seconds (`Infinity` when unknown). Listeners detach on cleanup.
+- `createNetwork()` tracks `navigator.onLine` plus the Network Information API: `{ online, effectiveType, downlink, rtt, saveData, supported }`. Updates on `online`/`offline` events and the connection `change` event.
+- `createWakeLock()` keeps the screen awake: `{ supported, active, error, request, release }`. Re-acquires automatically when the tab becomes visible again if the lock was still wanted.
+- `createContactPick()` wraps the Contact Picker API: `{ supported, contacts, error, pick }`. `pick({ multiple })` resolves with normalized `{ name, tel, email }` arrays, or an empty array when the user cancels.
+- `createOTP()` wraps the WebOTP API: `{ supported, code, error, wait, abort }`. `wait({ transport })` resolves with the SMS code (or `null` when aborted). Requires a secure origin and an origin-bound SMS format.
+- `createShare()` wraps the Web Share API: `{ supported, canShare, error, share }`. `share({ title, text, url, files })` opens the native sheet; user dismissal is not an error.
+- `createNFC()` wraps Web NFC (Chrome on Android, secure context, needs a user gesture): `{ supported, scanning, message, error, scan, write, abort }`. Scanned tags land in `message()` with decoded `text`/`url` records plus `serialNumber`; `write()` takes a string or `{ records }`.
+- `createTorch()` drives the camera flashlight: `{ supported, on, error, attach, set, toggle }`. `attach(trackOrStream)` checks the `torch` capability, then `set(true/false)` applies it via `applyConstraints`.
+- `createGyro()` wraps `deviceorientation`: `{ supported, needsPermission, alpha, beta, gamma, absolute, listening, error, requestPermission, start, stop }`. On iOS, call `requestPermission()` from a tap handler before `start()`; `start()` also requests it if needed.
+- `createShake(options?)` detects shake gestures from `devicemotion`: `{ supported, needsPermission, listening, shakes, error, requestPermission, start, stop }`. A shake counts when the acceleration delta exceeds `threshold` (default 15 m/s^2), rate-limited by `cooldown` (default 800ms); `onShake` fires per shake.
+- `createScanline(options?)` is the animated line of a QR/barcode viewfinder: `{ progress, running, start, stop }`. `progress()` sweeps 0..1 on the shared clock (`direction: "down" | "up" | "alternate"`); bind it to the line's position. Under reduced motion it freezes mid-frame. Every primitive is SSR-safe: server renders get `supported: false` and safe no-op actions.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
