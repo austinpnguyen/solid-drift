@@ -518,3 +518,28 @@ export type {
   NormalizedPlatformAnalytics,
   NormalizedAnalytics,
 } from "./social.js";
+export {
+  createApi,
+  createWebSocket,
+  createSearch,
+  createUpload,
+  createPagination,
+  verifyWebhookSignature,
+} from "./network.js";
+export type {
+  RequestStatus,
+  ApiOptions,
+  ApiControls,
+  WebSocketStatus,
+  WebSocketLike,
+  WebSocketOptions,
+  WebSocketControls,
+  SearchOptions,
+  SearchControls,
+  UploadOptions,
+  UploadControls,
+  PageResult,
+  PaginationOptions,
+  PaginationControls,
+  WebhookSignatureOptions,
+} from "./network.js";
