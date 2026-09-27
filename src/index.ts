@@ -565,3 +565,10 @@ export type {
   ScriptLoaderOptions,
   ScriptLoaderControls,
 } from "./browser.js";
+export { createAuthSession, decodeJwtPayload } from "./auth.js";
+export type {
+  AuthSession,
+  AuthSessionOptions,
+  AuthStatus,
+  AuthSessionControls,
+} from "./auth.js";

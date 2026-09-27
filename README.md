@@ -1934,6 +1934,31 @@ analytics.load(); // analytics.loaded()
 - `createPermission(name, { immediate?, navigatorImpl? })`: `{ state, supported, query }` around the Permissions API.
 - `createScriptLoader(src, { attrs?, documentImpl? })`: `{ loaded, error, status, load }`. Injects the script once per URL (repeat loads resolve immediately) and tracks it reactively. No-op on the server.
 
+### Auth session
+
+```tsx
+import { createAuthSession, decodeJwtPayload } from "solid-drift";
+
+const auth = createAuthSession({
+  initialSession: restored, // from the app's own storage, or omit
+  refresh: async (old) => {
+    const res = await fetch("/api/refresh", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken: old?.refreshToken }),
+    });
+    if (!res.ok) return undefined; // signs out
+    return res.json(); // { token, refreshToken?, expiresAt?, user? }
+  },
+});
+
+auth.signIn({ token, refreshToken, expiresAt, user });
+await auth.getToken(); // fresh token, refreshing first when expired
+fetch("/api/me", { headers: { authorization: auth.authHeader() ?? "" } });
+auth.signOut();
+```
+
+`createAuthSession({ initialSession?, refresh?, refreshMarginMs?, decodeUser? })`: `{ session, token, user, status, isAuthenticated, authHeader, signIn, getToken, signOut }`. The session lives in a memory-only signal: tokens are never written to storage by this primitive. `status()` is `"unknown"`, `"authenticated"`, `"unauthenticated"`, or `"refreshing"`. `getToken()` returns the current token, or refreshes it through the `refresh` callback when it is expired (or inside `refreshMarginMs`, default 60s); a failed refresh signs out. `authHeader()` returns `"Bearer <token>"` or undefined. `decodeJwtPayload(token)` decodes a JWT payload without verifying the signature (verification belongs on the server). No OAuth flow is implemented; the app signs in through its own backend and hands the session to `signIn()`.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
