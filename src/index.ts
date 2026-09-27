@@ -506,3 +506,15 @@ export type {
   OfflineQueueOptions,
   OfflineQueueControls,
 } from "./offline.js";
+export { validatePost, normalizeAnalytics } from "./social.js";
+export type {
+  SocialPlatform,
+  PostMedia,
+  PostDraft,
+  PostIssue,
+  PostValidation,
+  ValidatePostOptions,
+  AnalyticsEntry,
+  NormalizedPlatformAnalytics,
+  NormalizedAnalytics,
+} from "./social.js";
