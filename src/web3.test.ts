@@ -5,6 +5,7 @@ import {
   createTicker,
   createMintReveal,
   createConnectButton,
+  createAgentTx,
   type TxStatusInput,
 } from "./web3.js";
 
@@ -213,6 +214,183 @@ describe("createTxLifecycle", () => {
     expect(tx.progress()).toBe(0.25);
     tx.set("success");
     expect(tx.progress()).toBe(1);
+    dispose();
+  });
+});
+
+describe("createAgentTx", () => {
+  const ADDR = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+  const PROPOSAL = {
+    to: ADDR,
+    value: "1000000000000000000",
+    description: "Swap 1 ETH for USDC at the current rate.",
+  };
+
+  it("walks propose, approve, execute to confirmed", async () => {
+    stubBrowser();
+    let agent!: ReturnType<typeof createAgentTx>;
+    const dispose = createRoot((d) => {
+      agent = createAgentTx({ execute: async () => "0xhash" });
+      return d;
+    });
+    expect(agent.state()).toBe("idle");
+    agent.propose(PROPOSAL);
+    expect(agent.state()).toBe("proposed");
+    expect(agent.proposal()?.description).toBe(PROPOSAL.description);
+    agent.approve();
+    expect(agent.state()).toBe("approved");
+    await agent.execute();
+    expect(agent.state()).toBe("executing");
+    expect(agent.tx.state()).toBe("pending");
+    // The host reports the receipt landing.
+    agent.tx.set("success");
+    expect(agent.state()).toBe("confirmed");
+    dispose();
+  });
+
+  it("a throwing execute ends failed", async () => {
+    stubBrowser();
+    let agent!: ReturnType<typeof createAgentTx>;
+    const dispose = createRoot((d) => {
+      agent = createAgentTx({
+        execute: async () => {
+          throw new Error("user denied");
+        },
+      });
+      return d;
+    });
+    agent.propose(PROPOSAL);
+    agent.approve();
+    await agent.execute();
+    expect(agent.state()).toBe("failed");
+    expect(agent.tx.state()).toBe("failed");
+    dispose();
+  });
+
+  it("reject() ends rejected and reset() returns to idle", () => {
+    stubBrowser();
+    let agent!: ReturnType<typeof createAgentTx>;
+    const dispose = createRoot((d) => {
+      agent = createAgentTx();
+      return d;
+    });
+    agent.propose(PROPOSAL);
+    agent.reject();
+    expect(agent.state()).toBe("rejected");
+    agent.reset();
+    expect(agent.state()).toBe("idle");
+    expect(agent.proposal()).toBeUndefined();
+    dispose();
+  });
+
+  it("invalid transitions are no-ops", async () => {
+    stubBrowser();
+    let agent!: ReturnType<typeof createAgentTx>;
+    const dispose = createRoot((d) => {
+      agent = createAgentTx();
+      return d;
+    });
+    // Nothing to approve or execute from idle.
+    agent.approve();
+    await agent.execute();
+    expect(agent.state()).toBe("idle");
+    agent.propose(PROPOSAL);
+    // Cannot execute before approval, cannot re-propose mid-flow.
+    await agent.execute();
+    expect(agent.state()).toBe("proposed");
+    agent.propose({ ...PROPOSAL, description: "sneaky" });
+    expect(agent.proposal()?.description).toBe(PROPOSAL.description);
+    dispose();
+  });
+
+  it("propose() validates the proposal", () => {
+    stubBrowser();
+    let agent!: ReturnType<typeof createAgentTx>;
+    const dispose = createRoot((d) => {
+      agent = createAgentTx();
+      return d;
+    });
+    expect(() => agent.propose({ ...PROPOSAL, to: "nope" })).toThrow(
+      "not a valid address",
+    );
+    expect(() => agent.propose({ ...PROPOSAL, description: "" })).toThrow(
+      "needs a description",
+    );
+    expect(agent.state()).toBe("idle");
+    dispose();
+  });
+
+  it("source drives executing to confirmed", async () => {
+    stubBrowser();
+    const [input, setInput] = createSignal<TxStatusInput>({ status: "idle" });
+    let agent!: ReturnType<typeof createAgentTx>;
+    const dispose = createRoot((d) => {
+      agent = createAgentTx({
+        source: input,
+        execute: async () => "0xhash",
+      });
+      return d;
+    });
+    agent.propose(PROPOSAL);
+    agent.approve();
+    await agent.execute();
+    expect(agent.state()).toBe("executing");
+    setInput({ status: "success" });
+    expect(agent.state()).toBe("confirmed");
+    dispose();
+  });
+
+  it("onEnter reports transitions in order", async () => {
+    stubBrowser();
+    const seen: string[] = [];
+    let agent!: ReturnType<typeof createAgentTx>;
+    const dispose = createRoot((d) => {
+      agent = createAgentTx({
+        execute: async () => "0xhash",
+        onEnter: (state, prev) => seen.push(`${prev}->${state}`),
+      });
+      return d;
+    });
+    agent.propose(PROPOSAL);
+    agent.approve();
+    await agent.execute();
+    agent.tx.set("success");
+    expect(seen).toEqual([
+      "idle->proposed",
+      "proposed->approved",
+      "approved->executing",
+      "executing->confirmed",
+    ]);
+    dispose();
+  });
+
+  it("progress() rises across the flow", async () => {
+    const b = stubBrowser();
+    let agent!: ReturnType<typeof createAgentTx>;
+    const dispose = createRoot((d) => {
+      agent = createAgentTx();
+      return d;
+    });
+    const settled: number[] = [];
+    agent.propose(PROPOSAL);
+    b.frames(150);
+    settled.push(agent.progress());
+    agent.approve();
+    b.frames(150);
+    settled.push(agent.progress());
+    await agent.execute();
+    b.frames(150);
+    settled.push(agent.progress());
+    agent.tx.set("success");
+    b.frames(150);
+    settled.push(agent.progress());
+    expect(settled[0]).toBeCloseTo(0.2, 1);
+    expect(settled[1]).toBeCloseTo(0.35, 1);
+    expect(settled[2]).toBeCloseTo(0.65, 1);
+    expect(settled[3]).toBeCloseTo(1, 1);
+    expect(
+      settled.every((v, i) => i === 0 || v > settled[i - 1]),
+    ).toBe(true);
     dispose();
   });
 });

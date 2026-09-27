@@ -27,6 +27,7 @@ import { createMagnetic } from "./pointer.js";
 import { prefersReducedMotion } from "./reduced-motion.js";
 import { createSpring } from "./spring.js";
 import { ownerDoc } from "./text.js";
+import { isAddress } from "./web3data.js";
 
 type MaybeElement = () => Element | null | undefined;
 
@@ -178,6 +179,239 @@ export function createTxLifecycle(
     state,
     set: apply,
     reset: () => apply("idle"),
+    progress,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* createAgentTx                                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Stages of an AI-proposed transaction: the agent proposes, the user
+ * approves or rejects, the transaction executes.
+ */
+export type AgentTxState =
+  | "idle"
+  | "proposed"
+  | "approved"
+  | "executing"
+  | "confirmed"
+  | "rejected"
+  | "failed";
+
+/** An AI-proposed on-chain action, in plain data the user can review. */
+export interface AgentTxProposal {
+  /** Destination address. */
+  to: string;
+  /** Wei value as a decimal string. Default "0". */
+  value?: string;
+  /** Hex calldata. */
+  data?: string;
+  /** The AI's plain-language explanation of what this does. */
+  description: string;
+  /** Chain id. Default 1. */
+  chainId?: number;
+}
+
+export interface AgentTxOptions {
+  /**
+   * Executes the approved proposal against the wallet/chain adapter
+   * and resolves with the transaction hash. Throw to fail. Omit to
+   * drive the inner lifecycle manually through `tx`.
+   */
+  execute?: (
+    proposal: AgentTxProposal,
+    signal: AbortSignal,
+  ) => Promise<string>;
+  /** wagmi/viem-style status accessor, fed to the inner lifecycle. */
+  source?: Accessor<TxStatusInput>;
+  /** Confirmations that promote "pending" to "confirming". Default 1. */
+  requiredConfirmations?: number;
+  /** Spring stiffness for the progress value. Default 170. */
+  stiffness?: number;
+  /** Spring damping for the progress value. Default 26. */
+  damping?: number;
+  /** Called after entering a state, with the previous state. */
+  onEnter?: (state: AgentTxState, prev: AgentTxState) => void;
+}
+
+export interface AgentTxControls {
+  /** Current agent-tx state. */
+  state: Accessor<AgentTxState>;
+  /** The proposal under review, if any. */
+  proposal: Accessor<AgentTxProposal | undefined>;
+  /**
+   * Inner transaction lifecycle, live during "executing". Feed it
+   * through `source` or drive it manually with `tx.set()`.
+   */
+  tx: TxLifecycleControls;
+  /** Propose a transaction for the user to review. */
+  propose: (proposal: AgentTxProposal) => void;
+  /** Approve the proposal; only from "proposed". */
+  approve: () => void;
+  /** Reject the proposal; only from "proposed". */
+  reject: () => void;
+  /**
+   * Run the approved proposal: calls `execute`, then tracks the inner
+   * lifecycle to "confirmed" or "failed". Only from "approved".
+   */
+  execute: () => Promise<void>;
+  /** Back to "idle", aborting any in-flight execution. */
+  reset: () => void;
+  /**
+   * 0 to 1 across the whole flow, spring-smoothed for progress UI:
+   * idle 0, proposed 0.2, approved 0.35, executing 0.65,
+   * confirmed/failed 1, rejected back to 0.
+   */
+  progress: Accessor<number>;
+}
+
+const AGENT_TX_PROGRESS: Record<AgentTxState, number> = {
+  idle: 0,
+  proposed: 0.2,
+  approved: 0.35,
+  executing: 0.65,
+  confirmed: 1,
+  rejected: 0,
+  failed: 1,
+};
+
+/**
+ * AI proposes, the user approves, the transaction executes.
+ *
+ * The agent (an LLM) calls `propose()` with a plain-data proposal the
+ * user can read; the user calls `approve()` or `reject()`; `execute()`
+ * hands the approved proposal to the wallet adapter and the inner
+ * `createTxLifecycle` tracks signing to confirmation. The library
+ * never signs: `execute` is your wagmi/viem send function.
+ *
+ * ```ts
+ * const agentTx = createAgentTx({
+ *   execute: async (p) => sendTransaction({
+ *     to: p.to, value: p.value, data: p.data,
+ *   }),
+ *   source: () => receiptQuery(),
+ * })
+ * // The AI proposes:
+ * agentTx.propose({
+ *   to: "0x…",
+ *   value: "1000000000000000000",
+ *   description: "Swap 1 ETH for USDC at the current rate.",
+ * })
+ * // The user reviews proposal() and taps approve:
+ * agentTx.approve()
+ * await agentTx.execute() // "executing" to "confirmed"
+ * ```
+ *
+ * Invalid transitions are no-ops, so LLM-driven UIs cannot skip the
+ * user's approval. SSR-safe. Under reduced motion `progress()` jumps
+ * to its target.
+ */
+export function createAgentTx(
+  options: AgentTxOptions = {},
+): AgentTxControls {
+  const {
+    execute,
+    source,
+    requiredConfirmations = 1,
+    stiffness = 170,
+    damping = 26,
+    onEnter,
+  } = options;
+
+  const [state, setState] = createSignal<AgentTxState>("idle");
+  const [proposal, setProposal] = createSignal<AgentTxProposal | undefined>(
+    undefined,
+  );
+  const [target, setTarget] = createSignal(0);
+  const progress = createSpring(target, { stiffness, damping });
+  const tx = createTxLifecycle({
+    source,
+    requiredConfirmations,
+    stiffness,
+    damping,
+  });
+
+  let execAborter: AbortController | null = null;
+
+  const apply = (next: AgentTxState): void => {
+    const current = state();
+    if (next === current) return;
+    setState(next);
+    setTarget(AGENT_TX_PROGRESS[next]);
+    onEnter?.(next, current);
+  };
+
+  // Mirror the inner lifecycle into the agent flow.
+  createEffect(() => {
+    const inner = tx.state();
+    if (state() !== "executing") return;
+    if (inner === "success") apply("confirmed");
+    else if (inner === "failed") apply("failed");
+  });
+
+  const propose = (p: AgentTxProposal): void => {
+    const s = state();
+    if (s !== "idle" && s !== "rejected" && s !== "failed" && s !== "confirmed") {
+      return;
+    }
+    if (!isAddress(p.to)) {
+      throw new Error("createAgentTx: proposal 'to' is not a valid address.");
+    }
+    if (!p.description) {
+      throw new Error("createAgentTx: proposal needs a description.");
+    }
+    setProposal(p);
+    apply("proposed");
+  };
+
+  const approve = (): void => {
+    if (state() === "proposed") apply("approved");
+  };
+
+  const reject = (): void => {
+    if (state() === "proposed") apply("rejected");
+  };
+
+  const runExecute = async (): Promise<void> => {
+    if (state() !== "approved") return;
+    const p = proposal();
+    if (!p) return;
+    apply("executing");
+    tx.set("signing");
+    // Without an execute function the host drives tx manually.
+    if (!execute) return;
+    execAborter?.abort();
+    execAborter = new AbortController();
+    const signal = execAborter.signal;
+    try {
+      await execute(p, signal);
+      if (!signal.aborted) tx.set("pending");
+    } catch {
+      if (!signal.aborted) tx.set("failed");
+    }
+  };
+
+  const reset = (): void => {
+    execAborter?.abort();
+    execAborter = null;
+    setProposal(undefined);
+    tx.reset();
+    apply("idle");
+  };
+
+  onCleanup(() => execAborter?.abort());
+
+  return {
+    state,
+    proposal,
+    tx,
+    propose,
+    approve,
+    reject,
+    execute: runExecute,
+    reset,
     progress,
   };
 }

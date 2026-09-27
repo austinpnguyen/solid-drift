@@ -7,6 +7,8 @@ import {
   createSpecPlayer,
   DriftSpecError,
   type DriftSpec,
+  type AgentTxControls,
+  type AgentTxProposal,
 } from "./ai.js";
 
 afterEach(() => {
@@ -463,6 +465,198 @@ describe("createSpecPlayer", () => {
     });
     const p = player.play();
     await b.run(20); // 334ms, well under the 2000ms default
+    await p;
+    expect(player.status()).toBe("done");
+    dispose();
+  });
+});
+
+describe("DriftSpec web3 steps", () => {
+  const ADDR = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+  const HASH =
+    "0x5c504ed432cb51138bcf09aa5e8c31c3a5a25d00d5e2c38595411db5493f7b00";
+
+  it("parses agentTx and txReceipt steps", () => {
+    const spec = parseDriftSpec({
+      version: 1,
+      scenes: [
+        {
+          primitive: "agentTx",
+          options: {
+            to: ADDR,
+            description: "Swap 1 ETH for USDC.",
+            value: "1000000000000000000",
+            chainId: 1,
+          },
+        },
+        { primitive: "txReceipt", options: { hash: HASH, timeout: 5000 } },
+      ],
+    });
+    expect(spec.scenes[0].primitive).toBe("agentTx");
+    expect(spec.scenes[1].primitive).toBe("txReceipt");
+  });
+
+  it("rejects an agentTx step with a bad address", () => {
+    let path = "";
+    try {
+      parseDriftSpec({
+        version: 1,
+        scenes: [
+          { primitive: "agentTx", options: { to: "nope", description: "x" } },
+        ],
+      });
+    } catch (e) {
+      path = (e as DriftSpecError).path;
+    }
+    expect(path).toBe("scenes[0].options.to");
+  });
+
+  it("rejects an agentTx step without a description", () => {
+    let path = "";
+    try {
+      parseDriftSpec({
+        version: 1,
+        scenes: [{ primitive: "agentTx", options: { to: ADDR } }],
+      });
+    } catch (e) {
+      path = (e as DriftSpecError).path;
+    }
+    expect(path).toBe("scenes[0].options.description");
+  });
+
+  it("rejects a txReceipt step with a bad hash", () => {
+    let path = "";
+    try {
+      parseDriftSpec({
+        version: 1,
+        scenes: [{ primitive: "txReceipt", options: { hash: "0x123" } }],
+      });
+    } catch (e) {
+      path = (e as DriftSpecError).path;
+    }
+    expect(path).toBe("scenes[0].options.hash");
+  });
+
+  it("agentTx step proposes and waits for the host to approve", async () => {
+    const b = stubBrowser();
+    let seen: { proposal: AgentTxProposal; tx: AgentTxControls } | undefined;
+    const spec: DriftSpec = {
+      version: 1,
+      scenes: [
+        {
+          primitive: "agentTx",
+          options: { to: ADDR, description: "Swap 1 ETH for USDC." },
+        },
+      ],
+    };
+    let player!: ReturnType<typeof createSpecPlayer>;
+    const dispose = createRoot((d) => {
+      player = createSpecPlayer(spec, {}, {
+        onAgentTxStep: (proposal, tx) => {
+          seen = { proposal, tx };
+        },
+      });
+      return d;
+    });
+    const p = player.play();
+    await b.run(3);
+    expect(seen?.proposal.to).toBe(ADDR);
+    expect(seen?.tx.state()).toBe("proposed");
+    expect(player.status()).toBe("running");
+    // The host shows its approval UI, then drives the flow.
+    seen!.tx.approve();
+    await seen!.tx.execute();
+    await b.run(2);
+    expect(seen!.tx.state()).toBe("executing");
+    seen!.tx.tx.set("success");
+    await b.run(3);
+    await p;
+    expect(player.status()).toBe("done");
+    dispose();
+  });
+
+  it("autoApprove approves the step without a host gesture", async () => {
+    const b = stubBrowser();
+    let txRef: AgentTxControls | undefined;
+    const spec: DriftSpec = {
+      version: 1,
+      scenes: [
+        {
+          primitive: "agentTx",
+          options: { to: ADDR, description: "x", autoApprove: true },
+        },
+      ],
+    };
+    let player!: ReturnType<typeof createSpecPlayer>;
+    const dispose = createRoot((d) => {
+      player = createSpecPlayer(spec, {}, {
+        onAgentTxStep: (_p, tx) => {
+          txRef = tx;
+        },
+      });
+      return d;
+    });
+    const p = player.play();
+    await b.run(3);
+    expect(txRef?.state()).toBe("approved");
+    // The host still executes and reports the outcome.
+    await txRef!.execute();
+    txRef!.tx.set("success");
+    await b.run(3);
+    await p;
+    expect(player.status()).toBe("done");
+    dispose();
+  });
+
+  it("stop() skips a waiting agentTx step", async () => {
+    const b = stubBrowser();
+    const spec: DriftSpec = {
+      version: 1,
+      scenes: [
+        { primitive: "agentTx", options: { to: ADDR, description: "x" } },
+      ],
+    };
+    let player!: ReturnType<typeof createSpecPlayer>;
+    const dispose = createRoot((d) => {
+      player = createSpecPlayer(spec, {}, {});
+      return d;
+    });
+    const p = player.play();
+    await b.run(3);
+    expect(player.status()).toBe("running");
+    player.stop();
+    await p;
+    expect(player.status()).toBe("idle");
+    dispose();
+  });
+
+  it("txReceipt step waits for the hash to mine", async () => {
+    const b = stubBrowser();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          result: {
+            transactionHash: HASH,
+            blockNumber: "0x10",
+            status: "0x1",
+            gasUsed: "0x5208",
+          },
+        }),
+      })),
+    );
+    const spec: DriftSpec = {
+      version: 1,
+      scenes: [{ primitive: "txReceipt", options: { hash: HASH } }],
+    };
+    let player!: ReturnType<typeof createSpecPlayer>;
+    const dispose = createRoot((d) => {
+      player = createSpecPlayer(spec, {});
+      return d;
+    });
+    const p = player.play();
+    await b.run(10);
     await p;
     expect(player.status()).toBe("done");
     dispose();

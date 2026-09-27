@@ -95,7 +95,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createStreamReveal(ref, options?)` - streaming text reveal. Returns `{ push, complete, reset, status, pending }`.
 - `createAgentState(options?)` - agent state machine (`idle`, `thinking`, `streaming`, `tool-call`, `done`, `error`). Returns `{ state, prev, set, reset, is }`.
 - `parseDriftSpec(input)` - validate a DriftSpec JSON object, throws `DriftSpecError` with an exact path.
-- `createSpecPlayer(spec, refs)` - play a validated spec against a refs map. Returns `{ play, stop, status, scene }`.
+- `createSpecPlayer(spec, refs, hooks?)` - play a validated spec against a refs map. Returns `{ play, stop, status, scene }`. `hooks.onAgentTxStep(proposal, tx)` wires host approval UI for `agentTx` steps.
 
 **Web3**
 
@@ -103,6 +103,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createTicker(source, ref, options?)` - rolling-digit price ticker. Returns `{ display, direction }`.
 - `createMintReveal(ref, options?)` - anticipation shake, rotateY flip, `onFlip` at the midpoint. Returns `{ play, reset, status }`.
 - `createConnectButton(ref, options?)` - magnetic connect button with copy tick and chain pulse. Returns `{ copyTick, chainPulse, status }`.
+- `createAgentTx(options?)` - AI proposes, user approves, tx executes: `idle`, `proposed`, `approved`, `executing`, `confirmed`, `rejected`, `failed`. Invalid transitions are no-ops. Returns `{ state, proposal, tx, propose, approve, reject, execute, reset, progress }`.
 
 **Web3 data** (read-only, zero deps, SSR-safe, all share `{ data, error, status, retry, abort }`)
 
@@ -189,7 +190,7 @@ Return ONLY this JSON shape:
 }
 ```
 
-Rules: `primitive` is one of `kineticType`, `streamReveal`, `camera`, `colorShift`, `transition`, `beat`. `target` must be a key the host app provides in its refs map. `options` must match that primitive's documented options. Keep scenes short; add a `duration` budget to any scene that should not block the reel. Validate with `parseDriftSpec` before playing.
+Rules: `primitive` is one of `kineticType`, `streamReveal`, `camera`, `colorShift`, `transition`, `beat`, `agentTx`, `txReceipt`. `target` must be a key the host app provides in its refs map (not needed for `agentTx` / `txReceipt`). `options` must match that primitive's documented options. `agentTx` needs `to` (0x address) and `description`; it proposes the transaction and waits for the host's `hooks.onAgentTxStep` to approve and execute it. `txReceipt` needs `hash` and waits for the transaction to mine (optional `timeout` ms, `endpoint`). Keep scenes short; add a `duration` budget to any scene that should not block the reel. Validate with `parseDriftSpec` before playing.
 
 ## 5. SSR and reduced-motion rules
 

@@ -1094,6 +1094,41 @@ const connect = createConnectButton(() => btn, { strength: 0.35 });
 
 Returns `{ copyTick, chainPulse, status }`. `status()` is `"idle"`, `"ticking"` (check visible), or `"pulsing"` (ring expanding). Call `chainPulse()` after a successful connection or network switch. Under reduced motion there is no magnetic pull or scale; `copyTick()` and `chainPulse()` still show their overlays statically.
 
+### `createAgentTx(options?)`
+
+AI proposes, the user approves, the transaction executes. The agent (an LLM) calls `propose()` with a plain-data proposal the user can read (`to`, `value`, `data`, `description`, `chainId`); the user calls `approve()` or `reject()`; `execute()` hands the approved proposal to your wallet adapter and the inner `createTxLifecycle` tracks signing to confirmation. The library never signs: `execute` is your wagmi/viem send function.
+
+States flow `idle` to `proposed` to `approved` to `executing` to `confirmed`, with `rejected` and `failed` as the off-ramps. Invalid transitions are no-ops, so an LLM-driven UI cannot skip the user's approval. `progress()` is spring-smoothed across the whole flow for progress UI, and `tx` exposes the inner lifecycle for manual driving or extra rendering.
+
+```tsx
+const agentTx = createAgentTx({
+  execute: async (p) => sendTransaction({ to: p.to, value: p.value }),
+  source: () => receiptQuery(), // wagmi/viem-style status
+});
+// The AI proposes:
+agentTx.propose({
+  to: "0x…",
+  value: "1000000000000000000",
+  description: "Swap 1 ETH for USDC at the current rate.",
+});
+// The user reviews agentTx.proposal() and taps approve:
+agentTx.approve();
+await agentTx.execute(); // "executing" to "confirmed"
+```
+
+DriftSpec gains two LLM-generatable web3 steps for full dApp choreography: `"agentTx"` (options `to`, `description`, `value`, `data`, `chainId`, `autoApprove`) proposes a transaction mid-spec and waits for the host, via the new `createSpecPlayer(spec, refs, hooks)` third parameter, to approve and execute it through `hooks.onAgentTxStep`; `"txReceipt"` (options `hash`, `endpoint`, `timeout`) waits for a transaction hash to mine. A typical generated ceremony reads: `streamReveal` (explain) to `agentTx` (approve and send) to `txReceipt` (confirm).
+
+```json
+{
+  "version": 1,
+  "scenes": [
+    { "primitive": "streamReveal", "target": "explainer", "options": { "text": "The agent proposes swapping 1 ETH for USDC." } },
+    { "primitive": "agentTx", "options": { "to": "0x…", "description": "Swap 1 ETH for USDC.", "value": "1000000000000000000" } },
+    { "primitive": "txReceipt", "options": { "hash": "0x…" } }
+  ]
+}
+```
+
 ### Web3 data layer
 
 A zero-dependency read layer for chain and market data as signals: public RPC and API endpoints over `fetch`, with user-swappable endpoints. Every network primitive shares the `{ data, error, status, retry, abort }` shape, is SSR-safe (nothing fetches on the server), and polls with error backoff. Defaults are conservative because public endpoints are rate-limited. This is read-only: transaction signing stays with wallet libraries.

@@ -37,6 +37,16 @@ import {
 import type { ColorStop } from "./color.js";
 import { prefersReducedMotion } from "./reduced-motion.js";
 import { appendUnits } from "./text.js";
+import {
+  createAgentTx,
+  type AgentTxControls,
+  type AgentTxProposal,
+} from "./web3.js";
+import { createTxReceipt } from "./web3data.js";
+import { isAddress } from "./web3data.js";
+
+/** Re-exported for `SpecPlayerHooks` consumers. */
+export type { AgentTxProposal, AgentTxControls };
 
 type MaybeElement = () => Element | null | undefined;
 
@@ -379,7 +389,9 @@ export type DriftSpecPrimitive =
   | "colorShift"
   | "transition"
   | "beat"
-  | "streamReveal";
+  | "streamReveal"
+  | "agentTx"
+  | "txReceipt";
 
 /** One choreographed step. */
 export interface DriftSpecStep {
@@ -394,7 +406,9 @@ export interface DriftSpecStep {
   /**
    * Primitive options. Validated against each primitive's minimal
    * shape. "camera" reads `keyframes`, "colorShift" reads `stops`,
-   * "streamReveal" reads `text` here.
+   * "streamReveal" reads `text`, "agentTx" reads `to`, `description`,
+   * `value`, `data`, `chainId` and `autoApprove`, "txReceipt" reads
+   * `hash`, `endpoint` and `timeout`.
    */
   options?: Record<string, unknown>;
   /** Step budget in milliseconds, for timed players. */
@@ -433,6 +447,8 @@ const PRIMITIVES: readonly DriftSpecPrimitive[] = [
   "transition",
   "beat",
   "streamReveal",
+  "agentTx",
+  "txReceipt",
 ];
 
 /** Primitives that render into an element and need a target key. */
@@ -507,6 +523,52 @@ function checkOptions(
     case "streamReveal":
       if (options.text !== undefined && typeof options.text !== "string") {
         throw new DriftSpecError(at("text"), "expected a string");
+      }
+      break;
+    case "agentTx":
+      if (typeof options.to !== "string" || !isAddress(options.to)) {
+        throw new DriftSpecError(at("to"), "expected a valid 0x address");
+      }
+      if (
+        typeof options.description !== "string" ||
+        options.description.length === 0
+      ) {
+        throw new DriftSpecError(
+          at("description"),
+          "expected a non-empty string",
+        );
+      }
+      if (options.value !== undefined && typeof options.value !== "string") {
+        throw new DriftSpecError(at("value"), "expected a string");
+      }
+      if (options.data !== undefined && typeof options.data !== "string") {
+        throw new DriftSpecError(at("data"), "expected a string");
+      }
+      if (options.chainId !== undefined) {
+        assertPositiveNumber(options.chainId, at("chainId"));
+      }
+      if (
+        options.autoApprove !== undefined &&
+        typeof options.autoApprove !== "boolean"
+      ) {
+        throw new DriftSpecError(at("autoApprove"), "expected a boolean");
+      }
+      break;
+    case "txReceipt":
+      if (
+        typeof options.hash !== "string" ||
+        !/^0x[0-9a-fA-F]{64}$/.test(options.hash)
+      ) {
+        throw new DriftSpecError(at("hash"), "expected a 0x transaction hash");
+      }
+      if (
+        options.endpoint !== undefined &&
+        typeof options.endpoint !== "string"
+      ) {
+        throw new DriftSpecError(at("endpoint"), "expected a string");
+      }
+      if (options.timeout !== undefined) {
+        assertPositiveNumber(options.timeout, at("timeout"));
       }
       break;
   }
@@ -634,10 +696,25 @@ function whenDone(isDone: () => boolean): StepHandle {
   };
 }
 
+/** Host hooks for spec steps that need the outside world. */
+export interface SpecPlayerHooks {
+  /**
+   * Called when an "agentTx" step proposes its transaction. Show your
+   * approval UI here and call `tx.approve()` / `tx.reject()` (then
+   * `tx.execute()`) on the controls. The step waits for a terminal
+   * state ("confirmed", "rejected", "failed"); `stop()` skips it.
+   */
+  onAgentTxStep?: (
+    proposal: AgentTxProposal,
+    tx: AgentTxControls,
+  ) => void;
+}
+
 type StepPlayer = (
   target: MaybeElement | undefined,
   options: Record<string, unknown>,
   budget: number | undefined,
+  hooks: SpecPlayerHooks | undefined,
 ) => StepHandle;
 
 const stepPlayers: Record<DriftSpecPrimitive, StepPlayer> = {
@@ -713,12 +790,74 @@ const stepPlayers: Record<DriftSpecPrimitive, StepPlayer> = {
     };
     return { promise: timer.finished.then(() => c.stop()), stop: stopAll };
   },
+  agentTx: (_target, options, _budget, hooks) => {
+    const tx = createAgentTx();
+    const proposal: AgentTxProposal = {
+      to: options.to as string,
+      description: options.description as string,
+    };
+    if (typeof options.value === "string") proposal.value = options.value;
+    if (typeof options.data === "string") proposal.data = options.data;
+    if (typeof options.chainId === "number") {
+      proposal.chainId = options.chainId;
+    }
+    tx.propose(proposal);
+    hooks?.onAgentTxStep?.(proposal, tx);
+    if (options.autoApprove === true) tx.approve();
+    // The host approves through the hook; the step ends at a terminal
+    // state. Without a host the step simply waits until stop() skips it.
+    return whenDone(() => {
+      const s = tx.state();
+      return s === "confirmed" || s === "rejected" || s === "failed";
+    });
+  },
+  txReceipt: (_target, options) => {
+    const watcher = createTxReceipt(options.hash as string, {
+      endpoint:
+        typeof options.endpoint === "string" ? options.endpoint : undefined,
+      interval: 4000,
+    });
+    const timeout =
+      typeof options.timeout === "number" ? options.timeout : 120000;
+    let cancel: (() => void) | null = null;
+    let resolveFn!: () => void;
+    const started = Date.now();
+    const promise = new Promise<void>((resolve) => {
+      resolveFn = resolve;
+      if (watcher.mined()) {
+        resolve();
+        return;
+      }
+      cancel = schedule(() => {
+        if (watcher.mined() || Date.now() - started >= timeout) {
+          resolve();
+          return false;
+        }
+        return true;
+      });
+    });
+    const done = (): void => {
+      cancel?.();
+      cancel = null;
+      watcher.abort();
+    };
+    return {
+      promise: promise.then(done),
+      stop: () => {
+        done();
+        resolveFn();
+      },
+    };
+  },
 };
 
 /**
  * Render a validated DriftSpec: each scene's primitive plays in
  * order against the element refs the host supplies. `duration` on a
- * step caps that step's budget.
+ * step caps that step's budget. Web3 steps ("agentTx", "txReceipt")
+ * choreograph on-chain actions: "agentTx" proposes a transaction and
+ * waits for the host (via `hooks.onAgentTxStep`) to approve and
+ * execute it; "txReceipt" waits for a transaction hash to mine.
  *
  * SSR-safe: `play()` is a no-op on the server. Under reduced motion
  * `play()` jumps straight to the last scene (the clean final frame),
@@ -736,6 +875,7 @@ const stepPlayers: Record<DriftSpecPrimitive, StepPlayer> = {
 export function createSpecPlayer(
   spec: DriftSpec,
   refs: Record<string, MaybeElement>,
+  hooks?: SpecPlayerHooks,
 ): SpecPlayerControls {
   const [status, setStatus] = createSignal<SpecPlayerStatus>("idle");
   const [scene, setScene] = createSignal(-1);
@@ -750,6 +890,7 @@ export function createSpecPlayer(
       target,
       step.options ?? {},
       step.duration,
+      hooks,
     );
     currentStop = handle.stop;
     if (step.duration === undefined) {

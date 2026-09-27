@@ -223,6 +223,7 @@ export type {
   DriftSpecStep,
   DriftSpec,
   SpecPlayerStatus,
+  SpecPlayerHooks,
   SpecPlayerControls,
 } from "./ai.js";
 export {
@@ -230,6 +231,7 @@ export {
   createTicker,
   createMintReveal,
   createConnectButton,
+  createAgentTx,
 } from "./web3.js";
 export type {
   TxState,
@@ -244,6 +246,10 @@ export type {
   ConnectButtonOptions,
   ConnectButtonStatus,
   ConnectButtonControls,
+  AgentTxState,
+  AgentTxProposal,
+  AgentTxOptions,
+  AgentTxControls,
 } from "./web3.js";
 export {
   createPoll,
