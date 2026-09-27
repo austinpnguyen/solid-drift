@@ -424,3 +424,7 @@ export { createSkeleton } from "./skeleton.js";
 export type { SkeletonOptions, SkeletonControls } from "./skeleton.js";
 export { createScrollSpy } from "./scrollspy.js";
 export type { ScrollSpyOptions, ScrollSpyControls } from "./scrollspy.js";
+export { createCopy } from "./copy.js";
+export type { CopyOptions, CopyControls } from "./copy.js";
+export { createCountdown } from "./countdown.js";
+export type { CountdownOptions, CountdownControls } from "./countdown.js";

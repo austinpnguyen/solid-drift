@@ -168,6 +168,8 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createOptimistic(initial, apply)` - optimistic updates with rollback: `{ value, setBase, pending, pendingCount, error, commit, reset }`; `commit(update, task)` applies instantly, promotes to base on success, rolls back and rethrows on failure; write `apply` idempotently.
 - `createSkeleton(options?)` - loading placeholder with flicker protection: `{ loading, show, phase, setLoading }`; `show()` after `delay`, held for `minVisible`; `phase()` shimmer sweep on the shared clock, frozen under reduced motion.
 - `createScrollSpy(options)` - nav scroll spy: `{ active, scrollTo, refresh }`; deepest section at/above the offset line; id list or accessor; custom container; rAF-throttled; smooth scrollTo (auto under reduced motion); onChange on change only.
+- `createCopy(options?)` - copy to clipboard: `{ copied, error, copy, reset }`; async Clipboard API with execCommand fallback; `copied()` true for `resetDelay` ms for transient feedback.
+- `createCountdown(target, options?)` - countdown to a date/timestamp/accessor: `{ remaining, days, hours, minutes, seconds, done, running, start, stop, reset }`; wall-clock based; shared-clock recompute throttled to `interval`; stops at zero; onDone fires once.
 
 **Utilities**
 

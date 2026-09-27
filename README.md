@@ -1643,6 +1643,25 @@ const spy = createScrollSpy({ targets: ["intro", "api", "faq"], offset: 80 });
 - `createSkeleton(options?)` is a loading-placeholder controller with flicker protection: `{ loading, show, phase, setLoading }`. `show()` flips true only after `delay` ms (default 200), so fast loads never flash a skeleton, and stays true for at least `minVisible` ms once shown. `phase()` sweeps 0..1 on the shared clock while shown for a JS-driven shimmer (bind it to a gradient stop); it freezes under reduced motion. On the server `show()` never flips.
 - `createScrollSpy(options)` tracks the deepest section at or above the offset line: `{ active, scrollTo, refresh }`. `targets` is an id list or accessor; `container` defaults to the window (pass an element for a scrollable panel); scroll handling is rAF-throttled on the shared clock; `scrollTo(id)` smooth-scrolls (auto under reduced motion); `onChange` fires only when the active id changes. SSR-safe.
 
+### Copy and countdown
+
+```tsx
+import { createCopy, createCountdown } from "solid-drift";
+
+const clipboard = createCopy();
+const sale = createCountdown(new Date("2026-12-01T00:00:00"), {
+  onDone: () => toast("The sale has ended"),
+});
+
+<button onClick={() => clipboard.copy(link())}>
+  {clipboard.copied() ? "Copied!" : "Copy link"}
+</button>
+<p>{sale.days()}d {sale.hours()}h {sale.minutes()}m {sale.seconds()}s</p>
+```
+
+- `createCopy(options?)` copies text to the clipboard: `{ copied, error, copy, reset }`. Uses the async Clipboard API with an `execCommand` fallback (`noFallback: true` disables it). `copied()` flips true for `resetDelay` ms (default 2000) for transient "Copied!" feedback. SSR-safe.
+- `createCountdown(target, options?)` counts down to a date, timestamp, or accessor: `{ remaining, days, hours, minutes, seconds, done, running, start, stop, reset }`. Wall-clock based (the moment is fixed even if the tab hides); recomputes on the shared clock throttled to `interval` ms (default 1000); stops itself at zero and fires `onDone` once. SSR-safe.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
