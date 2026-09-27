@@ -163,6 +163,15 @@ export type {
   BeatCutOptions,
 } from "./motion.js";
 export {
+  createDrag,
+  type DragStatus,
+  type DragAxis,
+  type DragConstraints,
+  type DragEndInfo,
+  type DragOptions,
+  type DragControls,
+} from "./gesture.js";
+export {
   createStreamReveal,
   createAgentState,
   parseDriftSpec,

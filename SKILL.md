@@ -55,6 +55,10 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createFling(ref, options?)` - fling with momentum.
 - `animateFlip(ref, mutate, options?)` - FLIP layout animation.
 
+**Gesture**
+
+- `createDrag(ref, options?)` - pointer drag with spring settle, constraints, elastic overshoot, momentum. Returns `{ x, y, status }`.
+
 **Cartoon**
 
 - `createSquashStretch(ref, options)` - squash and stretch deform.

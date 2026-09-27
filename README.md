@@ -345,6 +345,43 @@ const { rotateX, rotateY } = createTilt(() => card, { maxAngle: 12 })
 
 Returns `{ rotateX, rotateY }`: spring-smoothed tilt in degrees. SSR-safe and reduced-motion safe: both return constant `0` accessors.
 
+### `createDrag(ref, options?)`
+
+Pointer drag with spring physics, constraints, and momentum. The gesture workhorse: draggable cards, sliders, bottom-sheet handles, sortable rows. While the pointer is down the element tracks it 1:1; on release it glides with inertia and springs into its constraints, stretching elastically past the edges while dragged. Set `touch-action: none` on the draggable element so touch drags do not fight the page scroll. For the physics-toy flavor (exponential friction plus bouncing off walls), see `createFling` instead.
+
+```tsx
+import { createDrag } from "solid-drift"
+
+let card!: HTMLDivElement
+const { x, y, status } = createDrag(() => card, {
+  constraints: { left: 0, right: 300, top: 0, bottom: 0 },
+  elastic: 0.4,
+})
+<div
+  ref={card}
+  style={{
+    transform: `translate(${x()}px, ${y()}px)`,
+    "touch-action": "none",
+    cursor: status() === "dragging" ? "grabbing" : "grab",
+  }}
+>
+  Drag me
+</div>
+```
+
+| Option        | Default                          | Description                                                        |
+| ------------- | -------------------------------- | ------------------------------------------------------------------ |
+| `axis`        | `"both"`                         | `"x"`, `"y"`, or `"both"`                                          |
+| `constraints` | none                             | Bounds in px relative to the drag origin; release settles inside    |
+| `elastic`     | `0.35`                           | Overshoot past constraints while dragging, 0 (hard stop) to 1      |
+| `momentum`    | `true`                           | Glide with inertia after release                                   |
+| `inertia`     | `0.2`                            | Seconds of release velocity projected into the settle target       |
+| `spring`      | `{ stiffness: 300, damping: 32 }` | Spring physics for the settle after release                       |
+| `onDragStart` | none                             | Called when the pointer grabs the element                           |
+| `onDragEnd`   | none                             | Called on release with `{ x, y, velocityX, velocityY }` (px/s)      |
+
+Returns `{ x, y, status }`: the drag offset in pixels and `status` (`"idle"`, `"dragging"`, `"settling"`). SSR-safe: everything rests at 0. Under reduced motion the drag still tracks the pointer (direct manipulation is not animation) but release snaps instantly to the constrained target with no glide.
+
 ### `createTrail(source, options?)`
 
 A signal that replays another signal's past: it returns the value the source had `delay` milliseconds ago, interpolated between samples. Chain trails off one source for follower effects (a cursor with a comet tail, cascading highlights), or trail a scroll progress for a delayed echo of the page. The trail catches up and parks exactly on the latest value when the source rests. The follow loop runs only while the trail is behind.
