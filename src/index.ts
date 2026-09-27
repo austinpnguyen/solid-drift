@@ -125,3 +125,35 @@ export {
   type Easing,
   type EasingName,
 } from "./easing.js";
+
+export {
+  createKineticType,
+  createScenePlayer,
+  createCamera,
+  createColorShift,
+  createTransition,
+  createBeat,
+} from "./motion.js";
+export type {
+  KineticTypeFrom,
+  KineticTypeOptions,
+  KineticTypeStatus,
+  KineticTypeControls,
+  MotionScene,
+  ScenePlayerStatus,
+  ScenePlayerControls,
+  CameraKeyframe,
+  CameraOptions,
+  ColorShiftOptions,
+  ColorShiftStatus,
+  ColorShiftControls,
+  TransitionType,
+  TransitionDirection,
+  TransitionOptions,
+  TransitionLayerStyle,
+  TransitionStatus,
+  TransitionControls,
+  BeatOptions,
+  BeatStatus,
+  BeatControls,
+} from "./motion.js";

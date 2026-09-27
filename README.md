@@ -704,6 +704,107 @@ createTextWave(() => headline, {
 
 Options: `amplitude`, `wavelength` (characters per wave), `period`, `tilt` (default true), `progress`. Returns `{ stop }`. Under reduced motion the text sits still.
 
+### `createKineticType(ref, options?)`
+
+Kinetic typography: each character (or word) flies in with position, blur, scale, and opacity, staggered for that showreel title feel. One master clock drives every unit, so a 40-character headline costs a single rAF task.
+
+```tsx
+let title!: HTMLHeadingElement;
+const kinetic = createKineticType(() => title, {
+  unit: "chars", // or "words"
+  duration: 550, // ms per unit
+  stagger: 45, // ms between unit starts
+  from: { y: 40, blur: 12, scale: 0.8, opacity: 0, rotate: 0 },
+  easing: "easeOutExpo",
+});
+onMount(() => kinetic.play());
+<h1 ref={title}>Showreel</h1>
+```
+
+Returns `{ play, stop, replay, status }`. `play()` resolves when the last unit arrives. Under reduced motion every unit jumps to its final state, so the text is fully readable.
+
+### `createScenePlayer(scenes)`
+
+Scene orchestrator for showreels and launch films: an ordered list of scenes, each with a `duration` and `onEnter`/`onExit` hooks. `scene()` tells your view which scene is live; the hooks trigger each scene's choreography (a `createKineticType`, a camera move, a color shift).
+
+```ts
+const player = createScenePlayer([
+  { duration: 1200, onEnter: () => hookTitle.play() },
+  { duration: 2000, onEnter: () => cameraZoom.play() },
+  { duration: 1500, onEnter: () => showLogo() }, // final frame
+]);
+await player.play(); // resolves after the last scene
+```
+
+Returns `{ scene, status, play, pause, stop, replay, next, prev, goTo }`. `pause()` freezes the clock and `play()` resumes where it left off. Under reduced motion `play()` jumps straight to the last scene (the clean final frame).
+
+### `createCamera(keyframes, options)`
+
+Camera moves for a motion-design stage: pan (`x`/`y` in px) and zoom (`scale`) through keyframes, driven by a 0-to-1 progress signal. Returns a compositor-friendly transform string (`translate3d(...) scale(...)`).
+
+```tsx
+const [p, setP] = createSignal(0);
+const cam = createCamera(
+  [
+    { at: 0, x: 0, y: 0, scale: 1 },
+    { at: 1, x: -120, y: 40, scale: 1.6, easing: "easeInOutCubic" },
+  ],
+  { progress: p },
+);
+<div style={{ transform: cam() }}>...</div>
+```
+
+Keyframes sort themselves by `at`; progress outside the range clamps to the end poses. Pure computation, no listeners. Under reduced motion it holds the final keyframe's pose.
+
+### `createColorShift(stops, options?)`
+
+Time-based color interpolation across stops: the sibling of `createScrollColor` for motion graphics, where color shifts run on a clock instead of scroll. Colors interpolate in linear light and alpha channels interpolate too.
+
+```ts
+const shift = createColorShift(
+  [
+    { at: 0, color: "#0a1220" },
+    { at: 0.5, color: "#2f8fdd" },
+    { at: 1, color: "#d9a441", easing: "easeInOutQuad" },
+  ],
+  { duration: 2000, format: "hex" },
+);
+shift.color(); // "#0a1220" ... "#d9a441" as it plays
+await shift.play();
+```
+
+Returns `{ color, play, stop, replay, status }`. Under reduced motion `play()` jumps to the final stop's color.
+
+### `createTransition(options?)`
+
+Match-cut style scene handoffs: `outgoing()` and `incoming()` return style objects for the two scene layers, driven by one 0-to-1 progress.
+
+```tsx
+const cut = createTransition({ type: "wipe", direction: "left", duration: 600 });
+const go = async () => {
+  showSceneB();
+  await cut.play();
+};
+<div style={cut.outgoing()}>{sceneA}</div>
+<div style={cut.incoming()}>{sceneB}</div>
+```
+
+Types: `"cut"` (instant swap), `"fade"` (crossfade), `"slide"` (layers move in opposite directions), `"wipe"` (incoming scene reveals over the outgoing one with a clip-path). Directions for slide/wipe: `"left"`, `"right"`, `"up"`, `"down"`. Everything animates on opacity, transform, or clip-path, so handoffs stay on the compositor. Under reduced motion every type degrades to a cut.
+
+### `createBeat(options?)`
+
+A beat clock for cutting on the music: `onBeat` fires your scene cuts, kinetic type replays, or color shifts in time. `phase()` gives the fractional position inside the current beat for syncing continuous motion to the rhythm.
+
+```ts
+const beat = createBeat({ bpm: 128, beatsPerBar: 4 });
+const off = beat.onBeat((b) => {
+  if (b % 8 === 0) player.next(); // cut scenes every 2 bars
+});
+beat.start();
+```
+
+Returns `{ beat, bar, phase, onBeat, start, stop, status }`. `onBeat` returns an unsubscribe function. Beats are timing, not motion, so the clock keeps ticking under reduced motion (your callbacks decide what that means visually).
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
