@@ -1534,6 +1534,43 @@ const chat = createChatModel({
 - Honest limitation: api.anthropic.com does not send CORS headers for browser origins, so from a browser Anthropic must go through your own server route or proxy; point `baseUrl` at it. For production with any provider, prefer a server route that holds the key and set `baseUrl` to it so keys never ship to the browser.
 - `createSSE(url, options?)` is a fetch-based event-stream client (`{ status, events, lastEvent, error, connect, disconnect }`): unlike `EventSource` it supports any method and custom headers, parses the full SSE framing (named events, multi-line data, comments, chunk splits), and leaves reconnection manual via `connect()`. SSR-safe: nothing connects until `connect()` (or `autoConnect`) runs on the client.
 
+### Voice
+
+A full voice loop: mic metering, speech-to-text, a voice state machine, canvas waveforms, text-to-speech (browser or cloud), thinking indicators, and a voice-enabled prompt input.
+
+```tsx
+import { createVoiceState, createSpeech, createTTS, createPrompt, createChatModel } from "solid-drift"
+
+const voice = createVoiceState()
+const chat = createChatModel({ provider: "openai", apiKey: getKey, model: "gpt-4o-mini" })
+const tts = createTTS()
+const prompt = createPrompt({
+  onSubmit: async (text) => {
+    voice.toThinking()
+    await chat.send(text)
+    voice.toSpeaking()
+    const msgs = chat.messages()
+    tts.speak(msgs[msgs.length - 1]?.content ?? "")
+    voice.toIdle()
+  },
+})
+
+<input
+  value={prompt.value()}
+  onInput={(e) => prompt.setValue(e.currentTarget.value)}
+  onKeyDown={(e) => e.key === "Enter" && prompt.submit()}
+/>
+<button onClick={() => { voice.toListening(); prompt.toggleMic(); }}>Mic</button>
+```
+
+- `createVoiceState()` is the turn state machine: `state()` is `idle`, `listening`, `thinking`, or `speaking`, with `toIdle`/`toListening`/`toThinking`/`toSpeaking` transitions.
+- `createMicLevel(options?)` returns `{ level, active, supported, analyser, error, start, stop }`: a 0..1 smoothed RMS meter from `getUserMedia` plus an `AnalyserNode` (call `start()` from a user gesture). The exposed `analyser` wires straight into `createWaveform`.
+- `createSpeech(options?)` wraps the Web Speech API (`SpeechRecognition` with `webkitSpeechRecognition` fallback): `{ supported, listening, transcript, interim, error, start, stop, reset }`. Final results accumulate into `transcript()`; `continuous` sessions auto-restart if the browser ends them mid-turn.
+- `createWaveform(canvas, options)` draws the analyser's time-domain wave (`mode: "line"`) or spectrum (`mode: "bars"`) on a canvas, DPR-aware, on the shared clock; under reduced motion it redraws at most every 250ms.
+- `createTTS(options?)` speaks via `speechSynthesis` by default (`{ supported, speaking, voices, speak, cancel }`, async voice loading, `speak()` cancels the current utterance first) and upgrades to any cloud voice through `provider: { speak(text, { signal }) }`.
+- `createThinking(options?)` cycles `"Thinking"`, `"Thinking."`, ... through `phrases` at `interval` ms: `{ text, running, start, stop }`.
+- `createPrompt(options?)` is the voice-enabled input: `{ value, setValue, listening, interim, supported, toggleMic, submit, clear }`. Mic finals are appended to the value as they arrive; `submit()` fires `onSubmit` and clears by default. Everything is SSR-safe: unsupported primitives report `supported: false` and their actions no-op on the server.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

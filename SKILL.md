@@ -147,6 +147,13 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createBottomSheet(ref, options?)` - draggable bottom sheet on `createDrag`: `{ open, snapIndex, y, status, openSheet, close, snapTo }`; `snapPoints` are height fractions (clamped/sorted, default `[0.5, 1]`); release target is nearest snap to `y + velocity * 0.18`, dismiss past midpoint or on fast downward flick; rubber-banded 1:1 tracking while dragging; `measureRef` when the drag ref is a handle.
 - `createChatModel(options)` - streaming chat over `openai` / `anthropic` / `meta` (Llama API `/compat/v1`) or a custom `{ kind: "custom", stream, parseDelta }`: `{ messages, streamingText, status, error, send, stop, reset }`; deltas append to a live assistant message; Anthropic needs `maxTokens` (default 1024) and, from browsers, a proxy/`baseUrl` since api.anthropic.com sends no CORS headers.
 - `createSSE(url, options?)` - fetch-based SSE client (any method, custom headers): `{ status, events, lastEvent, error, connect, disconnect }`; full SSE framing; manual reconnect; SSR-safe.
+- `createVoiceState()` - voice turn state machine: `idle` / `listening` / `thinking` / `speaking` with `toIdle` / `toListening` / `toThinking` / `toSpeaking`.
+- `createMicLevel(options?)` - mic volume meter (`getUserMedia` + `AnalyserNode`, smoothed 0..1 `level`); `{ active, supported, analyser, error, start, stop }`; analyser wires into `createWaveform`.
+- `createSpeech(options?)` - Web Speech API recognition (webkit fallback): `{ supported, listening, transcript, interim, error, start, stop, reset }`; continuous sessions auto-restart.
+- `createWaveform(canvas, options)` - DPR-aware canvas renderer for an analyser (`line` wave or `bars` spectrum) on the shared clock; throttled under reduced motion.
+- `createTTS(options?)` - `speechSynthesis` by default, cloud upgrade via `provider: { speak(text, { signal }) }`; `{ supported, speaking, voices, speak, cancel }`.
+- `createThinking(options?)` - animated thinking indicator cycling phrases and dots: `{ text, running, start, stop }`.
+- `createPrompt(options?)` - voice-enabled prompt input: `{ value, setValue, listening, interim, supported, toggleMic, submit, clear }`; mic finals append to the value; pairs with `createChatModel`.
 
 **Utilities**
 

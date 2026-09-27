@@ -361,3 +361,29 @@ export type {
   ChatModelOptions,
   ChatModelControls,
 } from "./stream.js";
+export {
+  createVoiceState,
+  createMicLevel,
+  createSpeech,
+  createWaveform,
+  createTTS,
+  createThinking,
+  createPrompt,
+} from "./voice.js";
+export type {
+  VoiceStatus,
+  VoiceStateControls,
+  MicLevelOptions,
+  MicLevelControls,
+  SpeechOptions,
+  SpeechControls,
+  WaveformOptions,
+  WaveformControls,
+  TTSProvider,
+  TTSOptions,
+  TTSControls,
+  ThinkingOptions,
+  ThinkingControls,
+  PromptOptions,
+  PromptControls,
+} from "./voice.js";
