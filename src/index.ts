@@ -63,6 +63,9 @@ export {
   createTilt,
   type TiltOptions,
   type TiltResult,
+  createTiltCard,
+  type TiltCardOptions,
+  type TiltCardResult,
 } from "./pointer.js";
 export { createTrail, type TrailOptions } from "./trail.js";
 export {

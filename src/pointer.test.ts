@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createRoot, type Accessor } from "solid-js";
-import { createMagnetic, createTilt } from "./pointer.js";
+import { createMagnetic, createTilt, createTiltCard } from "./pointer.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -293,6 +293,104 @@ describe("createTilt", () => {
     });
     expect(rx()).toBe(0);
     expect(ry()).toBe(0);
+    dispose();
+  });
+});
+
+describe("createTiltCard", () => {
+  const stiff = { stiffness: 500, damping: 40 };
+
+  it("tilts, tracks glare, sweeps the holo angle, and pops scale on hover", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    let card!: ReturnType<typeof createTiltCard>;
+    const dispose = createRoot((d) => {
+      card = createTiltCard(() => asElement(target), {
+        maxAngle: 12,
+        scale: 1.05,
+        spring: stiff,
+      });
+      return d;
+    });
+    expect(card.hovering()).toBe(false);
+    expect(card.shine()).toBe(0);
+    // Top-right corner of the 200x100 card at (100,100).
+    b.fire("pointermove", { clientX: 300, clientY: 100 });
+    b.frames(200);
+    expect(card.hovering()).toBe(true);
+    expect(card.rotateY()).toBeCloseTo(12, 0);
+    expect(card.rotateX()).toBeCloseTo(12, 0);
+    expect(card.glareX()).toBeCloseTo(1, 3);
+    expect(card.glareY()).toBeCloseTo(0, 3);
+    // (0.5 + -0.5) * 180 = 0 at the top-right corner; check the sweep
+    // with the pointer at bottom-right instead.
+    b.fire("pointermove", { clientX: 300, clientY: 200 });
+    b.frames(200);
+    expect(card.glareX()).toBeCloseTo(1, 3);
+    expect(card.glareY()).toBeCloseTo(1, 3);
+    expect(card.holoAngle()).toBeCloseTo(180, 0);
+    expect(card.rotateX()).toBeCloseTo(-12, 0);
+    expect(card.shine()).toBeCloseTo(1, 2);
+    expect(card.scale()).toBeCloseTo(1.05, 2);
+    expect(card.transform()).toContain("perspective(900px)");
+    expect(card.transform()).toContain("rotateX(");
+    dispose();
+  });
+
+  it("fades shine and settles flat on pointerleave", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    let card!: ReturnType<typeof createTiltCard>;
+    const dispose = createRoot((d) => {
+      card = createTiltCard(() => asElement(target), { spring: stiff });
+      return d;
+    });
+    b.fire("pointermove", { clientX: 300, clientY: 150 });
+    b.frames(120);
+    expect(card.shine()).toBeGreaterThan(0.5);
+    target.fireOnEl("pointerleave");
+    b.frames(200);
+    expect(card.hovering()).toBe(false);
+    expect(card.shine()).toBeCloseTo(0, 2);
+    expect(card.scale()).toBeCloseTo(1, 2);
+    expect(card.rotateY()).toBeCloseTo(0, 2);
+    dispose();
+  });
+
+  it("ignores pointer positions outside the card", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    let card!: ReturnType<typeof createTiltCard>;
+    const dispose = createRoot((d) => {
+      card = createTiltCard(() => asElement(target), { spring: stiff });
+      return d;
+    });
+    b.fire("pointermove", { clientX: 900, clientY: 900 });
+    b.frames(60);
+    expect(card.hovering()).toBe(false);
+    expect(card.shine()).toBeCloseTo(0, 2);
+    dispose();
+  });
+
+  it("returns static constants on the server and under reduced motion", () => {
+    const card = createTiltCard(() => null);
+    expect(card.rotateX()).toBe(0);
+    expect(card.rotateY()).toBe(0);
+    expect(card.shine()).toBe(0);
+    expect(card.scale()).toBe(1);
+    expect(card.hovering()).toBe(false);
+    expect(card.transform()).toContain("scale(1)");
+
+    stubBrowser({ reduced: true });
+    const target = makeEl();
+    let reduced!: ReturnType<typeof createTiltCard>;
+    const dispose = createRoot((d) => {
+      reduced = createTiltCard(() => asElement(target));
+      return d;
+    });
+    expect(reduced.rotateX()).toBe(0);
+    expect(reduced.shine()).toBe(0);
+    expect(reduced.scale()).toBe(1);
     dispose();
   });
 });

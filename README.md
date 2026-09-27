@@ -345,6 +345,36 @@ const { rotateX, rotateY } = createTilt(() => card, { maxAngle: 12 })
 
 Returns `{ rotateX, rotateY }`: spring-smoothed tilt in degrees. SSR-safe and reduced-motion safe: both return constant `0` accessors.
 
+### `createTiltCard(ref, options?)`
+
+Holographic trading-card tilt: 3D lean plus every signal a holo foil needs. Beyond `createTilt`'s rotation, this tracks `glareX`/`glareY` (pointer position 0..1, for a radial glare overlay), `holoAngle` (a rainbow angle that sweeps with the pointer, for a gradient foil overlay), `shine` (0..1 overlay intensity that fades in on hover and out on leave), `scale` (hover pop), `hovering`, and a ready-made `transform()` string (perspective, rotateX/rotateY, scale). SSR-safe and reduced-motion safe: static constants, no tilt, no shine. Touch drags tilt while touching, release settles back.
+
+```tsx
+import { createTiltCard } from "solid-drift"
+
+let card!: HTMLDivElement
+const c = createTiltCard(() => card, { maxAngle: 14 })
+<div style={{ transform: c.transform() }} ref={card}>
+  {art}
+  <div style={{
+    background: `radial-gradient(circle at ${c.glareX() * 100}% ${c.glareY() * 100}%, rgba(255,255,255,0.6), transparent 60%)`,
+    opacity: c.shine(),
+  }} />
+  <div style={{
+    background: `linear-gradient(${c.holoAngle()}deg, #ff0080, #ff8000, #ffff00, #00ff80, #0080ff, #8000ff)`,
+    "mix-blend-mode": "color-dodge",
+    opacity: c.shine() * 0.55,
+  }} />
+</div>
+```
+
+| Option        | Default | Description                          |
+| ------------- | ------- | ------------------------------------ |
+| `maxAngle`    | `12`    | Maximum tilt in degrees at the edge  |
+| `scale`       | `1.04`  | Scale while hovering                 |
+| `perspective` | `900`   | Perspective distance in px           |
+| `spring`      | default | Spring physics for tilt, shine, pop  |
+
 ### `createDrag(ref, options?)`
 
 Pointer drag with spring physics, constraints, and momentum. The gesture workhorse: draggable cards, sliders, bottom-sheet handles, sortable rows. While the pointer is down the element tracks it 1:1; on release it glides with inertia and springs into its constraints, stretching elastically past the edges while dragged. Set `touch-action: none` on the draggable element so touch drags do not fight the page scroll. For the physics-toy flavor (exponential friction plus bouncing off walls), see `createFling` instead.

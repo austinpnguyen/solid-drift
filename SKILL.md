@@ -49,6 +49,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createVelocity(source?, options?)` - signal velocity.
 - `createMagnetic(ref, options?)` - pointer attraction.
 - `createTilt(ref, options?)` - 3D pointer tilt.
+- `createTiltCard(ref, options?)` - holographic trading-card tilt: `{ rotateX, rotateY, glareX, glareY, holoAngle, shine, scale, hovering, transform }`. Bind glare/shine/holo overlays for the foil look.
 - `createTrail(source, options?)` - delayed signal replay.
 - `createGravity(options?)` - gravity simulation.
 - `createPendulum(ref, options?)` - pendulum swing.
