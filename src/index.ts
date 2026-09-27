@@ -26,6 +26,19 @@ export {
   type HorizontalScrollResult,
 } from "./horizontal.js";
 export { createScrub, type ScrubKeyframe, type ScrubOptions } from "./scrub.js";
+export {
+  createScrollColor,
+  type ScrollColorStop,
+  type ScrollColorOptions,
+  type ScrollColorFormat,
+  createScrollTracking,
+  type ScrollTrackingOptions,
+  createScrollLine,
+  type ScrollLineOptions,
+  type ScrollLineStyle,
+  type ScrollLineAxis,
+  type ScrollLineOrigin,
+} from "./scrollfx.js";
 export { createVelocity, type VelocityOptions } from "./velocity.js";
 export {
   createMagnetic,
