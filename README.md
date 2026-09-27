@@ -1895,6 +1895,45 @@ Every reactive primitive exposes `{ data, error, status, retry, abort }` (`statu
 
 All SSR-safe: nothing fires on the server until you call it.
 
+### Browser and DOM utilities
+
+```tsx
+import {
+  createGeolocation,
+  createElementSize,
+  createEventListener,
+  createHotkey,
+  createTimeAgo,
+  createPermission,
+  createScriptLoader,
+} from "solid-drift";
+
+const loc = createGeolocation({ watch: true });
+// loc.coords()?.latitude, loc.error(), loc.supported, loc.refresh()
+
+const size = createElementSize(() => panelRef);
+// size.width(), size.height() via ResizeObserver
+
+createHotkey("cmd+shift+p", () => commandPalette.open());
+createEventListener(() => canvasRef, "pointermove", onMove);
+
+const ago = createTimeAgo(() => post.createdAt); // "5 minutes ago"
+
+const camera = createPermission("camera");
+// camera.state(): "granted" | "denied" | "prompt" | undefined
+
+const analytics = createScriptLoader("https://example.com/analytics.js");
+analytics.load(); // analytics.loaded()
+```
+
+- `createGeolocation({ enableHighAccuracy?, timeout?, maximumAge?, immediate?, watch?, navigatorImpl? })`: `{ position, coords, error, supported, refresh }`. Reads once by default; `watch: true` keeps a live `watchPosition` subscription with automatic cleanup. `supported` is false on the server.
+- `createElementSize(() => el, { ResizeObserverImpl? })`: `{ width, height }` via ResizeObserver, 0x0 until the first measurement.
+- `createEventListener(target | (() => target), type, handler, options?)`: attaches with automatic cleanup; safe with an undefined target.
+- `createHotkey(keys, handler, { target?, preventDefault?, enabled? })`: combos like `"ctrl+k"`, `"cmd+shift+p"`, or `"?"` (modifiers: ctrl, cmd/meta, alt/opt, shift). Case-insensitive, multiple combos supported, `enabled` can be a signal.
+- `createTimeAgo(() => date, { updateIntervalMs?, locale? })`: reactive `"5 minutes ago"`, `"yesterday"`, `"in 3 hours"` via `Intl.RelativeTimeFormat`; `"just now"` under 5 seconds. Recomputes on an interval on the client only.
+- `createPermission(name, { immediate?, navigatorImpl? })`: `{ state, supported, query }` around the Permissions API.
+- `createScriptLoader(src, { attrs?, documentImpl? })`: `{ loaded, error, status, load }`. Injects the script once per URL (repeat loads resolve immediately) and tracks it reactively. No-op on the server.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

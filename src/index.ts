@@ -543,3 +543,25 @@ export type {
   PaginationControls,
   WebhookSignatureOptions,
 } from "./network.js";
+export {
+  createEventListener,
+  createElementSize,
+  createGeolocation,
+  createHotkey,
+  createTimeAgo,
+  createPermission,
+  createScriptLoader,
+} from "./browser.js";
+export type {
+  ElementSizeOptions,
+  ElementSize,
+  GeolocationOptions,
+  GeolocationControls,
+  HotkeyOptions,
+  TimeAgoOptions,
+  PermissionStateValue,
+  PermissionOptions,
+  PermissionControls,
+  ScriptLoaderOptions,
+  ScriptLoaderControls,
+} from "./browser.js";
