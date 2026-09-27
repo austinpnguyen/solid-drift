@@ -278,9 +278,9 @@ const AGENT_TX_PROGRESS: Record<AgentTxState, number> = {
 };
 
 /**
- * AI proposes, the user approves, the transaction executes.
+ * The agent proposes, the user approves, the transaction executes.
  *
- * The agent (an LLM) calls `propose()` with a plain-data proposal the
+ * The agent (a model-driven client) calls `propose()` with a plain-data proposal the
  * user can read; the user calls `approve()` or `reject()`; `execute()`
  * hands the approved proposal to the wallet adapter and the inner
  * `createTxLifecycle` tracks signing to confirmation. The library
@@ -293,7 +293,7 @@ const AGENT_TX_PROGRESS: Record<AgentTxState, number> = {
  *   }),
  *   source: () => receiptQuery(),
  * })
- * // The AI proposes:
+ * // The agent proposes:
  * agentTx.propose({
  *   to: "0x…",
  *   value: "1000000000000000000",
@@ -304,7 +304,7 @@ const AGENT_TX_PROGRESS: Record<AgentTxState, number> = {
  * await agentTx.execute() // "executing" to "confirmed"
  * ```
  *
- * Invalid transitions are no-ops, so LLM-driven UIs cannot skip the
+ * Invalid transitions are no-ops, so automated UIs cannot skip the
  * user's approval. SSR-safe. Under reduced motion `progress()` jumps
  * to its target.
  */

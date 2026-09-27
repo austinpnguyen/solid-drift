@@ -299,7 +299,7 @@ export interface ChatModelOptions {
   provider: ChatProviderKind | CustomChatProvider;
   /** API key, or a function returning it. Sent as Bearer (openai/meta) or x-api-key (anthropic). */
   apiKey?: string | (() => string | undefined);
-  /** Model name, e.g. "gpt-4o-mini", "claude-sonnet-4-20250514". */
+  /** Model name, e.g. "fast-model-1", "pro-model-2". */
   model: string;
   /** Override the API root. Defaults per provider kind. */
   baseUrl?: string;
@@ -488,7 +488,7 @@ function buildBuiltinRequest(
  * const chat = createChatModel({
  *   provider: "openai",
  *   apiKey: () => localStorage.getItem("openai_key") ?? "",
- *   model: "gpt-4o-mini",
+ *   model: "fast-model-1",
  *   system: "You are a concise assistant.",
  *   onFinish: (msg) => console.log("done:", msg.content.length),
  * });

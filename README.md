@@ -1213,16 +1213,16 @@ Returns `{ copyTick, chainPulse, status }`. `status()` is `"idle"`, `"ticking"` 
 
 ### `createAgentTx(options?)`
 
-AI proposes, the user approves, the transaction executes. The agent (an LLM) calls `propose()` with a plain-data proposal the user can read (`to`, `value`, `data`, `description`, `chainId`); the user calls `approve()` or `reject()`; `execute()` hands the approved proposal to your wallet adapter and the inner `createTxLifecycle` tracks signing to confirmation. The library never signs: `execute` is your wagmi/viem send function.
+The agent proposes, the user approves, the transaction executes. The agent (a model-driven client) calls `propose()` with a plain-data proposal the user can read (`to`, `value`, `data`, `description`, `chainId`); the user calls `approve()` or `reject()`; `execute()` hands the approved proposal to your wallet adapter and the inner `createTxLifecycle` tracks signing to confirmation. The library never signs: `execute` is your wagmi/viem send function.
 
-States flow `idle` to `proposed` to `approved` to `executing` to `confirmed`, with `rejected` and `failed` as the off-ramps. Invalid transitions are no-ops, so an LLM-driven UI cannot skip the user's approval. `progress()` is spring-smoothed across the whole flow for progress UI, and `tx` exposes the inner lifecycle for manual driving or extra rendering.
+States flow `idle` to `proposed` to `approved` to `executing` to `confirmed`, with `rejected` and `failed` as the off-ramps. Invalid transitions are no-ops, so an automated UI cannot skip the user's approval. `progress()` is spring-smoothed across the whole flow for progress UI, and `tx` exposes the inner lifecycle for manual driving or extra rendering.
 
 ```tsx
 const agentTx = createAgentTx({
   execute: async (p) => sendTransaction({ to: p.to, value: p.value }),
   source: () => receiptQuery(), // wagmi/viem-style status
 });
-// The AI proposes:
+// The agent proposes:
 agentTx.propose({
   to: "0x…",
   value: "1000000000000000000",
@@ -1233,7 +1233,7 @@ agentTx.approve();
 await agentTx.execute(); // "executing" to "confirmed"
 ```
 
-DriftSpec gains two LLM-generatable web3 steps for full dApp choreography: `"agentTx"` (options `to`, `description`, `value`, `data`, `chainId`, `autoApprove`) proposes a transaction mid-spec and waits for the host, via the new `createSpecPlayer(spec, refs, hooks)` third parameter, to approve and execute it through `hooks.onAgentTxStep`; `"txReceipt"` (options `hash`, `endpoint`, `timeout`) waits for a transaction hash to mine. A typical generated ceremony reads: `streamReveal` (explain) to `agentTx` (approve and send) to `txReceipt` (confirm).
+DriftSpec gains two model-generatable web3 steps for full dApp choreography: `"agentTx"` (options `to`, `description`, `value`, `data`, `chainId`, `autoApprove`) proposes a transaction mid-spec and waits for the host, via the new `createSpecPlayer(spec, refs, hooks)` third parameter, to approve and execute it through `hooks.onAgentTxStep`; `"txReceipt"` (options `hash`, `endpoint`, `timeout`) waits for a transaction hash to mine. A typical generated ceremony reads: `streamReveal` (explain) to `agentTx` (approve and send) to `txReceipt` (confirm).
 
 ```json
 {
@@ -1556,7 +1556,7 @@ import { createChatModel } from "solid-drift"
 const chat = createChatModel({
   provider: "openai",
   apiKey: () => localStorage.getItem("openai_key") ?? "",
-  model: "gpt-4o-mini",
+  model: "test-model-fast",
   system: "You are a concise assistant.",
 })
 
@@ -1582,7 +1582,7 @@ A full voice loop: mic metering, speech-to-text, a voice state machine, canvas w
 import { createVoiceState, createSpeech, createTTS, createPrompt, createChatModel } from "solid-drift"
 
 const voice = createVoiceState()
-const chat = createChatModel({ provider: "openai", apiKey: getKey, model: "gpt-4o-mini" })
+const chat = createChatModel({ provider: "openai", apiKey: getKey, model: "test-model-fast" })
 const tts = createTTS()
 const prompt = createPrompt({
   onSubmit: async (text) => {

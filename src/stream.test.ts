@@ -231,7 +231,7 @@ describe("createChatModel", () => {
       chat = createChatModel({
         provider: "openai",
         apiKey: "sk-test",
-        model: "gpt-4o-mini",
+        model: "test-model-fast",
         fetchFn: fetchMock,
         onFinish,
       });
@@ -241,7 +241,7 @@ describe("createChatModel", () => {
     await chat.send("Hi");
     expect(seenUrl).toBe("https://api.openai.com/v1/chat/completions");
     expect(seenHeaders["Authorization"]).toBe("Bearer sk-test");
-    expect(seenBody["model"]).toBe("gpt-4o-mini");
+    expect(seenBody["model"]).toBe("test-model-fast");
     expect(seenBody["stream"]).toBe(true);
     expect(chat.status()).toBe("idle");
     const msgs = chat.messages();
@@ -274,7 +274,7 @@ describe("createChatModel", () => {
       chat = createChatModel({
         provider: "anthropic",
         apiKey: () => "anth-key",
-        model: "claude-sonnet-4-20250514",
+        model: "test-model-pro",
         system: "Be brief.",
         fetchFn: fetchMock,
       });
@@ -352,7 +352,7 @@ describe("createChatModel", () => {
       chat = createChatModel({
         provider: "openai",
         apiKey: "sk-test",
-        model: "gpt-4o-mini",
+        model: "test-model-fast",
         fetchFn: fetchMock,
         onError,
       });
