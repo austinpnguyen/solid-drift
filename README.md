@@ -1959,6 +1959,40 @@ auth.signOut();
 
 `createAuthSession({ initialSession?, refresh?, refreshMarginMs?, decodeUser? })`: `{ session, token, user, status, isAuthenticated, authHeader, signIn, getToken, signOut }`. The session lives in a memory-only signal: tokens are never written to storage by this primitive. `status()` is `"unknown"`, `"authenticated"`, `"unauthenticated"`, or `"refreshing"`. `getToken()` returns the current token, or refreshes it through the `refresh` callback when it is expired (or inside `refreshMarginMs`, default 60s); a failed refresh signs out. `authHeader()` returns `"Bearer <token>"` or undefined. `decodeJwtPayload(token)` decodes a JWT payload without verifying the signature (verification belongs on the server). No OAuth flow is implemented; the app signs in through its own backend and hands the session to `signIn()`.
 
+### Analytics
+
+```tsx
+import { createTracker, useConsent, createFunnel } from "solid-drift";
+
+const consent = useConsent({ storageKey: "my-app:consent" });
+// consent.grant(), consent.deny(), consent.reset()
+
+const tracker = createTracker({
+  sink: (events) => fetch("/api/events", {
+    method: "POST",
+    body: JSON.stringify(events),
+  }),
+  consent: consent.granted, // holds events until granted
+  batchMs: 5000,
+});
+tracker.track("signup", { plan: "pro" });
+tracker.identify(userId);
+tracker.page("pricing");
+
+const funnel = createFunnel({
+  name: "checkout",
+  steps: ["cart", "details", "payment", "done"],
+  tracker,
+  windowMs: 30 * 60 * 1000,
+});
+funnel.enter();
+funnel.advance(); // cart -> details
+```
+
+- `createTracker({ sink?, batchMs?, batchSize?, consent?, blockProps?, sampleRate?, now?, maxQueue? })`: `{ track, identify, page, queue, flush, reset, enabled, setEnabled }`. Events batch by time (`batchMs`, default 5000) or size (`batchSize`, default 50) and go to `sink`; the default sink keeps them in the in-memory `queue()` for inspection. The library never sends data anywhere itself. While `consent` is false, events are held (not dropped) and flush when consent is granted. `blockProps` strips sensitive keys, `sampleRate` downsamples, `identify` attaches a user id, `page` tracks a `$page` event.
+- `useConsent({ storageKey?, storage? })`: `{ consent, granted, grant, deny, reset }`. Consent state (`"unknown"`, `"granted"`, `"denied"`) persisted to localStorage when `storageKey` is given. `granted()` plugs straight into the tracker's `consent` option.
+- `createFunnel({ name, steps, tracker?, windowMs?, now? })`: `{ step, current, completed, history, enter, advance, abandon, reset }`. Emits `funnel_enter`, `funnel_step`, `funnel_complete` (with `durationMs`), and `funnel_abandon` (with `reason` and last step) through the tracker. `advance()` goes to the next step, `advance("payment")` jumps forward; advancing after `windowMs` auto-abandons with reason `"expired"`.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

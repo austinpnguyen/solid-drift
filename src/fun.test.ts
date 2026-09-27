@@ -269,7 +269,9 @@ describe("createRedPacket", () => {
     packet.open();
     b.frames(10); // bursting
     const y1 = packet.coins()[0].y;
-    b.frames(30); // 668ms of flight
+    // 60 frames (~1s of flight): gravity dominates any random launch
+    // velocity, so the coin must be lower (larger y) than before.
+    b.frames(60);
     const y2 = packet.coins()[0].y;
     // Launched upward (negative vy), gravity pulls down: y grows over time.
     expect(y2).toBeGreaterThan(y1);

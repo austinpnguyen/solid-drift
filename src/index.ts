@@ -572,3 +572,15 @@ export type {
   AuthStatus,
   AuthSessionControls,
 } from "./auth.js";
+export { createTracker, useConsent, createFunnel } from "./analytics.js";
+export type {
+  TrackEvent,
+  TrackerOptions,
+  TrackerControls,
+  ConsentState,
+  ConsentOptions,
+  ConsentControls,
+  FunnelOptions,
+  FunnelStepRecord,
+  FunnelControls,
+} from "./analytics.js";
