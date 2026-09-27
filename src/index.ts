@@ -428,3 +428,24 @@ export { createCopy } from "./copy.js";
 export type { CopyOptions, CopyControls } from "./copy.js";
 export { createCountdown } from "./countdown.js";
 export type { CountdownOptions, CountdownControls } from "./countdown.js";
+export { createMarquee } from "./marquee.js";
+export type {
+  MarqueeDirection,
+  MarqueeOptions,
+  MarqueeControls,
+} from "./marquee.js";
+export { createVariants } from "./variants.js";
+export type {
+  VariantDef,
+  VariantsOptions,
+  VariantsControls,
+} from "./variants.js";
+export { createPathDraw } from "./pathdraw.js";
+export type { PathDrawOptions, PathDrawControls } from "./pathdraw.js";
+export { createPress, createHover } from "./press.js";
+export type {
+  PressOptions,
+  PressControls,
+  HoverOptions,
+  HoverControls,
+} from "./press.js";

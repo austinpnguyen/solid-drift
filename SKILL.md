@@ -170,6 +170,11 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createScrollSpy(options)` - nav scroll spy: `{ active, scrollTo, refresh }`; deepest section at/above the offset line; id list or accessor; custom container; rAF-throttled; smooth scrollTo (auto under reduced motion); onChange on change only.
 - `createCopy(options?)` - copy to clipboard: `{ copied, error, copy, reset }`; async Clipboard API with execCommand fallback; `copied()` true for `resetDelay` ms for transient feedback.
 - `createCountdown(target, options?)` - countdown to a date/timestamp/accessor: `{ remaining, days, hours, minutes, seconds, done, running, start, stop, reset }`; wall-clock based; shared-clock recompute throttled to `interval`; stops at zero; onDone fires once.
+- `createMarquee(options?)` - infinite scroller: `{ offset, running, setContentSize, start, stop }`; offset advances at `speed` px/s in `direction`, wraps at content size; render content twice, translate by `-offset()`; static under reduced motion.
+- `createVariants(defs, options?)` - named animation states: `{ current, values, go }`; `go(name)` tweens numeric props (`duration`, easing), snaps non-numeric at the end; unknown names ignored; snaps under reduced motion.
+- `createPathDraw(ref, options?)` - SVG stroke draw-on: `{ progress, running, start, stop, reset }`; `getTotalLength()` + dashoffset to 0, eased; onDone once; resume keeps constant speed; fully drawn under reduced motion.
+- `createPress(ref, options?)` - press gesture state: `{ pressed }`; pointer down/up/cancel/leave + Enter/Space keys; onChange on change only; pair with `createVariants`.
+- `createHover(ref, options?)` - hover gesture state: `{ hovering }`; pointer enter/leave + focus/blur; onChange on change only.
 
 **Utilities**
 

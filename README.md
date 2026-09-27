@@ -1662,6 +1662,42 @@ const sale = createCountdown(new Date("2026-12-01T00:00:00"), {
 - `createCopy(options?)` copies text to the clipboard: `{ copied, error, copy, reset }`. Uses the async Clipboard API with an `execCommand` fallback (`noFallback: true` disables it). `copied()` flips true for `resetDelay` ms (default 2000) for transient "Copied!" feedback. SSR-safe.
 - `createCountdown(target, options?)` counts down to a date, timestamp, or accessor: `{ remaining, days, hours, minutes, seconds, done, running, start, stop, reset }`. Wall-clock based (the moment is fixed even if the tab hides); recomputes on the shared clock throttled to `interval` ms (default 1000); stops itself at zero and fires `onDone` once. SSR-safe.
 
+### Marquee, variants, path drawing, press and hover
+
+```tsx
+import {
+  createMarquee,
+  createVariants,
+  createPathDraw,
+  createPress,
+  createHover,
+} from "solid-drift";
+
+const marquee = createMarquee({ speed: 80 });
+const card = createVariants(
+  {
+    idle: { scale: 1 },
+    hover: { scale: 1.04 },
+    press: { scale: 0.96 },
+  },
+  { initial: "idle", duration: 180 },
+);
+
+let strip!: HTMLDivElement;
+let btn!: HTMLButtonElement;
+let mark!: SVGPathElement;
+createEffect(() => marquee.setContentSize(strip.scrollWidth / 2));
+createHover(() => btn, { onChange: (h) => card.go(h ? "hover" : "idle") });
+createPress(() => btn, { onChange: (p) => card.go(p ? "press" : "idle") });
+const draw = createPathDraw(() => mark, { duration: 1600 });
+```
+
+- `createMarquee(options?)` infinite scroller: `{ offset, running, setContentSize, start, stop }`. The offset advances at `speed` px/s (`direction` left/right/up/down) on the shared clock and wraps at the content size; render the content twice and translate by `-offset()`. Measure one loop unit and pass it to `setContentSize`. Static under reduced motion; SSR-safe.
+- `createVariants(defs, options?)` named animation states: `{ current, values, go }`. `go(name)` tweens numeric props from the current values to the target variant (`duration` ms, easing) and snaps non-numeric props at the end; unknown names are ignored. Snaps instantly under reduced motion; SSR-safe.
+- `createPathDraw(ref, options?)` SVG stroke draw-on: `{ progress, running, start, stop, reset }`. Reads the length with `getTotalLength()` and drives `stroke-dashoffset` to 0, eased; `onDone` fires once; resume keeps a constant speed. Renders fully drawn under reduced motion; SSR-safe.
+- `createPress(ref, options?)` press gesture state: `{ pressed }`. Pointer down/up/cancel/leave plus Enter/Space keys for keyboard parity; `onChange` fires on change only. State only, no animation; pair with `createVariants`. SSR-safe.
+- `createHover(ref, options?)` hover gesture state: `{ hovering }`. Pointer enter/leave plus focus/blur for keyboard parity; `onChange` fires on change only. SSR-safe.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
