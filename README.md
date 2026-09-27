@@ -1473,6 +1473,39 @@ const beat = createHapticBeat(haptic, {
 - `createHapticBeat(haptic, options?)` returns `{ playing, bpm, step, start, stop, toggle, setBpm }`. The 16-step pattern uses `"x"` for a hit, `"X"` for an accent, anything else for a rest; steps run as 16th notes at `bpm` (live-changeable via `setBpm`), the downbeat fires immediately on `start()`, and `onStep(i)` reports each step index. `hapticBeatPresets` ships `heartbeat`, `metronome`, `ticks`, and `pulse`.
 - Haptics are tactile, not visual, so they fire under reduced motion too; the `enabled` switch is the way to offer quiet. Everything is a no-op where vibration is unsupported, and SSR-safe.
 
+### Bottom sheet
+
+A draggable bottom sheet built on `createDrag`: the user pulls it up by a handle (or the sheet itself) and on release it springs to the nearest snap point, projected forward by the release velocity like a native sheet. Dragging below the lowest snap (or a fast downward flick) dismisses it when `dismissible`.
+
+```tsx
+import { createBottomSheet } from "solid-drift"
+
+let sheet!: HTMLDivElement
+let handle!: HTMLDivElement
+const bs = createBottomSheet(() => handle, {
+  snapPoints: [0.4, 1],       // fractions of the sheet's own height
+  measureRef: () => sheet,    // measure the sheet, not the handle
+  onOpenChange: (open) => setScrimVisible(open),
+})
+
+<div
+  ref={sheet}
+  style={{
+    position: "fixed", left: "0", right: "0", bottom: "0",
+    transform: `translateY(${bs.y()}px)`,
+  }}
+>
+  <div ref={handle} style={{ "touch-action": "none" }}>Handle</div>
+  <div>Sheet content</div>
+</div>
+<button onClick={() => bs.openSheet()}>Open</button>
+```
+
+- `createBottomSheet(ref, options?)` returns `{ open, snapIndex, y, status, openSheet, close, snapTo }`. `y()` is the current translateY in pixels; `status()` is `idle`, `dragging`, or `settling`; `snapIndex()` is the snap-point index or -1 when dismissed.
+- `snapPoints` are visible height fractions (`1` fully open); values are clamped to [0, 1] and sorted ascending, an empty array falls back to `[1]`. Default `[0.5, 1]`; `initialSnap` (default the fullest) picks the point `openSheet()` opens at.
+- While the pointer is down the sheet tracks 1:1 with light rubber-banding past the fully-open top and the dismissed bottom. On release, the target is the nearest snap to `y + velocity * 0.18`; dismissal happens past the midpoint between the lowest snap and closed, or on a downward flick over 700 px/s. Snap travel uses a spring (`options.spring`, default stiffness 400 / damping 40).
+- Bind `ref` to the drag handle when the sheet body scrolls (keeps drag and scroll from fighting), to the sheet root otherwise. The moving element gets `translateY(y())`; the drag target needs `touch-action: none`. Starts dismissed on the server (SSR-safe); under reduced motion it jumps straight to snap targets.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

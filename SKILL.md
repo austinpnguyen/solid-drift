@@ -144,6 +144,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createInfiniteScroll(ref, options)` - IntersectionObserver sentinel with `threshold` prefetch and reactive `disabled` kill switch; calls `onLoadMore` on approach.
 - `createHaptic(options?)` - Vibration API wrapper: `{ supported, vibrate, light, medium, heavy, success, warning, error, morse }`; morse encodes `.`/`-`/` `//` gaps; `hapticPatterns` one-shot presets; `enabled` boolean-or-signal master switch. Tactile so it fires under reduced motion; no-op where unsupported.
 - `createHapticBeat(haptic, options?)` - 16-step haptic sequencer on the shared clock (`"x"` hit, `"X"` accent); `{ playing, bpm, step, start, stop, toggle, setBpm }`; `hapticBeatPresets` ships heartbeat, metronome, ticks, pulse.
+- `createBottomSheet(ref, options?)` - draggable bottom sheet on `createDrag`: `{ open, snapIndex, y, status, openSheet, close, snapTo }`; `snapPoints` are height fractions (clamped/sorted, default `[0.5, 1]`); release target is nearest snap to `y + velocity * 0.18`, dismiss past midpoint or on fast downward flick; rubber-banded 1:1 tracking while dragging; `measureRef` when the drag ref is a handle.
 
 **Utilities**
 

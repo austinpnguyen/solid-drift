@@ -71,6 +71,11 @@ export {
   type HapticBeatControls,
 } from "./haptic.js";
 export {
+  createBottomSheet,
+  type BottomSheetOptions,
+  type BottomSheetControls,
+} from "./sheet.js";
+export {
   createHorizontalScroll,
   type HorizontalScrollOptions,
   type HorizontalScrollResult,
