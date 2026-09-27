@@ -77,6 +77,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createTextGradient(ref, options?)` - animated gradient text.
 - `createTextScramble(ref, options?)` - scramble decode effect.
 - `createTextWave(ref, options?)` - wave motion across text.
+- `createCountUp(source, options?)` - eased number tween as a formatted string.
 
 **Motion graphics**
 

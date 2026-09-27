@@ -776,6 +776,25 @@ createTextWave(() => headline, {
 
 Options: `amplitude`, `wavelength` (characters per wave), `period`, `tilt` (default true), `progress`. Returns `{ stop }`. Under reduced motion the text sits still.
 
+### `createCountUp(source, options?)`
+
+A signal that counts toward a source number with an eased tween, rendering as a formatted string: dashboard stats, prices, scores. When the source changes mid-count the tween retargets from the current displayed value, with no snapping.
+
+```tsx
+import { createCountUp } from "solid-drift"
+
+const [revenue, setRevenue] = createSignal(0)
+const display = createCountUp(revenue, {
+  decimals: 2,
+  prefix: "$",
+  separator: ",",
+})
+<div>{display()}</div> // "$1,234.50" gliding up from "$0.00"
+setRevenue(1234.5)
+```
+
+Options: `decimals` (default 0), `duration` (ms, default 1000), `easing` (default `"easeOutExpo"`), `prefix` (default `""`), `suffix` (default `""`), `separator` (thousands separator, default `""`). Returns an accessor of the formatted string. SSR-safe: renders the formatted source value. Under reduced motion the text jumps straight to each new value.
+
 ### `createKineticType(ref, options?)`
 
 Kinetic typography: each character (or word) flies in with position, blur, scale, and opacity, staggered for that showreel title feel. One master clock drives every unit, so a 40-character headline costs a single rAF task.

@@ -107,6 +107,8 @@ export {
   type TextScrambleResult,
   createTextWave,
   type TextWaveOptions,
+  createCountUp,
+  type CountUpOptions,
 } from "./typography.js";
 export {
   easings,

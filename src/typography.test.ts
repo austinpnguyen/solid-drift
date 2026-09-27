@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createRoot } from "solid-js";
+import { createRoot, createSignal, type Accessor } from "solid-js";
 import {
   createFontSwap,
   createTextCutout,
@@ -9,6 +9,7 @@ import {
   createTextTunnel,
   createTextWave,
   createTyping,
+  createCountUp,
 } from "./typography.js";
 
 afterEach(() => {
@@ -557,5 +558,99 @@ describe("typography SSR", () => {
       expect(el.textContent).toBe("Hi");
       dispose();
     });
+  });
+});
+
+interface CountUpHarness {
+  display: Accessor<string>;
+  set: (v: number) => void;
+  dispose: () => void;
+}
+
+function setupCountUp(
+  initial: number,
+  options?: Parameters<typeof createCountUp>[1],
+): CountUpHarness {
+  let display!: Accessor<string>;
+  let set!: (v: number) => void;
+  const dispose = createRoot((d) => {
+    const [source, setSource] = createSignal(initial);
+    display = createCountUp(source, options);
+    set = setSource;
+    return d;
+  });
+  return { display, set, dispose };
+}
+
+describe("createCountUp", () => {
+  it("formats the initial value immediately", () => {
+    stubBrowser();
+    const { display, dispose } = setupCountUp(1234.5, {
+      decimals: 2,
+      prefix: "$",
+      separator: ",",
+    });
+    expect(display()).toBe("$1,234.50");
+    dispose();
+  });
+
+  it("tweens toward a new source value", () => {
+    const b = stubBrowser();
+    const { display, set, dispose } = setupCountUp(0, { duration: 1000 });
+    set(100);
+    b.frames(30); // halfway through the tween
+    const mid = parseFloat(display());
+    expect(mid).toBeGreaterThan(0);
+    expect(mid).toBeLessThan(100);
+    b.frames(60); // past the duration
+    expect(display()).toBe("100");
+    dispose();
+  });
+
+  it("retargets mid-flight with no snapping", () => {
+    const b = stubBrowser();
+    const { display, set, dispose } = setupCountUp(0, { duration: 1000 });
+    set(100);
+    b.frames(30);
+    const mid = parseFloat(display());
+    set(200);
+    b.frames(90);
+    expect(display()).toBe("200");
+    expect(mid).toBeLessThan(200);
+    dispose();
+  });
+
+  it("applies decimals, prefix, suffix, and separator", () => {
+    stubBrowser();
+    const a = setupCountUp(42, { suffix: "%" });
+    expect(a.display()).toBe("42%");
+    a.dispose();
+    const b2 = setupCountUp(-9876543.21, {
+      decimals: 2,
+      separator: ",",
+    });
+    expect(b2.display()).toBe("-9,876,543.21");
+    b2.dispose();
+    const c = setupCountUp(7, { decimals: 3 });
+    expect(c.display()).toBe("7.000");
+    c.dispose();
+  });
+
+  it("jumps straight to the target under reduced motion", () => {
+    stubBrowser({ reduced: true });
+    const { display, set, dispose } = setupCountUp(0, { duration: 1000 });
+    set(100);
+    expect(display()).toBe("100");
+    dispose();
+  });
+
+  it("renders the formatted source on the server", () => {
+    // No window stubbed: SSR path.
+    const { display } = setupCountUp(1234.5, {
+      decimals: 2,
+      prefix: "$",
+      separator: ",",
+    });
+    expect(display()).toBe("$1,234.50");
   });
 });

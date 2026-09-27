@@ -6,6 +6,7 @@ import {
   type Accessor,
 } from "solid-js";
 import { animate } from "./animate.js";
+import { createTween } from "./tween.js";
 import { resolveEasing, type Easing, type EasingName } from "./easing.js";
 import { now, schedule } from "./engine.js";
 import { prefersReducedMotion } from "./reduced-motion.js";
@@ -1114,4 +1115,77 @@ export function createTextWave(
       cancel = null;
     },
   };
+}
+
+export interface CountUpOptions {
+  /** Decimal places in the output. Default 0. */
+  decimals?: number;
+  /** Tween duration in milliseconds when the source changes. Default 1000. */
+  duration?: number;
+  /** Easing for the count. Default "easeOutExpo". */
+  easing?: Easing | EasingName;
+  /** String placed before the number, e.g. "$". Default "". */
+  prefix?: string;
+  /** String placed after the number, e.g. "%". Default "". */
+  suffix?: string;
+  /** Thousands separator, e.g. ",". Default "" (no grouping). */
+  separator?: string;
+}
+
+function groupInteger(int: string, separator: string): string {
+  if (!separator) return int;
+  const negative = int.startsWith("-");
+  const digits = negative ? int.slice(1) : int;
+  const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, separator);
+  return (negative ? "-" : "") + grouped;
+}
+
+/**
+ * A signal that counts toward a source number with an eased tween,
+ * rendering as a formatted string: dashboard stats, prices, scores.
+ *
+ * When the source changes mid-count the tween retargets from the
+ * current displayed value, with no snapping. Formatting (decimals,
+ * prefix, suffix, thousands separator) applies to every frame.
+ *
+ * SSR-safe: renders the formatted source value. Under reduced motion
+ * the text jumps straight to each new value with no tween.
+ *
+ * ```tsx
+ * import { createCountUp } from "solid-drift"
+ *
+ * const [revenue, setRevenue] = createSignal(0)
+ * const display = createCountUp(revenue, {
+ *   decimals: 2,
+ *   prefix: "$",
+ *   separator: ",",
+ * })
+ * <div>{display()}</div> // "$1,234.50" gliding up from "$0.00"
+ * setRevenue(1234.5)
+ * ```
+ */
+export function createCountUp(
+  source: Accessor<number>,
+  options: CountUpOptions = {},
+): Accessor<string> {
+  const {
+    decimals = 0,
+    duration = 1000,
+    easing = "easeOutExpo",
+    prefix = "",
+    suffix = "",
+    separator = "",
+  } = options;
+
+  const tweened = createTween(source, { duration, easing });
+
+  const format = (value: number): string => {
+    const fixed = value.toFixed(decimals);
+    const dot = fixed.indexOf(".");
+    const head = dot === -1 ? fixed : fixed.slice(0, dot);
+    const tail = dot === -1 ? "" : fixed.slice(dot);
+    return prefix + groupInteger(head, separator) + tail + suffix;
+  };
+
+  return () => format(tweened());
 }
