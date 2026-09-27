@@ -1006,6 +1006,31 @@ await stream.complete(); // flush the tail, then done
 
 Returns `{ push, complete, reset, status, pending }`. `status()` is `"idle"`, `"streaming"`, or `"done"`; `pending()` counts queued characters. Under reduced motion pushed text appears immediately with no per-unit animation; on the server `push` is a no-op and `status()` is `"done"`.
 
+### `createTokenStream(options?)`
+
+Streamed text with citation chips: AI answers cite sources as markers like `[1]`, and `push()` parses them out of the stream so each renders as a tappable chip next to the text. The buffer is re-parsed on every push, so a marker split across two chunks still resolves. Pure signals, no DOM.
+
+```tsx
+const stream = createTokenStream({
+  citations: { "1": { label: "1", url: "https://example.com/source" } },
+});
+stream.push("Revenue grew 12% [1] last quarter.");
+<For each={stream.segments()}>
+  {(seg) => (
+    <Show
+      when={seg.kind === "citation"}
+      fallback={<span>{(seg as { text: string }).text}</span>}
+    >
+      <a href={(seg as { citation: TokenCitation }).citation.url} class="chip">
+        {(seg as { citation: TokenCitation }).citation.label}
+      </a>
+    </Show>
+  )}
+</For>;
+```
+
+Returns `{ push, complete, reset, segments, text, status }`. `segments()` is an ordered list of `{ kind: "text", text }` and `{ kind: "citation", key, citation }`; `text()` is the raw stream with markers intact for copying. Options: `citations` (marker to definition map), `pattern` (default `/\[(\d+)\]/`, first capture group is the key), `keepUnknown` (default true; unknown markers render as text, or are dropped when false). Pair with `createStreamReveal` when the text itself should animate in.
+
 ### `createAgentState(options?)`
 
 A tiny state machine for agent UIs: `idle`, `thinking`, `streaming`, `tool`, `done`, `error`, with legal-transition gating and enter/exit hooks. Pure signals, no DOM, so it works on the server and in tests.
@@ -1027,6 +1052,20 @@ agent.prev(); // "idle"
 ```
 
 Agent UI recipe: `thinking` pairs with `createWobble` on typing dots, `streaming` drives `createStreamReveal`, `tool-call` overlays a `createTransition`, and `done`/`error` tint a status pill with `createColorShift`. Returns `{ state, prev, set, reset, is }`. Illegal moves are ignored. State is logic, not motion, so it behaves identically under reduced motion.
+
+### `createApprovalGate(options?)`
+
+Human in the loop for agent flows. An agent that mints, transfers, or publishes should not run unattended: `propose()` parks the flow in `"pending"`, the host renders an approve/deny UI, and the agent resumes only after a decision.
+
+```ts
+const gate = createApprovalGate({ timeoutMs: 60_000 });
+gate.propose({ title: "Mint 1 NFT", description: "Costs 0.05 ETH" });
+// ... the user approves in the UI ...
+gate.approve();
+gate.status(); // "approved"
+```
+
+Returns `{ status, request, reason, propose, approve, deny, reset }`. `status()` is `"idle"`, `"pending"`, `"approved"`, or `"denied"`; `request()` is the pending proposal; `deny(reason?)` records why. Decisions are no-ops unless pending, and `propose()` replaces a pending request. `timeoutMs` auto-denies when nobody decides in time (default 0, never). Pure signals, SSR-safe.
 
 ### `parseDriftSpec(input)`
 

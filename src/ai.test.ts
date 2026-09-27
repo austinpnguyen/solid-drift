@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createRoot } from "solid-js";
 import {
   createStreamReveal,
+  createTokenStream,
   createAgentState,
+  createApprovalGate,
   parseDriftSpec,
   createSpecPlayer,
   DriftSpecError,
@@ -660,5 +662,218 @@ describe("DriftSpec web3 steps", () => {
     await p;
     expect(player.status()).toBe("done");
     dispose();
+  });
+});
+
+describe("createTokenStream", () => {
+  const setup = (
+    options: Parameters<typeof createTokenStream>[0] = {},
+  ): {
+    stream: ReturnType<typeof createTokenStream>;
+    dispose: () => void;
+  } => {
+    let stream!: ReturnType<typeof createTokenStream>;
+    const dispose = createRoot((d) => {
+      stream = createTokenStream(options);
+      return d;
+    });
+    return { stream, dispose };
+  };
+
+  const citations = {
+    "1": { label: "1", url: "https://example.com/a" },
+    "2": { label: "2", title: "Second source" },
+  };
+
+  it("parses plain text into a single text segment", () => {
+    const { stream, dispose } = setup({ citations });
+    expect(stream.status()).toBe("idle");
+    stream.push("hello world");
+    expect(stream.status()).toBe("streaming");
+    expect(stream.segments()).toEqual([{ kind: "text", text: "hello world" }]);
+    expect(stream.text()).toBe("hello world");
+    stream.complete();
+    expect(stream.status()).toBe("done");
+    dispose();
+  });
+
+  it("splits citation markers into chip segments", () => {
+    const { stream, dispose } = setup({ citations });
+    stream.push("Revenue grew [1] and costs fell [2].");
+    expect(stream.segments()).toEqual([
+      { kind: "text", text: "Revenue grew " },
+      { kind: "citation", key: "1", citation: citations["1"] },
+      { kind: "text", text: " and costs fell " },
+      { kind: "citation", key: "2", citation: citations["2"] },
+      { kind: "text", text: "." },
+    ]);
+    // Raw text keeps markers intact for copying.
+    expect(stream.text()).toBe("Revenue grew [1] and costs fell [2].");
+    dispose();
+  });
+
+  it("resolves a marker split across two pushes", () => {
+    const { stream, dispose } = setup({ citations });
+    stream.push("see [");
+    expect(stream.segments()).toEqual([{ kind: "text", text: "see [" }]);
+    stream.push("1] now");
+    expect(stream.segments()).toEqual([
+      { kind: "text", text: "see " },
+      { kind: "citation", key: "1", citation: citations["1"] },
+      { kind: "text", text: " now" },
+    ]);
+    dispose();
+  });
+
+  it("keeps unknown markers as text by default", () => {
+    const { stream, dispose } = setup({ citations });
+    stream.push("see [9] here");
+    expect(stream.segments()).toEqual([
+      { kind: "text", text: "see " },
+      { kind: "text", text: "[9]" },
+      { kind: "text", text: " here" },
+    ]);
+    dispose();
+  });
+
+  it("drops unknown markers when keepUnknown is false", () => {
+    const { stream, dispose } = setup({ citations, keepUnknown: false });
+    stream.push("see [9] here");
+    expect(stream.segments()).toEqual([
+      { kind: "text", text: "see " },
+      { kind: "text", text: " here" },
+    ]);
+    dispose();
+  });
+
+  it("accepts a custom marker pattern", () => {
+    const { stream, dispose } = setup({
+      citations,
+      pattern: /<cite:(\d+)>/,
+    });
+    stream.push("see <cite:2> now");
+    expect(stream.segments()).toEqual([
+      { kind: "text", text: "see " },
+      { kind: "citation", key: "2", citation: citations["2"] },
+      { kind: "text", text: " now" },
+    ]);
+    dispose();
+  });
+
+  it("reset clears everything back to idle", () => {
+    const { stream, dispose } = setup({ citations });
+    stream.push("hi [1]");
+    stream.complete();
+    stream.reset();
+    expect(stream.status()).toBe("idle");
+    expect(stream.segments()).toEqual([]);
+    expect(stream.text()).toBe("");
+    stream.push("again");
+    expect(stream.status()).toBe("streaming");
+    dispose();
+  });
+
+  it("ignores empty pushes", () => {
+    const { stream, dispose } = setup();
+    stream.push("");
+    expect(stream.status()).toBe("idle");
+    expect(stream.segments()).toEqual([]);
+    dispose();
+  });
+});
+
+describe("createApprovalGate", () => {
+  const setup = (
+    options: Parameters<typeof createApprovalGate>[0] = {},
+  ): {
+    gate: ReturnType<typeof createApprovalGate>;
+    dispose: () => void;
+    onChange: ReturnType<typeof vi.fn>;
+  } => {
+    const onChange = vi.fn();
+    let gate!: ReturnType<typeof createApprovalGate>;
+    const dispose = createRoot((d) => {
+      gate = createApprovalGate({ ...options, onChange });
+      return d;
+    });
+    return { gate, dispose, onChange };
+  };
+
+  it("moves idle -> pending -> approved", () => {
+    const { gate, dispose, onChange } = setup();
+    expect(gate.status()).toBe("idle");
+    expect(gate.request()).toBeNull();
+    const req = { title: "Mint 1 NFT", description: "Costs 0.05 ETH" };
+    gate.propose(req);
+    expect(gate.status()).toBe("pending");
+    expect(gate.request()).toEqual(req);
+    expect(onChange).toHaveBeenCalledWith("pending", req);
+    gate.approve();
+    expect(gate.status()).toBe("approved");
+    expect(onChange).toHaveBeenCalledWith("approved", req);
+    gate.reset();
+    expect(gate.status()).toBe("idle");
+    expect(gate.request()).toBeNull();
+    dispose();
+  });
+
+  it("deny records the reason and approve/deny are no-ops unless pending", () => {
+    const { gate, dispose } = setup();
+    gate.approve();
+    gate.deny("nope");
+    expect(gate.status()).toBe("idle");
+    gate.propose({ title: "Transfer" });
+    gate.deny("too expensive");
+    expect(gate.status()).toBe("denied");
+    expect(gate.reason()).toBe("too expensive");
+    // Terminal states ignore further decisions.
+    gate.approve();
+    expect(gate.status()).toBe("denied");
+    gate.deny();
+    expect(gate.reason()).toBe("too expensive");
+    dispose();
+  });
+
+  it("propose replaces a pending request", () => {
+    const { gate, dispose } = setup();
+    gate.propose({ title: "First" });
+    gate.propose({ title: "Second" });
+    expect(gate.status()).toBe("pending");
+    expect(gate.request()).toEqual({ title: "Second" });
+    gate.approve();
+    expect(gate.request()).toEqual({ title: "Second" });
+    dispose();
+  });
+
+  it("auto-denies after timeoutMs without a decision", () => {
+    vi.useFakeTimers();
+    try {
+      const { gate, dispose } = setup({ timeoutMs: 1000 });
+      const req = { title: "Mint" };
+      gate.propose(req);
+      vi.advanceTimersByTime(999);
+      expect(gate.status()).toBe("pending");
+      vi.advanceTimersByTime(1);
+      expect(gate.status()).toBe("denied");
+      expect(gate.reason()).toBe("timeout");
+      expect(gate.request()).toEqual(req);
+      dispose();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a decision clears the pending timeout", () => {
+    vi.useFakeTimers();
+    try {
+      const { gate, dispose } = setup({ timeoutMs: 1000 });
+      gate.propose({ title: "Mint" });
+      gate.approve();
+      vi.advanceTimersByTime(5000);
+      expect(gate.status()).toBe("approved");
+      dispose();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

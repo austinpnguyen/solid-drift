@@ -282,6 +282,161 @@ export function createStreamReveal(
 }
 
 /* ------------------------------------------------------------------ */
+/* createTokenStream                                                    */
+/* ------------------------------------------------------------------ */
+
+/** One citation definition, keyed by its marker in `TokenStreamOptions`. */
+export interface TokenCitation {
+  /** Label rendered on the chip, e.g. "1" or a short source name. */
+  label: string;
+  /** Optional URL the chip links to. */
+  url?: string;
+  /** Optional longer title for tooltips and accessibility. */
+  title?: string;
+}
+
+/** A parsed piece of the stream: plain text or a citation chip. */
+export type TokenSegment =
+  | { kind: "text"; text: string }
+  | { kind: "citation"; key: string; citation: TokenCitation };
+
+export interface TokenStreamOptions {
+  /**
+   * Citation definitions keyed by marker, e.g.
+   * `{ "1": { label: "1", url: "https://..." } }`.
+   */
+  citations?: Record<string, TokenCitation>;
+  /**
+   * Pattern matching a citation marker. The first capture group is the
+   * lookup key. Default `/\[(\d+)\]/`.
+   */
+  pattern?: RegExp;
+  /**
+   * Render unknown markers as plain text (default true) or drop them.
+   */
+  keepUnknown?: boolean;
+}
+
+export interface TokenStreamControls {
+  /** Append raw stream text; markers are parsed into segments. */
+  push: (chunk: string) => void;
+  /** Mark the stream complete. */
+  complete: () => void;
+  /** Clear everything back to idle. */
+  reset: () => void;
+  /** Parsed segments in order. */
+  segments: Accessor<TokenSegment[]>;
+  /** Raw text with markers intact, for copying. */
+  text: Accessor<string>;
+  /** Reactive status: "idle" | "streaming" | "done". */
+  status: Accessor<StreamRevealStatus>;
+}
+
+/**
+ * Streamed text with citation chips. AI answers cite sources as
+ * markers like `[1]`; `push()` parses them out of the stream so the
+ * host can render each as a tappable chip next to the text, the trust
+ * pattern users expect from AI answers.
+ *
+ * The whole buffer is re-parsed on every push, so a marker split
+ * across two chunks (`"[1"` then `"]"`) still resolves. This is pure
+ * signal logic with no DOM: pair it with `createStreamReveal` when the
+ * text itself should animate in.
+ *
+ * SSR-safe: signals only, no browser APIs.
+ *
+ * ```tsx
+ * const stream = createTokenStream({
+ *   citations: { "1": { label: "1", url: "https://example.com/source" } },
+ * });
+ * stream.push("Revenue grew 12% [1] last quarter.");
+ * <For each={stream.segments()}>
+ *   {(seg) => (
+ *     <Show
+ *       when={seg.kind === "citation"}
+ *       fallback={<span>{(seg as { text: string }).text}</span>}
+ *     >
+ *       <a
+ *         href={(seg as { citation: TokenCitation }).citation.url}
+ *         class="citation-chip"
+ *       >
+ *         {(seg as { citation: TokenCitation }).citation.label}
+ *       </a>
+ *     </Show>
+ *   )}
+ * </For>;
+ * ```
+ */
+export function createTokenStream(
+  options: TokenStreamOptions = {},
+): TokenStreamControls {
+  const {
+    citations = {},
+    pattern = /\[(\d+)\]/,
+    keepUnknown = true,
+  } = options;
+  const [status, setStatus] = createSignal<StreamRevealStatus>("idle");
+  const [segments, setSegments] = createSignal<TokenSegment[]>([]);
+  const [text, setText] = createSignal("");
+  let raw = "";
+
+  const globalPattern = (): RegExp => {
+    const flags = pattern.flags.includes("g")
+      ? pattern.flags
+      : `${pattern.flags}g`;
+    return new RegExp(pattern.source, flags);
+  };
+
+  const parse = (): void => {
+    const out: TokenSegment[] = [];
+    const re = globalPattern();
+    let last = 0;
+    let match: RegExpExecArray | null;
+    while ((match = re.exec(raw)) !== null) {
+      if (match[0].length === 0) {
+        re.lastIndex += 1;
+        continue;
+      }
+      if (match.index > last) {
+        out.push({ kind: "text", text: raw.slice(last, match.index) });
+      }
+      const key = match[1] as string | undefined;
+      const citation = key !== undefined ? citations[key] : undefined;
+      if (citation) {
+        out.push({ kind: "citation", key: key as string, citation });
+      } else if (keepUnknown) {
+        out.push({ kind: "text", text: match[0] });
+      }
+      last = match.index + match[0].length;
+    }
+    if (last < raw.length) {
+      out.push({ kind: "text", text: raw.slice(last) });
+    }
+    setSegments(out);
+  };
+
+  return {
+    push: (chunk: string) => {
+      if (!chunk) return;
+      raw += chunk;
+      setText(raw);
+      if (status() === "idle") setStatus("streaming");
+      parse();
+    },
+    complete: () => setStatus("done"),
+    reset: () => {
+      raw = "";
+      setText("");
+      setSegments([]);
+      setStatus("idle");
+    },
+    segments,
+    text,
+    status,
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /* createAgentState                                                    */
 /* ------------------------------------------------------------------ */
 
@@ -375,6 +530,130 @@ export function createAgentState(
     set: move,
     reset,
     is: (s) => state() === s,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* createApprovalGate                                                   */
+/* ------------------------------------------------------------------ */
+
+/** Lifecycle of a human-in-the-loop approval. */
+export type ApprovalStatus = "idle" | "pending" | "approved" | "denied";
+
+/** The action awaiting a human decision. */
+export interface ApprovalRequest {
+  /** Short title for the approval UI, e.g. "Mint 1 NFT". */
+  title: string;
+  /** Longer description of what approving will do. */
+  description?: string;
+  /** Arbitrary payload the host can inspect before deciding. */
+  data?: unknown;
+}
+
+export interface ApprovalGateOptions {
+  /**
+   * Auto-deny after this many milliseconds without a decision.
+   * Default 0 (never).
+   */
+  timeoutMs?: number;
+  /** Fires on every status change. */
+  onChange?: (status: ApprovalStatus, request: ApprovalRequest | null) => void;
+}
+
+export interface ApprovalGateControls {
+  /** Current status. */
+  status: Accessor<ApprovalStatus>;
+  /** The request awaiting a decision, null when idle. */
+  request: Accessor<ApprovalRequest | null>;
+  /** Reason passed to the last `deny()`, if any. */
+  reason: Accessor<string | null>;
+  /** Opens the gate with a request, replacing any pending one. */
+  propose: (request: ApprovalRequest) => void;
+  /** Approves the pending request. No-op unless pending. */
+  approve: () => void;
+  /** Denies the pending request. No-op unless pending. */
+  deny: (reason?: string) => void;
+  /** Clears a terminal approved/denied state back to idle. */
+  reset: () => void;
+}
+
+/**
+ * Human in the loop for agent flows. An agent that mints, transfers,
+ * or publishes should not run unattended: `propose()` parks the flow
+ * in "pending", the host renders an approve/deny UI, and the agent
+ * resumes only after a decision.
+ *
+ * Pure signal logic, SSR-safe. Pair with `createAgentState` (the
+ * "tool-call" state opens the gate) and `createAgentTx` (the proposal
+ * carries the transaction details).
+ *
+ * ```ts
+ * const gate = createApprovalGate({ timeoutMs: 60_000 });
+ * gate.propose({ title: "Mint 1 NFT", description: "Costs 0.05 ETH" });
+ * // ... user clicks approve in the UI ...
+ * gate.approve();
+ * gate.status(); // "approved"
+ * ```
+ */
+export function createApprovalGate(
+  options: ApprovalGateOptions = {},
+): ApprovalGateControls {
+  const { timeoutMs = 0, onChange } = options;
+  const [status, setStatus] = createSignal<ApprovalStatus>("idle");
+  const [request, setRequest] = createSignal<ApprovalRequest | null>(null);
+  const [reason, setReason] = createSignal<string | null>(null);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const clearTimer = (): void => {
+    if (timer !== undefined) {
+      clearTimeout(timer);
+      timer = undefined;
+    }
+  };
+
+  const move = (
+    next: ApprovalStatus,
+    nextRequest: ApprovalRequest | null,
+    nextReason: string | null,
+  ): void => {
+    setStatus(next);
+    setRequest(nextRequest);
+    setReason(nextReason);
+    onChange?.(next, nextRequest);
+  };
+
+  onCleanup(clearTimer);
+
+  return {
+    status,
+    request,
+    reason,
+    propose: (next: ApprovalRequest) => {
+      clearTimer();
+      move("pending", next, null);
+      if (timeoutMs > 0) {
+        timer = setTimeout(() => {
+          timer = undefined;
+          if (status() === "pending") {
+            move("denied", request(), "timeout");
+          }
+        }, timeoutMs);
+      }
+    },
+    approve: () => {
+      if (status() !== "pending") return;
+      clearTimer();
+      move("approved", request(), null);
+    },
+    deny: (denialReason?: string) => {
+      if (status() !== "pending") return;
+      clearTimer();
+      move("denied", request(), denialReason ?? null);
+    },
+    reset: () => {
+      clearTimer();
+      move("idle", null, null);
+    },
   };
 }
 
