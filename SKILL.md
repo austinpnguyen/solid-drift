@@ -58,6 +58,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 **Gesture**
 
 - `createDrag(ref, options?)` - pointer drag with spring settle, constraints, elastic overshoot, momentum. Returns `{ x, y, status }`.
+- `createSharedLayout(ref, options)` - `layoutId`-style shared-element transition across mounts. Returns `{ x, y, scaleX, scaleY, flying }`.
 
 **Cartoon**
 

@@ -55,7 +55,13 @@ export {
   type TimelineStatus,
   type TimelineControls,
 } from "./timeline.js";
-export { animateFlip, type FlipOptions } from "./flip.js";
+export {
+  animateFlip,
+  type FlipOptions,
+  createSharedLayout,
+  type SharedLayoutOptions,
+  type SharedLayoutResult,
+} from "./flip.js";
 export {
   createSquashStretch,
   type SquashStretchOptions,

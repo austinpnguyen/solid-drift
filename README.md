@@ -467,6 +467,41 @@ const shuffle = () =>
 
 Returns `{ stop, finished }`: `stop()` halts mid-flight and restores the original transform. SSR-safe and reduced-motion safe: the mutation runs with no animation. If the element does not move, no animation runs either.
 
+### `createSharedLayout(ref, options)`
+
+Shared-element transition across mounts, the `layoutId` magic. Give the same `id` to elements that represent the same thing in different places: a tab pill, a card that opens into a detail view, a thumbnail that becomes a hero image. When the old element unmounts its rect is remembered; when the new one mounts it starts at the donor's rect and springs home, sliding and morphing into place. This is cross-mount FLIP: where `animateFlip` inverts the delta around a mutation on one element, `createSharedLayout` inverts the delta between two elements that share an identity. One active carrier per id.
+
+```tsx
+import { createSharedLayout } from "solid-drift"
+
+function TabPill(props: { id: string }) {
+  let pill!: HTMLDivElement
+  const { x, y, scaleX, scaleY } = createSharedLayout(() => pill, {
+    id: props.id,
+  })
+  return (
+    <div
+      ref={pill}
+      style={{
+        transform: `translate(${x()}px, ${y()}px) scale(${scaleX()}, ${scaleY()})`,
+      }}
+    />
+  )
+}
+
+// Only one pill is mounted at a time; it glides between tabs.
+<Show when={tab() === "a"}><TabPill id="pill" /></Show>
+<Show when={tab() === "b"}><TabPill id="pill" /></Show>
+```
+
+| Option   | Default                          | Description                                                     |
+| -------- | -------------------------------- | --------------------------------------------------------------- |
+| `id`     | required                         | Shared identity; elements with the same id hand off to each other |
+| `spring` | `{ stiffness: 260, damping: 30 }` | Spring physics for the handoff flight                           |
+| `scale`  | `true`                           | Also morph the size delta as scale                               |
+
+Returns `{ x, y, scaleX, scaleY, flying }`: the corrective transform and `flying`, true while the handoff runs. SSR-safe and reduced-motion safe: the element simply appears, with no flight.
+
 ### `springPresets`
 
 Named spring configurations for common feels. Spread into `createSpring`, `createMagnetic`, or `createTilt` options.
