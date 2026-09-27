@@ -175,6 +175,12 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createPathDraw(ref, options?)` - SVG stroke draw-on: `{ progress, running, start, stop, reset }`; `getTotalLength()` + dashoffset to 0, eased; onDone once; resume keeps constant speed; fully drawn under reduced motion.
 - `createPress(ref, options?)` - press gesture state: `{ pressed }`; pointer down/up/cancel/leave + Enter/Space keys; onChange on change only; pair with `createVariants`.
 - `createHover(ref, options?)` - hover gesture state: `{ hovering }`; pointer enter/leave + focus/blur; onChange on change only.
+- `createColorScheme(options?)` - `{ scheme, preference, setPreference, toggle }`; resolves "system" via OS media query (reactive); persists to localStorage; writes `html[data-theme]` + `color-scheme`.
+- `createIdle(options?)` - `{ idle, lastActive, reset }`; idle after `timeout` ms (default 60000) without activity events; activity restarts.
+- `createOnline()` - `{ online }`; seeds from `navigator.onLine`, follows online/offline events.
+- `createInstallPrompt()` - `{ canInstall, prompt }`; captures `beforeinstallprompt`; `prompt()` resolves the user choice or null; single-use per event.
+- `createUndo(initial, options?)` - undoable state: `{ value, set, undo, redo, clear, reset, canUndo, canRedo, past, future }`; `set()` records trimmed to `capacity`; new set discards redo.
+- `createFullscreen(ref, options?)` - `{ fullscreen, enter, exit, toggle }`; tracks `document.fullscreenElement`; failures go to `onError`.
 
 **Utilities**
 

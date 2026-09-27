@@ -1698,6 +1698,34 @@ const draw = createPathDraw(() => mark, { duration: 1600 });
 - `createPress(ref, options?)` press gesture state: `{ pressed }`. Pointer down/up/cancel/leave plus Enter/Space keys for keyboard parity; `onChange` fires on change only. State only, no animation; pair with `createVariants`. SSR-safe.
 - `createHover(ref, options?)` hover gesture state: `{ hovering }`. Pointer enter/leave plus focus/blur for keyboard parity; `onChange` fires on change only. SSR-safe.
 
+### App utilities
+
+```tsx
+import {
+  createColorScheme,
+  createIdle,
+  createOnline,
+  createInstallPrompt,
+  createUndo,
+  createFullscreen,
+} from "solid-drift";
+
+const theme = createColorScheme(); // follows the OS, persists, writes html[data-theme]
+const { idle } = createIdle({ timeout: 30_000 }); // auto-hide chrome when idle
+const { online } = createOnline(); // offline banner
+const install = createInstallPrompt(); // PWA install button
+const doc = createUndo({ title: "" }); // undoable form state
+let stage!: HTMLDivElement;
+const fs = createFullscreen(() => stage); // fullscreen toggle
+```
+
+- `createColorScheme(options?)`: `{ scheme, preference, setPreference, toggle }`. Resolves `"system"` through the `(prefers-color-scheme: dark)` media query (reactive to OS changes), persists the preference to localStorage (`storageKey`, null disables), and writes the resolved scheme to `<html data-theme="light|dark">` (configurable `attribute`) plus `color-scheme`. SSR-safe (resolves to light on the server).
+- `createIdle(options?)`: `{ idle, lastActive, reset }`. `idle()` flips true after `timeout` ms (default 60000) without any of the `events` (default mousemove, mousedown, keydown, touchstart, wheel); activity restarts the timer. SSR-safe.
+- `createOnline()`: `{ online }`. Seeds from `navigator.onLine`, follows window `online`/`offline` events. SSR-safe (assumes online).
+- `createInstallPrompt()`: `{ canInstall, prompt }`. Captures `beforeinstallprompt` (preventing the browser mini-bar); `prompt()` shows it from a click handler and resolves to the user's choice, or null when unavailable; each captured event is single-use. SSR-safe.
+- `createUndo(initial, options?)`: undoable state: `{ value, set, undo, redo, clear, reset, canUndo, canRedo, past, future }`. `set()` (value or updater) records history trimmed to `capacity` (default 50); a new `set()` discards the redo stack. Pure logic, SSR-safe.
+- `createFullscreen(ref, options?)`: `{ fullscreen, enter, exit, toggle }`. Tracks `document.fullscreenElement` so Escape and external changes stay in sync; failures go to `onError` instead of throwing. SSR-safe.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

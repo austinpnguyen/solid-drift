@@ -449,3 +449,26 @@ export type {
   HoverOptions,
   HoverControls,
 } from "./press.js";
+export {
+  createColorScheme,
+  createIdle,
+  createOnline,
+  createInstallPrompt,
+  createUndo,
+  createFullscreen,
+} from "./apputils.js";
+export type {
+  ColorScheme,
+  ColorSchemePreference,
+  ColorSchemeOptions,
+  ColorSchemeControls,
+  IdleOptions,
+  IdleControls,
+  OnlineControls,
+  BeforeInstallPromptEvent,
+  InstallPromptControls,
+  UndoOptions,
+  UndoControls,
+  FullscreenOptions,
+  FullscreenControls,
+} from "./apputils.js";
