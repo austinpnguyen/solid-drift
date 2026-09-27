@@ -19,6 +19,11 @@ export {
   usePrefersReducedMotion,
   prefersReducedMotion,
 } from "./reduced-motion.js";
+export {
+  isLowPowerMode,
+  useLowPowerMode,
+  type LowPowerOptions,
+} from "./power.js";
 export { createStagger } from "./stagger.js";
 export {
   createHorizontalScroll,

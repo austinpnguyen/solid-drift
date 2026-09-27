@@ -1130,13 +1130,28 @@ success("Payment sent", { description: "0.5 SOL to alice.sol" })
 
 Push helpers: `toast(title, options?)`, `info(...)`, `success(...)`, `warning(...)`, `error(...)`. Each returns the toast id. Per-toast options: `kind`, `description`, `duration` (ms; `0` means sticky). `dismiss(id)` starts the leave transition for one toast; `clear()` dismisses all. SSR-safe: toasts pushed on the server start `"visible"`. Under reduced motion the enter and leave transitions are instant, but auto-dismiss timing still applies.
 
+### `useLowPowerMode(options?)`
+
+One reactive signal for mobile-first degradation. It combines the OS `prefers-reduced-motion` and `prefers-reduced-data` media queries with low-end device signals (`navigator.deviceMemory`, `navigator.hardwareConcurrency`), so a single check covers user preference, network thrift, and weak hardware. The media queries update live; the device signals are sampled once. There is also a one-shot `isLowPowerMode(options?)` for non-reactive checks.
+
+```tsx
+import { useLowPowerMode } from "solid-drift"
+
+const lowPower = useLowPowerMode()
+// Degrade gracefully: shorter, cheaper motion on weak devices.
+const duration = () => (lowPower() ? 0 : 400)
+const confettiCount = () => (lowPower() ? 20 : 150)
+```
+
+Options: `maxDeviceMemory` (GB, default `4`), `maxHardwareConcurrency` (default `4`): a device at or below either threshold counts as low-end. Where the device signals are unsupported they degrade to "not low-end". SSR-safe: always `false` on the server.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
 
 ## How it works
 
-One shared `requestAnimationFrame` loop drives every animation in the app, so hundreds of springs cost a single rAF tick per frame. Springs integrate with semi-implicit Euler, tweens sample an easing curve. Everything is SSR-safe (animations simply don't run on the server).
+One shared `requestAnimationFrame` loop drives every animation in the app, so hundreds of springs cost a single rAF tick per frame. Springs integrate with semi-implicit Euler, tweens sample an easing curve. When the tab becomes hidden the engine pauses the loop and freezes its clock, so nothing burns battery in the background; on return the clock continues where it left off and in-flight animations resume seamlessly. Everything is SSR-safe (animations simply don't run on the server).
 
 ## License
 
