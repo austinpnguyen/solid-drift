@@ -33,7 +33,10 @@ was built on top of the v0.40.0 commit, so the registry has all
 v0.40.0 code. Re-running the v0.40.0 workflow was deliberately not
 done: `npm publish` would move the `latest` dist-tag back to 0.40.0
 and there is no npm auth on this machine to move it back.
-Final suite: 775 Vitest tests passing, tsc clean, production build clean.
+Final suite: 776 Vitest tests passing, tsc clean, production build clean.
+(A follow-up commit on main fixed a createOfflineQueue flush race and
+added its regression test; no version bump, the v0.33.0-v0.41.0 release
+sequence is complete.)
 
 Each release: implement, export, document in README, full Vitest suite,
 tsc clean, production build, em-dash and prohibited-term scans, commit
