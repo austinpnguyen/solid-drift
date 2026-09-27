@@ -5,48 +5,7 @@ SolidJS ecosystem gap analysis). Release plan approved by the owner on
 2026-09-27: build sequentially, test carefully, then notify the website
 chat and publish to npm.
 
-## Release plan
-
-- v0.33.0: animation presence family (createPresence,
-  createViewTransition, createScrollReveal), shipped 2026-09-27
-- v0.34.0: agent trust family (createApprovalGate, createTokenStream), shipped 2026-09-27
-- v0.35.0: web3 security (sanitizeOnchain), shipped 2026-09-27
-- v0.36.0: offline (createOfflineQueue), shipped 2026-09-27
-- v0.37.0: social kit (validatePost, normalizeAnalytics), shipped 2026-09-27
-- v0.38.0: network family (createApi, createWebSocket, createSearch,
-  createUpload, createPagination, verifyWebhookSignature), shipped 2026-09-27
-- v0.39.0: browser API family (createGeolocation, createElementSize,
-  createEventListener, createHotkey, createTimeAgo, createPermission,
-  createScriptLoader), shipped 2026-09-27
-- v0.40.0: auth session (createAuthSession), shipped 2026-09-27
-- v0.41.0: analytics lite family (createTracker, useConsent,
-  createFunnel), shipped 2026-09-27
-
-All nine releases are pushed and tagged (2026-09-27).
-npm registry confirmation (2026-09-27): v0.33.0 through v0.39.0 and
-v0.41.0 are live on the registry; dist-tags.latest = 0.41.0.
-v0.40.0 was pushed and tagged but NOT published: its GitHub Actions
-run failed at the `npm test` step on the pre-existing flaky red-packet
-gravity test (a random launch velocity could beat the assertion window;
-fixed in the v0.41.0 commit by extending the flight window). v0.41.0
-was built on top of the v0.40.0 commit, so the registry has all
-v0.40.0 code. Re-running the v0.40.0 workflow was deliberately not
-done: `npm publish` would move the `latest` dist-tag back to 0.40.0
-and there is no npm auth on this machine to move it back.
-Final suite: 776 Vitest tests passing, tsc clean, production build clean.
-(A follow-up commit on main fixed a createOfflineQueue flush race and
-added its regression test; no version bump, the v0.33.0-v0.41.0 release
-sequence is complete.)
-
-- v0.41.1: createWaveform re-arm fix, shipped 2026-09-27. The render
-  loop used to schedule its engine task once at creation, so a waveform
-  created while `enabled()` was false never drew again when enabled
-  flipped true (the engine drops tasks that return false). The loop is
-  now armed/disarmed by a reactive effect on `enabled()`: it starts when
-  enabled becomes true, parks when false, and cleans up on dispose.
-  Regression tests in src/waveform.test.ts cover disabled-to-enabled,
-  enabled-to-disabled, default-enabled, and plain-boolean-false.
-  Final suite: 780 Vitest tests passing, tsc clean, production build clean.
+Release history has moved to [CHANGELOG.md](./CHANGELOG.md).
 
 Each release: implement, export, document in README, full Vitest suite,
 tsc clean, production build, em-dash and prohibited-term scans, commit

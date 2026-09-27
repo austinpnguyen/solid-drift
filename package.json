@@ -15,6 +15,12 @@
   "files": [
     "dist"
   ],
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/austinpnguyen"
+    }
+  ],
   "keywords": [
     "solid",
     "solidjs",
@@ -43,5 +49,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "0.41.1"
+  "version": "0.41.2"
 }

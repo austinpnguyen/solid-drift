@@ -1,5 +1,8 @@
 # solid-drift
 
+[![npm version](https://img.shields.io/npm/v/solid-drift)](https://www.npmjs.com/package/solid-drift)
+[![Sponsor](https://img.shields.io/badge/sponsor-austinpnguyen-ff69b4)](https://github.com/sponsors/austinpnguyen)
+
 Signal-native animation for SolidJS. Animate **values, not elements**: springs and tweens follow your signals, and retargeting mid-flight is seamless by design, with no restarts and no jumps.
 
 Built with AI assistance.
@@ -35,7 +38,33 @@ function Panel() {
 }
 ```
 
-## API
+## Contents
+
+- [Core](#core)
+- [Scroll](#scroll)
+- [Pointer and physics](#pointer-and-physics)
+- [Gesture](#gesture)
+- [Cartoon](#cartoon)
+- [Typography](#typography)
+- [Motion graphics](#motion-graphics)
+- [AI and agent UI](#ai-and-agent-ui)
+- [Web3](#web3)
+- [Fun and feedback](#fun-and-feedback)
+- [Utilities](#utilities)
+- [Offline](#offline)
+- [Social](#social)
+- [Network](#network)
+- [Browser](#browser)
+- [Auth](#auth)
+- [Analytics](#analytics)
+- [Easings](#easings)
+- [Support the project](#support-the-project)
+- [How it works](#how-it-works)
+- [License](#license)
+
+## Core
+
+Use when you need the basic building blocks: springs, tweens, staggered lists, timelines, and imperative animation.
 
 ### `createSpring(source, options?)`
 
@@ -82,6 +111,105 @@ Binds animated values directly to an element's style. Each prop accepts a plain 
 ```
 
 `x`/`y` map to `translate3d` px, `rotate` to degrees.
+
+### `createTimeline(steps)`
+
+Plays a sequence of one-shot animations back to back. Each step is an `animate()` call: `from`/`to` plus duration, delay, easing, and `onUpdate`. Steps run strictly in order, so one step's `onUpdate` can drive one element while the next step drives another, building choreographed entrances without nested callbacks.
+
+```ts
+import { createTimeline } from "solid-drift";
+
+const intro = createTimeline([
+  {
+    from: 0,
+    to: 1,
+    duration: 400,
+    onUpdate: (v) => (title.style.opacity = String(v)),
+  },
+  {
+    from: 24,
+    to: 0,
+    duration: 500,
+    easing: "easeOutExpo",
+    onUpdate: (v) => (title.style.transform = `translateY(${v}px)`),
+  },
+  {
+    from: 0,
+    to: 1,
+    duration: 300,
+    onUpdate: (v) => (cta.style.opacity = String(v)),
+  },
+]);
+await intro.start();
+```
+
+Returns `{ start, stop, replay, status }`:
+
+- `start()` plays every step in order and resolves when the last step completes.
+- `stop()` halts mid-step and resolves the in-flight `start()` promise.
+- `replay()` stops and plays again from the first step.
+- `status` is a reactive `"idle" | "running" | "done"` signal.
+
+Under reduced motion every step jumps straight to its end value (each step's `onUpdate(to)` still runs, so the final state is always correct). SSR-safe: steps apply their end values instantly.
+
+### `springPresets`
+
+Named spring configurations for common feels. Spread into `createSpring`, `createMagnetic`, or `createTilt` options.
+
+```ts
+import { createSpring, springPresets } from "solid-drift";
+
+const x = createSpring(target, { ...springPresets.wobbly });
+```
+
+| Preset     | Feel                                            |
+| ---------- | ----------------------------------------------- |
+| `gentle`   | Soft and calm, default-like, a touch slower     |
+| `default`  | The library default balance                     |
+| `snappy`   | Tight and responsive, for UI that must keep up  |
+| `wobbly`   | Loose and playful, with a visible overshoot     |
+| `molasses` | Heavy and deliberate, like moving through syrup |
+
+### `createStagger(count, delayMs)`
+
+Builds a stagger-delay lookup for cascading animations across a list. Given an item index, returns its delay in milliseconds (`index * delayMs`). Pair with `createTween`'s `delay` option (or `animate`) so items enter one after another instead of all at once. Pure function, no reactivity involved.
+
+```tsx
+import { createStagger } from "solid-drift";
+
+const at = createStagger(5, 80); // 5 items, 80ms apart
+at(0); // 0
+at(3); // 240
+```
+
+## Scroll
+
+Use when animation or state should follow scroll position.
+
+### `createScrollProgress(target?)`
+
+Reports scroll progress as a 0-to-1 signal. Defaults to whole-page progress; pass an element ref accessor for element-scoped progress. Updates are rAF-throttled. SSR-safe: reports 0 on the server.
+
+```tsx
+import { createScrollProgress } from "solid-drift";
+
+const progress = createScrollProgress(); // page progress
+const section = createScrollProgress(() => sectionRef); // element progress
+<div style={{ transform: `scaleX(${progress()})` }} />
+```
+
+### `createInView(ref, options?)`
+
+Element visibility as a boolean signal, via IntersectionObserver. `threshold` (default 0.15) sets how much of the element must be visible; `once` (default true) stops observing after the first entry. SSR-safe: always `false` on the server.
+
+```tsx
+import { createInView, createTween } from "solid-drift";
+
+let card: HTMLDivElement | undefined;
+const inView = createInView(() => card);
+const opacity = createTween(() => (inView() ? 1 : 0), { duration: 400 });
+<div ref={card} style={{ opacity: opacity() }}>fades in on scroll</div>
+```
 
 ### `createHorizontalScroll(options)`
 
@@ -274,6 +402,47 @@ const line = createScrollLine({ progress, axis: "x", origin: "start" });
 
 SSR-safe (returns the `from` scale on the server). Under reduced motion the line holds the `to` scale, so it is fully revealed rather than stuck invisible.
 
+### Presence, view transitions, and scroll reveals
+
+```tsx
+import { createPresence, createViewTransition, createScrollReveal } from "solid-drift";
+
+// Exit animations that actually run
+const dialog = createPresence({ when: open, exitDuration: 250 });
+<Show when={dialog.mounted()}>
+  <div
+    style={{
+      opacity: dialog.exiting() ? "0" : "1",
+      transition: "opacity 250ms",
+    }}
+  >
+    ...
+  </div>
+</Show>;
+
+// Native-feel page transitions
+const vt = createViewTransition();
+const switchTab = (tab: string) => vt.transition(() => setTab(tab));
+
+// Scroll-triggered reveal choreography
+const reveal = createScrollReveal(3, { stagger: 90 });
+<For each={cards}>
+  {(card, i) => (
+    <div ref={reveal.items[i()].ref} style={reveal.items[i()].style()}>
+      {card.title}
+    </div>
+  )}
+</For>;
+```
+
+- `createPresence({ when, exitDuration?, onExitStart?, onExitComplete? })`: `{ mounted, status, exiting, forceExit }`. When `when` flips false, content stays mounted for `exitDuration` ms (default 300) so the exit animation finishes, then unmounts; flipping back mid-exit cancels it. `forceExit()` unmounts immediately. Skips the exit phase under reduced motion. SSR-safe.
+- `createViewTransition()`: `{ supported, transitioning, transition }`. Wraps `document.startViewTransition`: `transition(update)` animates between old and new DOM when supported, otherwise runs the update directly. SSR-safe (`supported()` is false on the server).
+- `createScrollReveal(count, options?)`: `{ items, replay, reset }`. Each `items[i]` has `ref`, `revealed`, and `style` (empty on the server so content stays visible without JS). Staggered entrance (`stagger`, default 60ms), variants (`fade`, `fade-up`, `fade-down`, `fade-left`, `fade-right`, `scale`, `none`), `once` semantics (default true), and instant reveal under reduced motion.
+
+## Pointer and physics
+
+Use when elements should react to the pointer or simulate real physics.
+
 ### `createVelocity(source?, options?)`
 
 A signal tracking how fast another signal changes, in units per second, smoothed with an exponential moving average. With no source it measures page scroll in pixels per second. It spikes while the user flings the page and coasts back to exactly 0 when motion stops, which makes it ideal for velocity-driven skew, stretch, or blur that intensifies with speed. The measurement loop runs only while the value is live.
@@ -375,69 +544,6 @@ const c = createTiltCard(() => card, { maxAngle: 14 })
 | `perspective` | `900`   | Perspective distance in px           |
 | `spring`      | default | Spring physics for tilt, shine, pop  |
 
-### `createDrag(ref, options?)`
-
-Pointer drag with spring physics, constraints, and momentum. The gesture workhorse: draggable cards, sliders, bottom-sheet handles, sortable rows. While the pointer is down the element tracks it 1:1; on release it glides with inertia and springs into its constraints, stretching elastically past the edges while dragged. Set `touch-action: none` on the draggable element so touch drags do not fight the page scroll. For the physics-toy flavor (exponential friction plus bouncing off walls), see `createFling` instead.
-
-```tsx
-import { createDrag } from "solid-drift"
-
-let card!: HTMLDivElement
-const { x, y, status } = createDrag(() => card, {
-  constraints: { left: 0, right: 300, top: 0, bottom: 0 },
-  elastic: 0.4,
-})
-<div
-  ref={card}
-  style={{
-    transform: `translate(${x()}px, ${y()}px)`,
-    "touch-action": "none",
-    cursor: status() === "dragging" ? "grabbing" : "grab",
-  }}
->
-  Drag me
-</div>
-```
-
-| Option        | Default                          | Description                                                        |
-| ------------- | -------------------------------- | ------------------------------------------------------------------ |
-| `axis`        | `"both"`                         | `"x"`, `"y"`, or `"both"`                                          |
-| `constraints` | none                             | Bounds in px relative to the drag origin; release settles inside    |
-| `elastic`     | `0.35`                           | Overshoot past constraints while dragging, 0 (hard stop) to 1      |
-| `momentum`    | `true`                           | Glide with inertia after release                                   |
-| `inertia`     | `0.2`                            | Seconds of release velocity projected into the settle target       |
-| `spring`      | `{ stiffness: 300, damping: 32 }` | Spring physics for the settle after release                       |
-| `onDragStart` | none                             | Called when the pointer grabs the element                           |
-| `onDragEnd`   | none                             | Called on release with `{ x, y, velocityX, velocityY }` (px/s)      |
-
-Returns `{ x, y, status }`: the drag offset in pixels and `status` (`"idle"`, `"dragging"`, `"settling"`). SSR-safe: everything rests at 0. Under reduced motion the drag still tracks the pointer (direct manipulation is not animation) but release snaps instantly to the constrained target with no glide.
-
-### `createSwipe(ref, options?)`
-
-Touch swipe gesture recognition: swipe-to-dismiss, carousels. While `createDrag` tracks the pointer continuously, `createSwipe` makes the discrete decision: was that gesture a swipe, and which way? On pointerup it compares travel, duration, and velocity against the thresholds and fires the matching callbacks plus the `lastSwipe` signal. Pointer Events give touch parity for free: mouse, touch, and pen run through the same path. For touch, set `touch-action: pan-y` on a horizontal swipe surface (or `pan-x` for vertical) so the browser does not hijack the gesture; use `none` when recognizing both axes.
-
-```tsx
-import { createSwipe } from "solid-drift"
-
-let deck!: HTMLDivElement
-const { lastSwipe } = createSwipe(() => deck, {
-  onSwipeLeft: () => dismiss(),
-  onSwipeRight: () => keep(),
-})
-<div ref={deck} style={{ "touch-action": "pan-y" }}>card</div>
-```
-
-| Option         | Default | Description                                                              |
-| -------------- | ------- | ------------------------------------------------------------------------ |
-| `threshold`    | `48`    | Minimum travel in px to count as a swipe                                 |
-| `maxDuration`  | `800`   | Maximum gesture duration in ms                                           |
-| `minVelocity`  | `0.4`   | Minimum velocity in px/ms; a fast flick below `threshold` still counts    |
-| `axis`         | `"both"`| `"x"`, `"y"`, or `"both"`                                                |
-| `onSwipe`      | none    | Called for every recognized swipe with `{ direction, distance, velocity, duration, from, to }` |
-| `onSwipeLeft` / `onSwipeRight` / `onSwipeUp` / `onSwipeDown` | none | Per-direction callbacks |
-
-Returns `{ lastSwipe, reset }`. A swipe counts when travel passes `threshold` inside `maxDuration`, or velocity passes `minVelocity`; slow long drags are not swipes. Recognition is not animation, so it works identically under reduced motion; the host decides how to animate the response. SSR-safe: `lastSwipe()` stays null and callbacks never fire.
-
 ### `createTrail(source, options?)`
 
 A signal that replays another signal's past: it returns the value the source had `delay` milliseconds ago, interpolated between samples. Chain trails off one source for follower effects (a cursor with a comet tail, cascading highlights), or trail a scroll progress for a delayed echo of the page. The trail catches up and parks exactly on the latest value when the source rests. The follow loop runs only while the trail is behind.
@@ -455,46 +561,6 @@ const ghost = createTrail(tab, { delay: 150 });
 | `delay` | `120`   | How far behind the source the trail follows, in ms |
 
 SSR-safe: returns the source itself on the server. Under reduced motion it also returns the source directly, with no trailing motion. A `delay` of 0 returns the source itself.
-
-### `createTimeline(steps)`
-
-Plays a sequence of one-shot animations back to back. Each step is an `animate()` call: `from`/`to` plus duration, delay, easing, and `onUpdate`. Steps run strictly in order, so one step's `onUpdate` can drive one element while the next step drives another, building choreographed entrances without nested callbacks.
-
-```ts
-import { createTimeline } from "solid-drift";
-
-const intro = createTimeline([
-  {
-    from: 0,
-    to: 1,
-    duration: 400,
-    onUpdate: (v) => (title.style.opacity = String(v)),
-  },
-  {
-    from: 24,
-    to: 0,
-    duration: 500,
-    easing: "easeOutExpo",
-    onUpdate: (v) => (title.style.transform = `translateY(${v}px)`),
-  },
-  {
-    from: 0,
-    to: 1,
-    duration: 300,
-    onUpdate: (v) => (cta.style.opacity = String(v)),
-  },
-]);
-await intro.start();
-```
-
-Returns `{ start, stop, replay, status }`:
-
-- `start()` plays every step in order and resolves when the last step completes.
-- `stop()` halts mid-step and resolves the in-flight `start()` promise.
-- `replay()` stops and plays again from the first step.
-- `status` is a reactive `"idle" | "running" | "done"` signal.
-
-Under reduced motion every step jumps straight to its end value (each step's `onUpdate(to)` still runs, so the final state is always correct). SSR-safe: steps apply their end values instantly.
 
 ### `animateFlip(ref, mutate, options?)`
 
@@ -558,23 +624,127 @@ function TabPill(props: { id: string }) {
 
 Returns `{ x, y, scaleX, scaleY, flying }`: the corrective transform and `flying`, true while the handoff runs. SSR-safe and reduced-motion safe: the element simply appears, with no flight.
 
-### `springPresets`
+### `createGravity(options?)`
 
-Named spring configurations for common feels. Spread into `createSpring`, `createMagnetic`, or `createTilt` options.
+Real falling physics with floor bounces. A body accelerates downward, bounces with restitution, and comes to rest exactly on the floor. Call `drop()` to replay.
 
 ```ts
-import { createSpring, springPresets } from "solid-drift";
+import { createGravity } from "solid-drift";
 
-const x = createSpring(target, { ...springPresets.wobbly });
+const { x, y, moving, drop } = createGravity({
+  from: 300, // drop height above the floor
+  gravity: 2600,
+  bounciness: 0.55,
+  velocityX: 120, // optional sideways toss
+  onRest: () => console.log("landed"),
+});
 ```
 
-| Preset     | Feel                                            |
-| ---------- | ----------------------------------------------- |
-| `gentle`   | Soft and calm, default-like, a touch slower     |
-| `default`  | The library default balance                     |
-| `snappy`   | Tight and responsive, for UI that must keep up  |
-| `wobbly`   | Loose and playful, with a visible overshoot     |
-| `molasses` | Heavy and deliberate, like moving through syrup |
+Returns `{ x, y, vx, vy, moving, drop, stop }`. Under reduced motion the body sits on the floor and `drop()` is a no-op.
+
+### `createPendulum(ref, options?)`
+
+A true physical pendulum: integrates the pendulum equation, so the period naturally depends on the rope length. Drag the bob with the pointer to set a release angle, or call `swing(degrees)`.
+
+```ts
+import { createPendulum } from "solid-drift";
+
+const { angle, x, y, swing } = createPendulum(() => bob, {
+  length: 180,
+  gravity: 2600,
+  damping: 0.35,
+  amplitude: 40, // auto-swings on mount
+});
+```
+
+Returns `{ angle, x, y, swing }` where `x`/`y` are the bob offset from the pivot. Pointer drag pauses the sim, sets the angle from the pointer position around the pivot, and releases on pointer-up. Under reduced motion it hangs at rest.
+
+### `createFling(ref, options?)`
+
+Drag it, throw it: pointer drag with release velocity, exponential friction, and bounces off the container or viewport edges. The momentum is sampled from the last 120ms of pointer movement, so a flick feels like a flick.
+
+```ts
+import { createFling } from "solid-drift";
+
+const { x, y, moving, stop } = createFling(() => card, {
+  friction: 1.4,
+  bounciness: 0.6,
+  bounds: () => arena, // or omit for the viewport
+});
+```
+
+Returns `{ x, y, vx, vy, moving, stop }`. Under reduced motion dragging still works but release has no momentum.
+
+## Gesture
+
+Use when you need drag or swipe interactions with touch parity.
+
+### `createDrag(ref, options?)`
+
+Pointer drag with spring physics, constraints, and momentum. The gesture workhorse: draggable cards, sliders, bottom-sheet handles, sortable rows. While the pointer is down the element tracks it 1:1; on release it glides with inertia and springs into its constraints, stretching elastically past the edges while dragged. Set `touch-action: none` on the draggable element so touch drags do not fight the page scroll. For the physics-toy flavor (exponential friction plus bouncing off walls), see `createFling` instead.
+
+```tsx
+import { createDrag } from "solid-drift"
+
+let card!: HTMLDivElement
+const { x, y, status } = createDrag(() => card, {
+  constraints: { left: 0, right: 300, top: 0, bottom: 0 },
+  elastic: 0.4,
+})
+<div
+  ref={card}
+  style={{
+    transform: `translate(${x()}px, ${y()}px)`,
+    "touch-action": "none",
+    cursor: status() === "dragging" ? "grabbing" : "grab",
+  }}
+>
+  Drag me
+</div>
+```
+
+| Option        | Default                          | Description                                                        |
+| ------------- | -------------------------------- | ------------------------------------------------------------------ |
+| `axis`        | `"both"`                         | `"x"`, `"y"`, or `"both"`                                          |
+| `constraints` | none                             | Bounds in px relative to the drag origin; release settles inside    |
+| `elastic`     | `0.35`                           | Overshoot past constraints while dragging, 0 (hard stop) to 1      |
+| `momentum`    | `true`                           | Glide with inertia after release                                   |
+| `inertia`     | `0.2`                            | Seconds of release velocity projected into the settle target       |
+| `spring`      | `{ stiffness: 300, damping: 32 }` | Spring physics for the settle after release                       |
+| `onDragStart` | none                             | Called when the pointer grabs the element                           |
+| `onDragEnd`   | none                             | Called on release with `{ x, y, velocityX, velocityY }` (px/s)      |
+
+Returns `{ x, y, status }`: the drag offset in pixels and `status` (`"idle"`, `"dragging"`, `"settling"`). SSR-safe: everything rests at 0. Under reduced motion the drag still tracks the pointer (direct manipulation is not animation) but release snaps instantly to the constrained target with no glide.
+
+### `createSwipe(ref, options?)`
+
+Touch swipe gesture recognition: swipe-to-dismiss, carousels. While `createDrag` tracks the pointer continuously, `createSwipe` makes the discrete decision: was that gesture a swipe, and which way? On pointerup it compares travel, duration, and velocity against the thresholds and fires the matching callbacks plus the `lastSwipe` signal. Pointer Events give touch parity for free: mouse, touch, and pen run through the same path. For touch, set `touch-action: pan-y` on a horizontal swipe surface (or `pan-x` for vertical) so the browser does not hijack the gesture; use `none` when recognizing both axes.
+
+```tsx
+import { createSwipe } from "solid-drift"
+
+let deck!: HTMLDivElement
+const { lastSwipe } = createSwipe(() => deck, {
+  onSwipeLeft: () => dismiss(),
+  onSwipeRight: () => keep(),
+})
+<div ref={deck} style={{ "touch-action": "pan-y" }}>card</div>
+```
+
+| Option         | Default | Description                                                              |
+| -------------- | ------- | ------------------------------------------------------------------------ |
+| `threshold`    | `48`    | Minimum travel in px to count as a swipe                                 |
+| `maxDuration`  | `800`   | Maximum gesture duration in ms                                           |
+| `minVelocity`  | `0.4`   | Minimum velocity in px/ms; a fast flick below `threshold` still counts    |
+| `axis`         | `"both"`| `"x"`, `"y"`, or `"both"`                                                |
+| `onSwipe`      | none    | Called for every recognized swipe with `{ direction, distance, velocity, duration, from, to }` |
+| `onSwipeLeft` / `onSwipeRight` / `onSwipeUp` / `onSwipeDown` | none | Per-direction callbacks |
+
+Returns `{ lastSwipe, reset }`. A swipe counts when travel passes `threshold` inside `maxDuration`, or velocity passes `minVelocity`; slow long drags are not swipes. Recognition is not animation, so it works identically under reduced motion; the host decides how to animate the response. SSR-safe: `lastSwipe()` stays null and callbacks never fire.
+
+## Cartoon
+
+Use when you want cartoon-style motion: squash, anticipation, wobble.
 
 ### `createSquashStretch(ref, options)`
 
@@ -644,56 +814,9 @@ const { wobble } = createWobble(() => badge, {
 
 Options: `rotation` (default 7), `frequency` (default 5), `decay` (default 0.45), `scaleAmount` (default 0.06), `trigger` (`"pointerdown" | "none"`, default `"pointerdown"` when a ref is given). Returns `{ rotate, scaleX, scaleY, wobble }`; `wobble(direction?)` retriggers with an optional initial direction. Under reduced motion it never moves.
 
-### `createGravity(options?)`
+## Typography
 
-Real falling physics with floor bounces. A body accelerates downward, bounces with restitution, and comes to rest exactly on the floor. Call `drop()` to replay.
-
-```ts
-import { createGravity } from "solid-drift";
-
-const { x, y, moving, drop } = createGravity({
-  from: 300, // drop height above the floor
-  gravity: 2600,
-  bounciness: 0.55,
-  velocityX: 120, // optional sideways toss
-  onRest: () => console.log("landed"),
-});
-```
-
-Returns `{ x, y, vx, vy, moving, drop, stop }`. Under reduced motion the body sits on the floor and `drop()` is a no-op.
-
-### `createPendulum(ref, options?)`
-
-A true physical pendulum: integrates the pendulum equation, so the period naturally depends on the rope length. Drag the bob with the pointer to set a release angle, or call `swing(degrees)`.
-
-```ts
-import { createPendulum } from "solid-drift";
-
-const { angle, x, y, swing } = createPendulum(() => bob, {
-  length: 180,
-  gravity: 2600,
-  damping: 0.35,
-  amplitude: 40, // auto-swings on mount
-});
-```
-
-Returns `{ angle, x, y, swing }` where `x`/`y` are the bob offset from the pivot. Pointer drag pauses the sim, sets the angle from the pointer position around the pivot, and releases on pointer-up. Under reduced motion it hangs at rest.
-
-### `createFling(ref, options?)`
-
-Drag it, throw it: pointer drag with release velocity, exponential friction, and bounces off the container or viewport edges. The momentum is sampled from the last 120ms of pointer movement, so a flick feels like a flick.
-
-```ts
-import { createFling } from "solid-drift";
-
-const { x, y, moving, stop } = createFling(() => card, {
-  friction: 1.4,
-  bounciness: 0.6,
-  bounds: () => arena, // or omit for the viewport
-});
-```
-
-Returns `{ x, y, vx, vy, moving, stop }`. Under reduced motion dragging still works but release has no momentum.
+Use when text itself is the animation.
 
 ### `createFontSwap(ref, options)`
 
@@ -872,6 +995,10 @@ Returns `{ play, stop, replay, status }`. `play()` resolves when the last unit a
 
 `from` also accepts `variance` (0 to 1, default 0) and `seed`. Each unit jitters `y`, `blur`, `scale`, and `rotate` around the `from` values by up to `variance`, so a headline feels hand-set instead of mechanical. The jitter uses a seeded PRNG, so the same `seed` renders the exact same layout on every run (stable across SSR and replays). `variance: 0` keeps the classic uniform behavior.
 
+## Motion graphics
+
+Use when you are directing scenes: cameras, cuts, beats, showreels.
+
 ### `createScenePlayer(scenes)`
 
 Scene orchestrator for showreels and launch films: an ordered list of scenes, each with a `duration` and `onEnter`/`onExit` hooks. `scene()` tells your view which scene is live; the hooks trigger each scene's choreography (a `createKineticType`, a camera move, a color shift).
@@ -984,6 +1111,10 @@ stopCuts();
 ```
 
 Cuts only fire while the player is running, so pausing the reel pauses the cuts too. Beat timing is not motion, so cuts keep firing under reduced motion (pair with a reduced-motion-safe `onEnter` if the cut itself animates).
+
+## AI and agent UI
+
+Use when building AI chat, voice, streaming, or agent interfaces.
 
 ### `createStreamReveal(ref, options?)`
 
@@ -1110,6 +1241,75 @@ player.stop(); // halt mid-reel; the play() promise resolves
 ```
 
 Returns `{ scene, status, play, stop }`. `scene()` is the live scene index (-1 before the first play). Under reduced motion `play()` applies every scene's final state instantly and ends `"done"`.
+
+### Streaming
+
+Token-by-token chat over OpenAI, Anthropic, Meta's Llama API, or your own provider, plus a low-level fetch-based SSE client for any event stream.
+
+```tsx
+import { createChatModel } from "solid-drift"
+
+const chat = createChatModel({
+  provider: "openai",
+  apiKey: () => localStorage.getItem("openai_key") ?? "",
+  model: "test-model-fast",
+  system: "You are a concise assistant.",
+})
+
+// In your component:
+<For each={chat.messages()}>
+  {(m) => <div class={m.role}>{m.content}</div>}
+</For>
+<button onClick={() => chat.send(input())} disabled={chat.status() === "streaming"}>
+  Send
+</button>
+```
+
+- `createChatModel(options)` returns `{ messages, streamingText, status, error, send, stop, reset }`. `send(content)` appends the user message and streams the reply into a live assistant message, so UI bound to `messages()` renders token by token; `status()` is `idle`, `streaming`, or `error`. `stop()` aborts and keeps the partial reply; `send()` while streaming is ignored.
+- `provider` is `"openai"`, `"anthropic"`, `"meta"`, or a custom `{ kind: "custom", stream, parseDelta }`. OpenAI and Meta (Llama API via `/compat/v1`, OpenAI-compatible) use Bearer auth and `data:` chunks terminated by `[DONE]`; Anthropic uses `x-api-key` plus `anthropic-version: 2023-06-01`, a top-level `system` prompt, and `content_block_delta` text deltas (required `maxTokens` defaults to 1024).
+- Honest limitation: api.anthropic.com does not send CORS headers for browser origins, so from a browser Anthropic must go through your own server route or proxy; point `baseUrl` at it. For production with any provider, prefer a server route that holds the key and set `baseUrl` to it so keys never ship to the browser.
+- `createSSE(url, options?)` is a fetch-based event-stream client (`{ status, events, lastEvent, error, connect, disconnect }`): unlike `EventSource` it supports any method and custom headers, parses the full SSE framing (named events, multi-line data, comments, chunk splits), and leaves reconnection manual via `connect()`. SSR-safe: nothing connects until `connect()` (or `autoConnect`) runs on the client.
+
+### Voice
+
+A full voice loop: mic metering, speech-to-text, a voice state machine, canvas waveforms, text-to-speech (browser or cloud), thinking indicators, and a voice-enabled prompt input.
+
+```tsx
+import { createVoiceState, createSpeech, createTTS, createPrompt, createChatModel } from "solid-drift"
+
+const voice = createVoiceState()
+const chat = createChatModel({ provider: "openai", apiKey: getKey, model: "test-model-fast" })
+const tts = createTTS()
+const prompt = createPrompt({
+  onSubmit: async (text) => {
+    voice.toThinking()
+    await chat.send(text)
+    voice.toSpeaking()
+    const msgs = chat.messages()
+    tts.speak(msgs[msgs.length - 1]?.content ?? "")
+    voice.toIdle()
+  },
+})
+
+<input
+  value={prompt.value()}
+  onInput={(e) => prompt.setValue(e.currentTarget.value)}
+  onKeyDown={(e) => e.key === "Enter" && prompt.submit()}
+/>
+<button onClick={() => { voice.toListening(); prompt.toggleMic(); }}>Mic</button>
+```
+
+- `createVoiceState()` is the turn state machine: `state()` is `idle`, `listening`, `thinking`, or `speaking`, with `toIdle`/`toListening`/`toThinking`/`toSpeaking` transitions.
+- `createMicLevel(options?)` returns `{ level, active, supported, analyser, error, start, stop }`: a 0..1 smoothed RMS meter from `getUserMedia` plus an `AnalyserNode` (call `start()` from a user gesture). The exposed `analyser` wires straight into `createWaveform`.
+- `createSpeech(options?)` wraps the Web Speech API (`SpeechRecognition` with `webkitSpeechRecognition` fallback): `{ supported, listening, transcript, interim, error, start, stop, reset }`. Final results accumulate into `transcript()`; `continuous` sessions auto-restart if the browser ends them mid-turn.
+- `createWaveform(canvas, options)` draws the analyser's time-domain wave (`mode: "line"`) or spectrum (`mode: "bars"`) on a canvas, DPR-aware, on the shared clock; under reduced motion it redraws at most every 250ms.
+- `createTTS(options?)` speaks via `speechSynthesis` by default (`{ supported, speaking, voices, speak, cancel }`, async voice loading, `speak()` cancels the current utterance first) and upgrades to any cloud voice through `provider: { speak(text, { signal }) }`.
+- `createThinking(options?)` cycles `"Thinking"`, `"Thinking."`, ... through `phrases` at `interval` ms: `{ text, running, start, stop }`.
+- `createPrompt(options?)` is the voice-enabled input: `{ value, setValue, listening, interim, supported, toggleMic, submit, clear }`. Mic finals are appended to the value as they arrive; `submit()` fires `onSubmit` and clears by default. Everything is SSR-safe: unsupported primitives report `supported: false` and their actions no-op on the server.
+
+## Web3
+
+Use when building onchain UI: transactions, prices, NFTs, identity, market data.
 
 ### `createTxLifecycle(options?)`
 
@@ -1278,6 +1478,10 @@ const { mined, receipt } = createTxReceipt("0x5c50…f7b");
 const avatar = createIdenticon("0xd8dA…6045");
 ```
 
+## Fun and feedback
+
+Use when you want delight: toasts, gacha, confetti, scratch-offs.
+
 ### `createToast(options?)`
 
 A signal-native toast queue with choreographed lifecycle. The primitive owns timing and state; you own the rendering, so no component opinions leak into your design system. Each toast moves through `"entering"` to `"visible"` to `"leaving"` to removed on the shared animation clock: bind `state` to CSS classes or drift values for enter/exit motion without any timers of your own.
@@ -1313,21 +1517,6 @@ success("Payment sent", { description: "0.5 SOL to alice.sol" })
 | `duration` | `4000`  | Default auto-dismiss time in milliseconds                        |
 
 Push helpers: `toast(title, options?)`, `info(...)`, `success(...)`, `warning(...)`, `error(...)`. Each returns the toast id. Per-toast options: `kind`, `description`, `duration` (ms; `0` means sticky). `dismiss(id)` starts the leave transition for one toast; `clear()` dismisses all. SSR-safe: toasts pushed on the server start `"visible"`. Under reduced motion the enter and leave transitions are instant, but auto-dismiss timing still applies.
-
-### `useLowPowerMode(options?)`
-
-One reactive signal for mobile-first degradation. It combines the OS `prefers-reduced-motion` and `prefers-reduced-data` media queries with low-end device signals (`navigator.deviceMemory`, `navigator.hardwareConcurrency`), so a single check covers user preference, network thrift, and weak hardware. The media queries update live; the device signals are sampled once. There is also a one-shot `isLowPowerMode(options?)` for non-reactive checks.
-
-```tsx
-import { useLowPowerMode } from "solid-drift"
-
-const lowPower = useLowPowerMode()
-// Degrade gracefully: shorter, cheaper motion on weak devices.
-const duration = () => (lowPower() ? 0 : 400)
-const confettiCount = () => (lowPower() ? 20 : 150)
-```
-
-Options: `maxDeviceMemory` (GB, default `4`), `maxHardwareConcurrency` (default `4`): a device at or below either threshold counts as low-end. Where the device signals are unsupported they degrade to "not low-end". SSR-safe: always `false` on the server.
 
 ### `createSlotMachine(options)`
 
@@ -1429,6 +1618,10 @@ const scratch = createScratch(() => foil, {
 ```
 
 Options: `threshold` (fraction cleared to complete, default `0.45`), `brush` (eraser radius in px, default `26`), `paint(ctx, w, h)` (custom cover art), `onComplete`. Returns `{ cleared, done, reset }`: `cleared()` is the 0..1 fraction erased, `reset()` repaints the cover. Scratching is direct manipulation, so it works identically under reduced motion. SSR-safe: `cleared()` stays 0.
+
+## Utilities
+
+Use when you need everyday app glue: DOM helpers, haptics, storage, gesture state.
 
 ### DOM utilities
 
@@ -1545,100 +1738,6 @@ const bs = createBottomSheet(() => handle, {
 - `snapPoints` are visible height fractions (`1` fully open); values are clamped to [0, 1] and sorted ascending, an empty array falls back to `[1]`. Default `[0.5, 1]`; `initialSnap` (default the fullest) picks the point `openSheet()` opens at.
 - While the pointer is down the sheet tracks 1:1 with light rubber-banding past the fully-open top and the dismissed bottom. On release, the target is the nearest snap to `y + velocity * 0.18`; dismissal happens past the midpoint between the lowest snap and closed, or on a downward flick over 700 px/s. Snap travel uses a spring (`options.spring`, default stiffness 400 / damping 40).
 - Bind `ref` to the drag handle when the sheet body scrolls (keeps drag and scroll from fighting), to the sheet root otherwise. The moving element gets `translateY(y())`; the drag target needs `touch-action: none`. Starts dismissed on the server (SSR-safe); under reduced motion it jumps straight to snap targets.
-
-### Streaming
-
-Token-by-token chat over OpenAI, Anthropic, Meta's Llama API, or your own provider, plus a low-level fetch-based SSE client for any event stream.
-
-```tsx
-import { createChatModel } from "solid-drift"
-
-const chat = createChatModel({
-  provider: "openai",
-  apiKey: () => localStorage.getItem("openai_key") ?? "",
-  model: "test-model-fast",
-  system: "You are a concise assistant.",
-})
-
-// In your component:
-<For each={chat.messages()}>
-  {(m) => <div class={m.role}>{m.content}</div>}
-</For>
-<button onClick={() => chat.send(input())} disabled={chat.status() === "streaming"}>
-  Send
-</button>
-```
-
-- `createChatModel(options)` returns `{ messages, streamingText, status, error, send, stop, reset }`. `send(content)` appends the user message and streams the reply into a live assistant message, so UI bound to `messages()` renders token by token; `status()` is `idle`, `streaming`, or `error`. `stop()` aborts and keeps the partial reply; `send()` while streaming is ignored.
-- `provider` is `"openai"`, `"anthropic"`, `"meta"`, or a custom `{ kind: "custom", stream, parseDelta }`. OpenAI and Meta (Llama API via `/compat/v1`, OpenAI-compatible) use Bearer auth and `data:` chunks terminated by `[DONE]`; Anthropic uses `x-api-key` plus `anthropic-version: 2023-06-01`, a top-level `system` prompt, and `content_block_delta` text deltas (required `maxTokens` defaults to 1024).
-- Honest limitation: api.anthropic.com does not send CORS headers for browser origins, so from a browser Anthropic must go through your own server route or proxy; point `baseUrl` at it. For production with any provider, prefer a server route that holds the key and set `baseUrl` to it so keys never ship to the browser.
-- `createSSE(url, options?)` is a fetch-based event-stream client (`{ status, events, lastEvent, error, connect, disconnect }`): unlike `EventSource` it supports any method and custom headers, parses the full SSE framing (named events, multi-line data, comments, chunk splits), and leaves reconnection manual via `connect()`. SSR-safe: nothing connects until `connect()` (or `autoConnect`) runs on the client.
-
-### Voice
-
-A full voice loop: mic metering, speech-to-text, a voice state machine, canvas waveforms, text-to-speech (browser or cloud), thinking indicators, and a voice-enabled prompt input.
-
-```tsx
-import { createVoiceState, createSpeech, createTTS, createPrompt, createChatModel } from "solid-drift"
-
-const voice = createVoiceState()
-const chat = createChatModel({ provider: "openai", apiKey: getKey, model: "test-model-fast" })
-const tts = createTTS()
-const prompt = createPrompt({
-  onSubmit: async (text) => {
-    voice.toThinking()
-    await chat.send(text)
-    voice.toSpeaking()
-    const msgs = chat.messages()
-    tts.speak(msgs[msgs.length - 1]?.content ?? "")
-    voice.toIdle()
-  },
-})
-
-<input
-  value={prompt.value()}
-  onInput={(e) => prompt.setValue(e.currentTarget.value)}
-  onKeyDown={(e) => e.key === "Enter" && prompt.submit()}
-/>
-<button onClick={() => { voice.toListening(); prompt.toggleMic(); }}>Mic</button>
-```
-
-- `createVoiceState()` is the turn state machine: `state()` is `idle`, `listening`, `thinking`, or `speaking`, with `toIdle`/`toListening`/`toThinking`/`toSpeaking` transitions.
-- `createMicLevel(options?)` returns `{ level, active, supported, analyser, error, start, stop }`: a 0..1 smoothed RMS meter from `getUserMedia` plus an `AnalyserNode` (call `start()` from a user gesture). The exposed `analyser` wires straight into `createWaveform`.
-- `createSpeech(options?)` wraps the Web Speech API (`SpeechRecognition` with `webkitSpeechRecognition` fallback): `{ supported, listening, transcript, interim, error, start, stop, reset }`. Final results accumulate into `transcript()`; `continuous` sessions auto-restart if the browser ends them mid-turn.
-- `createWaveform(canvas, options)` draws the analyser's time-domain wave (`mode: "line"`) or spectrum (`mode: "bars"`) on a canvas, DPR-aware, on the shared clock; under reduced motion it redraws at most every 250ms.
-- `createTTS(options?)` speaks via `speechSynthesis` by default (`{ supported, speaking, voices, speak, cancel }`, async voice loading, `speak()` cancels the current utterance first) and upgrades to any cloud voice through `provider: { speak(text, { signal }) }`.
-- `createThinking(options?)` cycles `"Thinking"`, `"Thinking."`, ... through `phrases` at `interval` ms: `{ text, running, start, stop }`.
-- `createPrompt(options?)` is the voice-enabled input: `{ value, setValue, listening, interim, supported, toggleMic, submit, clear }`. Mic finals are appended to the value as they arrive; `submit()` fires `onSubmit` and clears by default. Everything is SSR-safe: unsupported primitives report `supported: false` and their actions no-op on the server.
-
-### Mobile hardware
-
-```tsx
-import { createBattery, createShare, createScanline } from "solid-drift";
-
-const battery = createBattery();
-const share = createShare();
-const scanline = createScanline({ duration: 1800 });
-
-scanline.start();
-// in your scanner viewfinder:
-// <div class="line" style={{ top: `${scanline.progress() * 100}%` }} />
-
-<p>Battery: {Math.round(battery.level() * 100)}% {battery.charging() ? "(charging)" : ""}</p>
-<button onClick={() => share.share({ title: "solid-drift", url: location.href })}>Share</button>
-```
-
-- `createBattery()` wraps `navigator.getBattery()`: `{ supported, charging, level, chargingTime, dischargingTime, error }`. Level is 0..1; times are seconds (`Infinity` when unknown). Listeners detach on cleanup.
-- `createNetwork()` tracks `navigator.onLine` plus the Network Information API: `{ online, effectiveType, downlink, rtt, saveData, supported }`. Updates on `online`/`offline` events and the connection `change` event.
-- `createWakeLock()` keeps the screen awake: `{ supported, active, error, request, release }`. Re-acquires automatically when the tab becomes visible again if the lock was still wanted.
-- `createContactPick()` wraps the Contact Picker API: `{ supported, contacts, error, pick }`. `pick({ multiple })` resolves with normalized `{ name, tel, email }` arrays, or an empty array when the user cancels.
-- `createOTP()` wraps the WebOTP API: `{ supported, code, error, wait, abort }`. `wait({ transport })` resolves with the SMS code (or `null` when aborted). Requires a secure origin and an origin-bound SMS format.
-- `createShare()` wraps the Web Share API: `{ supported, canShare, error, share }`. `share({ title, text, url, files })` opens the native sheet; user dismissal is not an error.
-- `createNFC()` wraps Web NFC (Chrome on Android, secure context, needs a user gesture): `{ supported, scanning, message, error, scan, write, abort }`. Scanned tags land in `message()` with decoded `text`/`url` records plus `serialNumber`; `write()` takes a string or `{ records }`.
-- `createTorch()` drives the camera flashlight: `{ supported, on, error, attach, set, toggle }`. `attach(trackOrStream)` checks the `torch` capability, then `set(true/false)` applies it via `applyConstraints`.
-- `createGyro()` wraps `deviceorientation`: `{ supported, needsPermission, alpha, beta, gamma, absolute, listening, error, requestPermission, start, stop }`. On iOS, call `requestPermission()` from a tap handler before `start()`; `start()` also requests it if needed.
-- `createShake(options?)` detects shake gestures from `devicemotion`: `{ supported, needsPermission, listening, shakes, error, requestPermission, start, stop }`. A shake counts when the acceleration delta exceeds `threshold` (default 15 m/s^2), rate-limited by `cooldown` (default 800ms); `onShake` fires per shake.
-- `createScanline(options?)` is the animated line of a QR/barcode viewfinder: `{ progress, running, start, stop }`. `progress()` sweeps 0..1 on the shared clock (`direction: "down" | "up" | "alternate"`); bind it to the line's position. Under reduced motion it freezes mid-frame. Every primitive is SSR-safe: server renders get `supported: false` and safe no-op actions.
 
 ### Optimistic updates
 
@@ -1766,42 +1865,35 @@ const fs = createFullscreen(() => stage); // fullscreen toggle
 - `createUndo(initial, options?)`: undoable state: `{ value, set, undo, redo, clear, reset, canUndo, canRedo, past, future }`. `set()` (value or updater) records history trimmed to `capacity` (default 50); a new `set()` discards the redo stack. Pure logic, SSR-safe.
 - `createFullscreen(ref, options?)`: `{ fullscreen, enter, exit, toggle }`. Tracks `document.fullscreenElement` so Escape and external changes stay in sync; failures go to `onError` instead of throwing. SSR-safe.
 
-### Presence, view transitions, and scroll reveals
+### `useLowPowerMode(options?)`
+
+One reactive signal for mobile-first degradation. It combines the OS `prefers-reduced-motion` and `prefers-reduced-data` media queries with low-end device signals (`navigator.deviceMemory`, `navigator.hardwareConcurrency`), so a single check covers user preference, network thrift, and weak hardware. The media queries update live; the device signals are sampled once. There is also a one-shot `isLowPowerMode(options?)` for non-reactive checks.
 
 ```tsx
-import { createPresence, createViewTransition, createScrollReveal } from "solid-drift";
+import { useLowPowerMode } from "solid-drift"
 
-// Exit animations that actually run
-const dialog = createPresence({ when: open, exitDuration: 250 });
-<Show when={dialog.mounted()}>
-  <div
-    style={{
-      opacity: dialog.exiting() ? "0" : "1",
-      transition: "opacity 250ms",
-    }}
-  >
-    ...
-  </div>
-</Show>;
-
-// Native-feel page transitions
-const vt = createViewTransition();
-const switchTab = (tab: string) => vt.transition(() => setTab(tab));
-
-// Scroll-triggered reveal choreography
-const reveal = createScrollReveal(3, { stagger: 90 });
-<For each={cards}>
-  {(card, i) => (
-    <div ref={reveal.items[i()].ref} style={reveal.items[i()].style()}>
-      {card.title}
-    </div>
-  )}
-</For>;
+const lowPower = useLowPowerMode()
+// Degrade gracefully: shorter, cheaper motion on weak devices.
+const duration = () => (lowPower() ? 0 : 400)
+const confettiCount = () => (lowPower() ? 20 : 150)
 ```
 
-- `createPresence({ when, exitDuration?, onExitStart?, onExitComplete? })`: `{ mounted, status, exiting, forceExit }`. When `when` flips false, content stays mounted for `exitDuration` ms (default 300) so the exit animation finishes, then unmounts; flipping back mid-exit cancels it. `forceExit()` unmounts immediately. Skips the exit phase under reduced motion. SSR-safe.
-- `createViewTransition()`: `{ supported, transitioning, transition }`. Wraps `document.startViewTransition`: `transition(update)` animates between old and new DOM when supported, otherwise runs the update directly. SSR-safe (`supported()` is false on the server).
-- `createScrollReveal(count, options?)`: `{ items, replay, reset }`. Each `items[i]` has `ref`, `revealed`, and `style` (empty on the server so content stays visible without JS). Staggered entrance (`stagger`, default 60ms), variants (`fade`, `fade-up`, `fade-down`, `fade-left`, `fade-right`, `scale`, `none`), `once` semantics (default true), and instant reveal under reduced motion.
+Options: `maxDeviceMemory` (GB, default `4`), `maxHardwareConcurrency` (default `4`): a device at or below either threshold counts as low-end. Where the device signals are unsupported they degrade to "not low-end". SSR-safe: always `false` on the server.
+
+### `usePrefersReducedMotion()` / `prefersReducedMotion()`
+
+Reduced-motion checks for the `(prefers-reduced-motion: reduce)` media query. `prefersReducedMotion()` is a one-shot boolean (always `false` on the server); `usePrefersReducedMotion()` is a reactive signal that updates live if the OS preference changes. `createSpring`, `createTween`, and `animate` already respect this automatically and jump straight to the target when reduced motion is preferred.
+
+```tsx
+import { usePrefersReducedMotion } from "solid-drift";
+
+const reduced = usePrefersReducedMotion();
+const duration = () => (reduced() ? 0 : 400);
+```
+
+## Offline
+
+Use when mutations must survive flaky networks.
 
 ### Offline queue
 
@@ -1822,6 +1914,10 @@ outbox.enqueue({ text: "hello" }); // sends now, or when back online
 ```
 
 `createOfflineQueue({ send, online?, maxAttempts?, retryDelayMs?, storageKey?, capacity?, onDrain?, onDead? })`: `{ queue, dead, pending, status, error, enqueue, flush, remove, retryDead, clear }`. `enqueue()` sends immediately when online, otherwise waits for reconnect; the queue replays in order with exponential backoff (`retryDelayMs`, default 1000, doubled per attempt). Mutations that exhaust `maxAttempts` (default 5) are parked in `dead()` for the UI to surface, and `retryDead(id)` puts one back. `status()` is `"online"`, `"offline"`, or `"flushing"`. Online state defaults to the window `online`/`offline` events (assumes online on the server); pass your own `online` accessor to override. `storageKey` persists the queue to localStorage (payloads must be JSON-serializable). SSR-safe.
+
+## Social
+
+Use when validating posts or normalizing analytics across platforms.
 
 ### Social posting helpers
 
@@ -1848,6 +1944,10 @@ const report = normalizeAnalytics([
 `validatePost(draft, platforms, options?)`: pure function that checks a post draft (`{ text, media?, link? }`) against documented platform limits: X 280 chars / 4 attachments / 140s video, Threads 500 chars / 10 media / 300s video, LinkedIn 3000 chars, Facebook 63206 chars, Instagram 2200 chars / 10 carousel items, TikTok 4000 chars (video required), Bluesky 300 chars / 4 images, Mastodon 500 chars / 4 media. Returns `{ valid, issues }` with machine-readable issue codes (`empty_post`, `text_too_long`, `too_many_media`, `video_too_long`, `video_required`). Character counts use code points so emoji count as one. Limits that vary by post type or are unverified are not checked; pass `limits` overrides to adjust any platform. Never posts anything.
 
 `normalizeAnalytics(entries)`: pure function that takes one entry per platform using native field names (impressions, favorites, reposts, retweets, replies, urlClicks) and returns canonical totals plus a per-platform breakdown. `engagementRate` is `(likes + shares + comments) / views`, 0 when views is 0. Missing, negative, or non-finite values count as 0. Followers are summed across platforms (total audience, not unique people).
+
+## Network
+
+Use when talking to HTTP APIs, WebSockets, uploads, or verifying webhooks.
 
 ### Network primitives
 
@@ -1895,6 +1995,10 @@ Every reactive primitive exposes `{ data, error, status, retry, abort }` (`statu
 
 All SSR-safe: nothing fires on the server until you call it.
 
+## Browser
+
+Use when wrapping browser and mobile hardware APIs as signals.
+
 ### Browser and DOM utilities
 
 ```tsx
@@ -1934,6 +2038,39 @@ analytics.load(); // analytics.loaded()
 - `createPermission(name, { immediate?, navigatorImpl? })`: `{ state, supported, query }` around the Permissions API.
 - `createScriptLoader(src, { attrs?, documentImpl? })`: `{ loaded, error, status, load }`. Injects the script once per URL (repeat loads resolve immediately) and tracks it reactively. No-op on the server.
 
+### Mobile hardware
+
+```tsx
+import { createBattery, createShare, createScanline } from "solid-drift";
+
+const battery = createBattery();
+const share = createShare();
+const scanline = createScanline({ duration: 1800 });
+
+scanline.start();
+// in your scanner viewfinder:
+// <div class="line" style={{ top: `${scanline.progress() * 100}%` }} />
+
+<p>Battery: {Math.round(battery.level() * 100)}% {battery.charging() ? "(charging)" : ""}</p>
+<button onClick={() => share.share({ title: "solid-drift", url: location.href })}>Share</button>
+```
+
+- `createBattery()` wraps `navigator.getBattery()`: `{ supported, charging, level, chargingTime, dischargingTime, error }`. Level is 0..1; times are seconds (`Infinity` when unknown). Listeners detach on cleanup.
+- `createNetwork()` tracks `navigator.onLine` plus the Network Information API: `{ online, effectiveType, downlink, rtt, saveData, supported }`. Updates on `online`/`offline` events and the connection `change` event.
+- `createWakeLock()` keeps the screen awake: `{ supported, active, error, request, release }`. Re-acquires automatically when the tab becomes visible again if the lock was still wanted.
+- `createContactPick()` wraps the Contact Picker API: `{ supported, contacts, error, pick }`. `pick({ multiple })` resolves with normalized `{ name, tel, email }` arrays, or an empty array when the user cancels.
+- `createOTP()` wraps the WebOTP API: `{ supported, code, error, wait, abort }`. `wait({ transport })` resolves with the SMS code (or `null` when aborted). Requires a secure origin and an origin-bound SMS format.
+- `createShare()` wraps the Web Share API: `{ supported, canShare, error, share }`. `share({ title, text, url, files })` opens the native sheet; user dismissal is not an error.
+- `createNFC()` wraps Web NFC (Chrome on Android, secure context, needs a user gesture): `{ supported, scanning, message, error, scan, write, abort }`. Scanned tags land in `message()` with decoded `text`/`url` records plus `serialNumber`; `write()` takes a string or `{ records }`.
+- `createTorch()` drives the camera flashlight: `{ supported, on, error, attach, set, toggle }`. `attach(trackOrStream)` checks the `torch` capability, then `set(true/false)` applies it via `applyConstraints`.
+- `createGyro()` wraps `deviceorientation`: `{ supported, needsPermission, alpha, beta, gamma, absolute, listening, error, requestPermission, start, stop }`. On iOS, call `requestPermission()` from a tap handler before `start()`; `start()` also requests it if needed.
+- `createShake(options?)` detects shake gestures from `devicemotion`: `{ supported, needsPermission, listening, shakes, error, requestPermission, start, stop }`. A shake counts when the acceleration delta exceeds `threshold` (default 15 m/s^2), rate-limited by `cooldown` (default 800ms); `onShake` fires per shake.
+- `createScanline(options?)` is the animated line of a QR/barcode viewfinder: `{ progress, running, start, stop }`. `progress()` sweeps 0..1 on the shared clock (`direction: "down" | "up" | "alternate"`); bind it to the line's position. Under reduced motion it freezes mid-frame. Every primitive is SSR-safe: server renders get `supported: false` and safe no-op actions.
+
+## Auth
+
+Use when managing auth sessions and decoding JWTs.
+
 ### Auth session
 
 ```tsx
@@ -1958,6 +2095,10 @@ auth.signOut();
 ```
 
 `createAuthSession({ initialSession?, refresh?, refreshMarginMs?, decodeUser? })`: `{ session, token, user, status, isAuthenticated, authHeader, signIn, getToken, signOut }`. The session lives in a memory-only signal: tokens are never written to storage by this primitive. `status()` is `"unknown"`, `"authenticated"`, `"unauthenticated"`, or `"refreshing"`. `getToken()` returns the current token, or refreshes it through the `refresh` callback when it is expired (or inside `refreshMarginMs`, default 60s); a failed refresh signs out. `authHeader()` returns `"Bearer <token>"` or undefined. `decodeJwtPayload(token)` decodes a JWT payload without verifying the signature (verification belongs on the server). No OAuth flow is implemented; the app signs in through its own backend and hands the session to `signIn()`.
+
+## Analytics
+
+Use when you need lightweight, consent-aware analytics.
 
 ### Analytics
 
@@ -1993,6 +2134,8 @@ funnel.advance(); // cart -> details
 - `useConsent({ storageKey?, storage? })`: `{ consent, granted, grant, deny, reset }`. Consent state (`"unknown"`, `"granted"`, `"denied"`) persisted to localStorage when `storageKey` is given. `granted()` plugs straight into the tracker's `consent` option.
 - `createFunnel({ name, steps, tracker?, windowMs?, now? })`: `{ step, current, completed, history, enter, advance, abandon, reset }`. Emits `funnel_enter`, `funnel_step`, `funnel_complete` (with `durationMs`), and `funnel_abandon` (with `reason` and last step) through the tracker. `advance()` goes to the next step, `advance("payment")` jumps forward; advancing after `windowMs` auto-abandons with reason `"expired"`.
 
+## Easings
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
@@ -2000,6 +2143,10 @@ Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCu
 ## How it works
 
 One shared `requestAnimationFrame` loop drives every animation in the app, so hundreds of springs cost a single rAF tick per frame. Springs integrate with semi-implicit Euler, tweens sample an easing curve. When the tab becomes hidden the engine pauses the loop and freezes its clock, so nothing burns battery in the background; on return the clock continues where it left off and in-flight animations resume seamlessly. Everything is SSR-safe (animations simply don't run on the server).
+
+## Support the project
+
+solid-drift is free and MIT-licensed, maintained by Austin Nguyen. If it saves you time, consider [becoming a sponsor](https://github.com/sponsors/austinpnguyen): every contribution funds maintenance and new primitives.
 
 ## License
 
