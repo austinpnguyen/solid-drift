@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, type Accessor } from "solid-js";
+import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js";
 import { schedule } from "./engine.js";
 import { prefersReducedMotion } from "./reduced-motion.js";
 
@@ -529,10 +529,34 @@ export function createWaveform(
     return true;
   };
 
-  cancel = schedule(draw);
-  onCleanup(() => {
+  const arm = (): void => {
+    if (cancel) return;
+    cancel = schedule((t) => {
+      const alive = draw(t);
+      if (!alive) cancel = null;
+      return alive;
+    });
+  };
+  const disarm = (): void => {
     cancel?.();
+    cancel = null;
     setActive(false);
+  };
+
+  if (typeof enabled === "function") {
+    // Re-arm the render loop whenever `enabled()` flips back to true.
+    // Without this, a task that parked itself while disabled never
+    // draws again, because the engine drops tasks that return false.
+    createEffect(() => {
+      if (isEnabled()) arm();
+      else disarm();
+    });
+  } else if (enabled) {
+    arm();
+  }
+
+  onCleanup(() => {
+    disarm();
   });
 
   return { active };

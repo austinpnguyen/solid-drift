@@ -38,6 +38,16 @@ Final suite: 776 Vitest tests passing, tsc clean, production build clean.
 added its regression test; no version bump, the v0.33.0-v0.41.0 release
 sequence is complete.)
 
+- v0.41.1: createWaveform re-arm fix, shipped 2026-09-27. The render
+  loop used to schedule its engine task once at creation, so a waveform
+  created while `enabled()` was false never drew again when enabled
+  flipped true (the engine drops tasks that return false). The loop is
+  now armed/disarmed by a reactive effect on `enabled()`: it starts when
+  enabled becomes true, parks when false, and cleans up on dispose.
+  Regression tests in src/waveform.test.ts cover disabled-to-enabled,
+  enabled-to-disabled, default-enabled, and plain-boolean-false.
+  Final suite: 780 Vitest tests passing, tsc clean, production build clean.
+
 Each release: implement, export, document in README, full Vitest suite,
 tsc clean, production build, em-dash and prohibited-term scans, commit
 plus annotated tag as Austin Nguyen, push via GitHub REST, publish to
