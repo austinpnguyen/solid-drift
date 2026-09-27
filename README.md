@@ -412,6 +412,32 @@ const { x, y, status } = createDrag(() => card, {
 
 Returns `{ x, y, status }`: the drag offset in pixels and `status` (`"idle"`, `"dragging"`, `"settling"`). SSR-safe: everything rests at 0. Under reduced motion the drag still tracks the pointer (direct manipulation is not animation) but release snaps instantly to the constrained target with no glide.
 
+### `createSwipe(ref, options?)`
+
+Touch swipe gesture recognition: swipe-to-dismiss, carousels. While `createDrag` tracks the pointer continuously, `createSwipe` makes the discrete decision: was that gesture a swipe, and which way? On pointerup it compares travel, duration, and velocity against the thresholds and fires the matching callbacks plus the `lastSwipe` signal. Pointer Events give touch parity for free: mouse, touch, and pen run through the same path. For touch, set `touch-action: pan-y` on a horizontal swipe surface (or `pan-x` for vertical) so the browser does not hijack the gesture; use `none` when recognizing both axes.
+
+```tsx
+import { createSwipe } from "solid-drift"
+
+let deck!: HTMLDivElement
+const { lastSwipe } = createSwipe(() => deck, {
+  onSwipeLeft: () => dismiss(),
+  onSwipeRight: () => keep(),
+})
+<div ref={deck} style={{ "touch-action": "pan-y" }}>card</div>
+```
+
+| Option         | Default | Description                                                              |
+| -------------- | ------- | ------------------------------------------------------------------------ |
+| `threshold`    | `48`    | Minimum travel in px to count as a swipe                                 |
+| `maxDuration`  | `800`   | Maximum gesture duration in ms                                           |
+| `minVelocity`  | `0.4`   | Minimum velocity in px/ms; a fast flick below `threshold` still counts    |
+| `axis`         | `"both"`| `"x"`, `"y"`, or `"both"`                                                |
+| `onSwipe`      | none    | Called for every recognized swipe with `{ direction, distance, velocity, duration, from, to }` |
+| `onSwipeLeft` / `onSwipeRight` / `onSwipeUp` / `onSwipeDown` | none | Per-direction callbacks |
+
+Returns `{ lastSwipe, reset }`. A swipe counts when travel passes `threshold` inside `maxDuration`, or velocity passes `minVelocity`; slow long drags are not swipes. Recognition is not animation, so it works identically under reduced motion; the host decides how to animate the response. SSR-safe: `lastSwipe()` stays null and callbacks never fire.
+
 ### `createTrail(source, options?)`
 
 A signal that replays another signal's past: it returns the value the source had `delay` milliseconds ago, interpolated between samples. Chain trails off one source for follower effects (a cursor with a comet tail, cascading highlights), or trail a scroll progress for a delayed echo of the page. The trail catches up and parks exactly on the latest value when the source rests. The follow loop runs only while the trail is behind.

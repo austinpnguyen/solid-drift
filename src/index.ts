@@ -212,6 +212,11 @@ export {
   type DragEndInfo,
   type DragOptions,
   type DragControls,
+  createSwipe,
+  type SwipeDirection,
+  type SwipeDetails,
+  type SwipeOptions,
+  type SwipeControls,
 } from "./gesture.js";
 export {
   createStreamReveal,

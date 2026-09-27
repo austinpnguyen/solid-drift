@@ -310,3 +310,182 @@ export function createDrag(
 
   return { x, y, status };
 }
+
+/* ------------------------------------------------------------------ */
+/* createSwipe                                                         */
+/* ------------------------------------------------------------------ */
+
+/** Cardinal direction of a recognized swipe. */
+export type SwipeDirection = "left" | "right" | "up" | "down";
+
+/** Snapshot delivered for a recognized swipe. */
+export interface SwipeDetails {
+  direction: SwipeDirection;
+  /** Primary-axis travel in px. Always positive. */
+  distance: number;
+  /** Primary-axis velocity in px/ms. Always positive. */
+  velocity: number;
+  /** Gesture duration in ms. */
+  duration: number;
+  /** Pointer path endpoints in client pixels. */
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+}
+
+export interface SwipeOptions {
+  /** Minimum travel in px to count as a swipe. Default 48. */
+  threshold?: number;
+  /** Maximum gesture duration in ms. Default 800. */
+  maxDuration?: number;
+  /**
+   * Minimum primary-axis velocity in px/ms. A fast flick shorter than
+   * `threshold` still counts as a swipe. Default 0.4.
+   */
+  minVelocity?: number;
+  /** Lock recognition to an axis. Default "both". */
+  axis?: DragAxis;
+  /** Called for every recognized swipe. */
+  onSwipe?: (details: SwipeDetails) => void;
+  /** Called for a leftward swipe. */
+  onSwipeLeft?: (details: SwipeDetails) => void;
+  /** Called for a rightward swipe. */
+  onSwipeRight?: (details: SwipeDetails) => void;
+  /** Called for an upward swipe. */
+  onSwipeUp?: (details: SwipeDetails) => void;
+  /** Called for a downward swipe. */
+  onSwipeDown?: (details: SwipeDetails) => void;
+}
+
+export interface SwipeControls {
+  /** The most recent recognized swipe, or null if none yet. */
+  lastSwipe: Accessor<SwipeDetails | null>;
+  /** Clear the last swipe. */
+  reset: () => void;
+}
+
+/**
+ * Touch swipe gesture recognition: swipe-to-dismiss, carousels.
+ *
+ * While `createDrag` tracks the pointer continuously, `createSwipe`
+ * makes the discrete decision: was that gesture a swipe, and which
+ * way? On pointerup it compares travel, duration, and velocity
+ * against the thresholds and fires the matching callbacks plus the
+ * `lastSwipe` signal.
+ *
+ * Pointer Events give touch parity for free: mouse, touch, and pen
+ * run through the same path. For touch, set `touch-action: pan-y` on
+ * a horizontal swipe surface (or `pan-x` for vertical) so the browser
+ * does not hijack the gesture; use `none` when recognizing both axes.
+ *
+ * A swipe counts when travel passes `threshold` inside `maxDuration`,
+ * or when velocity passes `minVelocity` (a fast flick). Slow long
+ * drags are not swipes; they belong to `createDrag`.
+ *
+ * Recognition is not animation, so it works identically under
+ * reduced motion; the host decides how to animate the response.
+ * SSR-safe: `lastSwipe()` stays null and callbacks never fire.
+ *
+ * ```tsx
+ * let deck!: HTMLDivElement
+ * const { lastSwipe } = createSwipe(() => deck, {
+ *   onSwipeLeft: () => dismiss(),
+ *   onSwipeRight: () => keep(),
+ * })
+ * <div ref={deck} style={{ "touch-action": "pan-y" }}>card</div>
+ * ```
+ */
+export function createSwipe(
+  ref: MaybeElement,
+  options: SwipeOptions = {},
+): SwipeControls {
+  const none = () => null;
+  if (typeof window === "undefined") {
+    return { lastSwipe: none, reset: () => {} };
+  }
+
+  const {
+    threshold = 48,
+    maxDuration = 800,
+    minVelocity = 0.4,
+    axis = "both",
+    onSwipe,
+    onSwipeLeft,
+    onSwipeRight,
+    onSwipeUp,
+    onSwipeDown,
+  } = options;
+
+  const [lastSwipe, setLastSwipe] =
+    createSignal<SwipeDetails | null>(null);
+
+  const fire = (details: SwipeDetails): void => {
+    setLastSwipe(details);
+    onSwipe?.(details);
+    if (details.direction === "left") onSwipeLeft?.(details);
+    else if (details.direction === "right") onSwipeRight?.(details);
+    else if (details.direction === "up") onSwipeUp?.(details);
+    else onSwipeDown?.(details);
+  };
+
+  const onDown = (event: PointerEvent) => {
+    if (event.isPrimary === false) return;
+    const el = ref();
+    if (!el) return;
+
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const startT = now();
+
+    const up = (ev: PointerEvent) => {
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancel);
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      const dt = Math.max(now() - startT, 1);
+      // Primary axis, honoring the axis lock.
+      const horizontal = axis === "x" || (axis === "both" && Math.abs(dx) >= Math.abs(dy));
+      const travel = horizontal ? dx : dy;
+      const distance = Math.abs(travel);
+      const velocity = distance / dt;
+      const isSwipe =
+        (distance >= threshold && dt <= maxDuration) ||
+        velocity >= minVelocity;
+      if (!isSwipe || distance === 0) return;
+      const direction: SwipeDirection = horizontal
+        ? travel > 0
+          ? "right"
+          : "left"
+        : travel > 0
+          ? "down"
+          : "up";
+      fire({
+        direction,
+        distance,
+        velocity,
+        duration: dt,
+        from: { x: startX, y: startY },
+        to: { x: ev.clientX, y: ev.clientY },
+      });
+    };
+
+    const cancel = () => {
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancel);
+    };
+
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cancel);
+  };
+
+  // Late-bound refs (Solid assigns `ref` after mount) still get the grab.
+  createEffect(() => {
+    const el = ref();
+    if (!el) return;
+    el.addEventListener("pointerdown", onDown as EventListener);
+    onCleanup(() =>
+      el.removeEventListener("pointerdown", onDown as EventListener),
+    );
+  });
+
+  return { lastSwipe, reset: () => setLastSwipe(null) };
+}

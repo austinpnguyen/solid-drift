@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createRoot, type Accessor } from "solid-js";
-import { createDrag, type DragStatus } from "./gesture.js";
+import { createDrag, createSwipe, type DragStatus, type SwipeControls, type SwipeDetails, type SwipeOptions } from "./gesture.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -322,5 +322,147 @@ describe("createDrag", () => {
       "pointerdown",
       expect.any(Function),
     );
+  });
+});
+
+describe("createSwipe", () => {
+  function setupSwipe(
+    target: ElStub,
+    options?: SwipeOptions,
+  ): SwipeControls & { dispose: () => void } {
+    let controls!: SwipeControls;
+    const dispose = createRoot((d) => {
+      controls = createSwipe(() => asElement(target), options);
+      return d;
+    });
+    return { ...controls, dispose };
+  }
+
+  it("recognizes a left swipe past the threshold", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    const seen: SwipeDetails[] = [];
+    const { lastSwipe, dispose } = setupSwipe(target, {
+      onSwipe: (d) => seen.push(d),
+    });
+    target.fireOnEl("pointerdown", { clientX: 300, clientY: 200 });
+    b.frames(6); // ~100ms
+    b.fire("pointerup", { clientX: 180, clientY: 205 });
+    expect(seen).toHaveLength(1);
+    expect(seen[0].direction).toBe("left");
+    expect(seen[0].distance).toBe(120);
+    expect(seen[0].velocity).toBeGreaterThan(0.4);
+    expect(lastSwipe()?.direction).toBe("left");
+    dispose();
+  });
+
+  it("fires the matching per-direction callback", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    const onSwipeRight = vi.fn();
+    const onSwipeUp = vi.fn();
+    const { dispose } = setupSwipe(target, { onSwipeRight, onSwipeUp });
+    target.fireOnEl("pointerdown", { clientX: 100, clientY: 200 });
+    b.frames(3);
+    b.fire("pointerup", { clientX: 220, clientY: 200 });
+    expect(onSwipeRight).toHaveBeenCalledTimes(1);
+    expect(onSwipeRight.mock.calls[0][0].direction).toBe("right");
+    expect(onSwipeUp).not.toHaveBeenCalled();
+    dispose();
+  });
+
+  it("ignores slow long drags and short taps", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    const onSwipe = vi.fn();
+    const { dispose } = setupSwipe(target, { onSwipe });
+    // Past the threshold but over maxDuration and under minVelocity:
+    // a drag, not a swipe.
+    target.fireOnEl("pointerdown", { clientX: 100, clientY: 200 });
+    b.frames(60); // ~1000ms: 200px at 0.2 px/ms
+    b.fire("pointerup", { clientX: 300, clientY: 200 });
+    // Short tap: under the threshold.
+    target.fireOnEl("pointerdown", { clientX: 100, clientY: 200 });
+    b.frames(6);
+    b.fire("pointerup", { clientX: 110, clientY: 202 });
+    expect(onSwipe).not.toHaveBeenCalled();
+    dispose();
+  });
+
+  it("counts a fast flick below the distance threshold", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    const onSwipe = vi.fn();
+    const { dispose } = setupSwipe(target, { onSwipe, threshold: 200 });
+    target.fireOnEl("pointerdown", { clientX: 200, clientY: 200 });
+    b.frames(1); // 16.7ms: 40px at ~2.4 px/ms
+    b.fire("pointerup", { clientX: 240, clientY: 200 });
+    expect(onSwipe).toHaveBeenCalledTimes(1);
+    expect(onSwipe.mock.calls[0][0].direction).toBe("right");
+    dispose();
+  });
+
+  it("locks recognition to an axis", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    const onSwipe = vi.fn();
+    const { dispose } = setupSwipe(target, { onSwipe, axis: "x" });
+    // Mostly vertical gesture: horizontal travel stays under threshold.
+    target.fireOnEl("pointerdown", { clientX: 200, clientY: 200 });
+    b.frames(6);
+    b.fire("pointerup", { clientX: 210, clientY: 320 });
+    expect(onSwipe).not.toHaveBeenCalled();
+    dispose();
+  });
+
+  it("picks the dominant axis with axis both", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    const onSwipe = vi.fn();
+    const { dispose } = setupSwipe(target, { onSwipe });
+    target.fireOnEl("pointerdown", { clientX: 200, clientY: 200 });
+    b.frames(6);
+    b.fire("pointerup", { clientX: 230, clientY: 320 });
+    expect(onSwipe).toHaveBeenCalledTimes(1);
+    expect(onSwipe.mock.calls[0][0].direction).toBe("down");
+    dispose();
+  });
+
+  it("reset() clears the last swipe", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    const { lastSwipe, reset, dispose } = setupSwipe(target);
+    target.fireOnEl("pointerdown", { clientX: 300, clientY: 200 });
+    b.frames(6);
+    b.fire("pointerup", { clientX: 150, clientY: 200 });
+    expect(lastSwipe()).not.toBeNull();
+    reset();
+    expect(lastSwipe()).toBeNull();
+    dispose();
+  });
+
+  it("ignores non-primary pointers and pointercancel", () => {
+    const b = stubBrowser();
+    const target = makeEl();
+    const onSwipe = vi.fn();
+    const { dispose } = setupSwipe(target, { onSwipe });
+    target.fireOnEl("pointerdown", {
+      clientX: 300,
+      clientY: 200,
+      isPrimary: false,
+    });
+    b.frames(6);
+    b.fire("pointerup", { clientX: 100, clientY: 200 });
+    // Cancelled mid-gesture: no swipe even with big travel.
+    target.fireOnEl("pointerdown", { clientX: 300, clientY: 200 });
+    b.frames(6);
+    b.fire("pointercancel", {});
+    expect(onSwipe).not.toHaveBeenCalled();
+    dispose();
+  });
+
+  it("is SSR-safe: lastSwipe stays null", () => {
+    const { lastSwipe } = createSwipe(() => null);
+    expect(lastSwipe()).toBeNull();
   });
 });

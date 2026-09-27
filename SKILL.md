@@ -59,6 +59,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 **Gesture**
 
 - `createDrag(ref, options?)` - pointer drag with spring settle, constraints, elastic overshoot, momentum. Returns `{ x, y, status }`.
+- `createSwipe(ref, options?)` - discrete swipe recognition (swipe-to-dismiss, carousels) with touch parity via Pointer Events: `{ direction, distance, velocity, duration }`, per-direction callbacks, `lastSwipe` signal.
 - `createSharedLayout(ref, options)` - `layoutId`-style shared-element transition across mounts. Returns `{ x, y, scaleX, scaleY, flying }`.
 
 **Cartoon**
