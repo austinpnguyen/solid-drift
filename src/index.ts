@@ -63,6 +63,15 @@ export {
   type SharedLayoutResult,
 } from "./flip.js";
 export {
+  createToast,
+  type Toast,
+  type ToastControls,
+  type ToastKind,
+  type ToastOptions,
+  type ToastQueueOptions,
+  type ToastState,
+} from "./toast.js";
+export {
   createSquashStretch,
   type SquashStretchOptions,
   type SquashStretchResult,

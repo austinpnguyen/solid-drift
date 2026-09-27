@@ -104,6 +104,10 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createMintReveal(ref, options?)` - anticipation shake, rotateY flip, `onFlip` at the midpoint. Returns `{ play, reset, status }`.
 - `createConnectButton(ref, options?)` - magnetic connect button with copy tick and chain pulse. Returns `{ copyTick, chainPulse, status }`.
 
+**Feedback**
+
+- `createToast(options?)` - signal-native toast queue, you render the UI. Returns `{ toasts, toast, info, success, warning, error, dismiss, clear }`.
+
 **Utilities**
 
 - `usePrefersReducedMotion()` / `prefersReducedMotion()` - reactive / one-shot reduced-motion check.

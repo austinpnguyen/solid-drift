@@ -1094,6 +1094,42 @@ const connect = createConnectButton(() => btn, { strength: 0.35 });
 
 Returns `{ copyTick, chainPulse, status }`. `status()` is `"idle"`, `"ticking"` (check visible), or `"pulsing"` (ring expanding). Call `chainPulse()` after a successful connection or network switch. Under reduced motion there is no magnetic pull or scale; `copyTick()` and `chainPulse()` still show their overlays statically.
 
+### `createToast(options?)`
+
+A signal-native toast queue with choreographed lifecycle. The primitive owns timing and state; you own the rendering, so no component opinions leak into your design system. Each toast moves through `"entering"` to `"visible"` to `"leaving"` to removed on the shared animation clock: bind `state` to CSS classes or drift values for enter/exit motion without any timers of your own.
+
+```tsx
+import { createToast } from "solid-drift"
+
+const { toasts, success, dismiss } = createToast()
+success("Payment sent", { description: "0.5 SOL to alice.sol" })
+
+<For each={toasts()}>
+  {(t) => (
+    <div
+      class="toast"
+      classList={{
+        "toast-enter": t.state === "entering",
+        "toast-leave": t.state === "leaving",
+      }}
+    >
+      <strong>{t.title}</strong>
+      {t.description && <p>{t.description}</p>}
+      <button onClick={() => dismiss(t.id)}>Dismiss</button>
+    </div>
+  )}
+</For>
+```
+
+| Option     | Default | Description                                                      |
+| ---------- | ------- | ---------------------------------------------------------------- |
+| `max`      | `5`     | Max toasts in the queue; older ones are dismissed first          |
+| `enterMs`  | `250`   | Enter transition time in milliseconds                            |
+| `leaveMs`  | `200`   | Leave transition time in milliseconds                            |
+| `duration` | `4000`  | Default auto-dismiss time in milliseconds                        |
+
+Push helpers: `toast(title, options?)`, `info(...)`, `success(...)`, `warning(...)`, `error(...)`. Each returns the toast id. Per-toast options: `kind`, `description`, `duration` (ms; `0` means sticky). `dismiss(id)` starts the leave transition for one toast; `clear()` dismisses all. SSR-safe: toasts pushed on the server start `"visible"`. Under reduced motion the enter and leave transitions are instant, but auto-dismiss timing still applies.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
