@@ -1617,6 +1617,32 @@ await feed.commit(bid, (b) => sendBidTx(b)).catch(() => {
 
 `createOptimistic(initial, apply)` gives `{ value, setBase, pending, pendingCount, error, commit, reset }`. `commit(update, task)` applies the update instantly, then runs the task; on success the update is promoted into the base truth (no flicker while the server catches up), and on failure it is rolled back, `error()` is set, and the error is rethrown. `setBase()` folds fresh server truth in (after a refetch); write `apply` idempotently, for example upsert by id, so truth that already includes an optimistic update does not duplicate it. `reset()` drops in-flight updates. Pure signals, SSR-safe.
 
+### Skeleton and scroll spy
+
+```tsx
+import { createSkeleton, createScrollSpy } from "solid-drift";
+
+const sk = createSkeleton({ delay: 200, minVisible: 400 });
+createEffect(() => sk.setLoading(query.loading()));
+
+const spy = createScrollSpy({ targets: ["intro", "api", "faq"], offset: 80 });
+
+<Show when={sk.show()} fallback={<ArticleView />}>
+  <div class="skeleton" style={{ "--shine": `${sk.phase() * 100}%` }} />
+</Show>
+<nav>
+  <For each={["intro", "api", "faq"]}>
+    {(id) => (
+      <a classList={{ active: spy.active() === id }}
+         onClick={() => spy.scrollTo(id)}>{id}</a>
+    )}
+  </For>
+</nav>
+```
+
+- `createSkeleton(options?)` is a loading-placeholder controller with flicker protection: `{ loading, show, phase, setLoading }`. `show()` flips true only after `delay` ms (default 200), so fast loads never flash a skeleton, and stays true for at least `minVisible` ms once shown. `phase()` sweeps 0..1 on the shared clock while shown for a JS-driven shimmer (bind it to a gradient stop); it freezes under reduced motion. On the server `show()` never flips.
+- `createScrollSpy(options)` tracks the deepest section at or above the offset line: `{ active, scrollTo, refresh }`. `targets` is an id list or accessor; `container` defaults to the window (pass an element for a scrollable panel); scroll handling is rAF-throttled on the shared clock; `scrollTo(id)` smooth-scrolls (auto under reduced motion); `onChange` fires only when the active id changes. SSR-safe.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

@@ -166,6 +166,8 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createShake(options?)` - shake detection from devicemotion: `{ supported, needsPermission, listening, shakes, error, requestPermission, start, stop }`; threshold/cooldown/onShake options.
 - `createScanline(options?)` - QR viewfinder scan line: `{ progress, running, start, stop }`; 0..1 sweep on the shared clock, down/up/alternate; freezes under reduced motion.
 - `createOptimistic(initial, apply)` - optimistic updates with rollback: `{ value, setBase, pending, pendingCount, error, commit, reset }`; `commit(update, task)` applies instantly, promotes to base on success, rolls back and rethrows on failure; write `apply` idempotently.
+- `createSkeleton(options?)` - loading placeholder with flicker protection: `{ loading, show, phase, setLoading }`; `show()` after `delay`, held for `minVisible`; `phase()` shimmer sweep on the shared clock, frozen under reduced motion.
+- `createScrollSpy(options)` - nav scroll spy: `{ active, scrollTo, refresh }`; deepest section at/above the offset line; id list or accessor; custom container; rAF-throttled; smooth scrollTo (auto under reduced motion); onChange on change only.
 
 **Utilities**
 

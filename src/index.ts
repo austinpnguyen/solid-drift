@@ -420,3 +420,7 @@ export type {
 } from "./hardware.js";
 export { createOptimistic } from "./optimistic.js";
 export type { OptimisticControls } from "./optimistic.js";
+export { createSkeleton } from "./skeleton.js";
+export type { SkeletonOptions, SkeletonControls } from "./skeleton.js";
+export { createScrollSpy } from "./scrollspy.js";
+export type { ScrollSpyOptions, ScrollSpyControls } from "./scrollspy.js";
