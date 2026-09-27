@@ -723,6 +723,8 @@ onMount(() => kinetic.play());
 
 Returns `{ play, stop, replay, status }`. `play()` resolves when the last unit arrives. Under reduced motion every unit jumps to its final state, so the text is fully readable.
 
+`from` also accepts `variance` (0 to 1, default 0) and `seed`. Each unit jitters `y`, `blur`, `scale`, and `rotate` around the `from` values by up to `variance`, so a headline feels hand-set instead of mechanical. The jitter uses a seeded PRNG, so the same `seed` renders the exact same layout on every run (stable across SSR and replays). `variance: 0` keeps the classic uniform behavior.
+
 ### `createScenePlayer(scenes)`
 
 Scene orchestrator for showreels and launch films: an ordered list of scenes, each with a `duration` and `onEnter`/`onExit` hooks. `scene()` tells your view which scene is live; the hooks trigger each scene's choreography (a `createKineticType`, a camera move, a color shift).
@@ -803,7 +805,203 @@ const off = beat.onBeat((b) => {
 beat.start();
 ```
 
-Returns `{ beat, bar, phase, onBeat, start, stop, status }`. `onBeat` returns an unsubscribe function. Beats are timing, not motion, so the clock keeps ticking under reduced motion (your callbacks decide what that means visually).
+Returns `{ beat, bar, beatsPerBar, phase, onBeat, start, stop, status }`. `onBeat` returns an unsubscribe function. Beats are timing, not motion, so the clock keeps ticking under reduced motion (your callbacks decide what that means visually).
+
+### `createShowreel(scenes)`
+
+A guided showreel recipe on top of `createScenePlayer`: scenes carry a `kind` label (`"title"`, `"camera"`, `"color"`, `"cut"`, `"custom"`) so the reel reads like a shot list. It returns the full scene player controls, so `play`, `pause`, `next`, `prev`, and `goTo` all work unchanged.
+
+```ts
+const reel = createShowreel([
+  { kind: "title", duration: 1200, onEnter: () => titleCard.play() },
+  { kind: "camera", duration: 2000, onEnter: () => dolly.play() },
+  { kind: "color", duration: 1500, onEnter: () => finale.play() },
+  { kind: "cut", duration: 400, onEnter: () => wipe.play() },
+]);
+await reel.play(); // resolves after the last scene
+```
+
+Showreel recipe: combine `createKineticType` (title cards), `createCamera` (dolly moves), `createColorShift` (finale grade), `createTransition` (match cuts), `createBeat` (rhythm), and `createShowreel` (the shot list). Under reduced motion `play()` jumps straight to the last scene.
+
+### `createBeatCuts(beat, player, options?)`
+
+Beat-synced scene cuts: advances the player every N beats through the beat clock's `onBeat`. The default interval is the beat clock's `beatsPerBar`, so a cut lands on every downbeat. Returns a cleanup function that unsubscribes the cut listener.
+
+```ts
+const beat = createBeat({ bpm: 128, beatsPerBar: 4 });
+const stopCuts = createBeatCuts(beat, player); // cut every bar
+// const stopCuts = createBeatCuts(beat, player, { every: 8 }); // every 2 bars
+beat.start();
+await player.play();
+stopCuts();
+```
+
+Cuts only fire while the player is running, so pausing the reel pauses the cuts too. Beat timing is not motion, so cuts keep firing under reduced motion (pair with a reduced-motion-safe `onEnter` if the cut itself animates).
+
+### `createStreamReveal(ref, options?)`
+
+Streaming text for chat and agent UIs: push characters as they arrive and each batch reveals with the kinetic treatment (rise, deblur, settle). Batches flush on a short cadence, or early when the queue grows past `maxBatch`, so fast streams never fall behind.
+
+```tsx
+let out!: HTMLDivElement;
+const stream = createStreamReveal(() => out, { batchMs: 120, maxBatch: 24 });
+const res = await fetch("/chat", { method: "POST", body: q });
+const reader = res.body!.getReader();
+const decoder = new TextDecoder();
+for (;;) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  stream.push(decoder.decode(value, { stream: true }));
+}
+await stream.complete(); // flush the tail, then done
+<div ref={out} aria-live="polite" />
+```
+
+Returns `{ push, complete, reset, status, pending }`. `status()` is `"idle"`, `"streaming"`, or `"done"`; `pending()` counts queued characters. Under reduced motion pushed text appears immediately with no per-unit animation; on the server `push` is a no-op and `status()` is `"done"`.
+
+### `createAgentState(options?)`
+
+A tiny state machine for agent UIs: `idle`, `thinking`, `streaming`, `tool`, `done`, `error`, with legal-transition gating and enter/exit hooks. Pure signals, no DOM, so it works on the server and in tests.
+
+```ts
+const agent = createAgentState({
+  allowed: [
+    { from: "idle", to: "thinking" },
+    { from: "thinking", to: "streaming" },
+    { from: "streaming", to: "tool-call" },
+    { from: "tool-call", to: "streaming" },
+    { from: "streaming", to: "done" },
+  ],
+  onEnter: (s) => console.log("agent:", s),
+});
+agent.set("thinking");
+agent.state(); // "thinking"
+agent.prev(); // "idle"
+```
+
+Agent UI recipe: `thinking` pairs with `createWobble` on typing dots, `streaming` drives `createStreamReveal`, `tool-call` overlays a `createTransition`, and `done`/`error` tint a status pill with `createColorShift`. Returns `{ state, prev, set, reset, is }`. Illegal moves are ignored. State is logic, not motion, so it behaves identically under reduced motion.
+
+### `parseDriftSpec(input)`
+
+Validates a DriftSpec, the JSON motion spec a coding agent can generate: `{ version: 1, scenes: [{ primitive, target?, options?, duration? }] }`. Supported primitives: `kineticType`, `streamReveal`, `camera`, `colorShift`, `transition`, `beat`. Throws a `DriftSpecError` naming the exact path (`scenes[0].options.duration`) on the first problem.
+
+```ts
+import { parseDriftSpec } from "solid-drift";
+
+const spec = parseDriftSpec({
+  version: 1,
+  scenes: [
+    {
+      primitive: "kineticType",
+      target: "title",
+      options: { duration: 600, stagger: 40, from: { y: 40, variance: 0.5, seed: 7 } },
+    },
+    {
+      primitive: "colorShift",
+      options: {
+        stops: [
+          { at: 0, color: "#0a1220" },
+          { at: 1, color: "#d9a441" },
+        ],
+        duration: 1200,
+      },
+      duration: 1200, // step budget: move on even if the shift is still running
+    },
+  ],
+});
+```
+
+Prompt hint for generating specs: "Return ONLY a JSON DriftSpec: `{ version: 1, scenes: [...] }`. Each scene is `{ primitive, target?, options?, duration? }`. `primitive` is one of kineticType, streamReveal, camera, colorShift, transition, beat. `target` is a key into the refs map I provide. `options` match that primitive's options exactly. Keep scenes short; put a `duration` budget on any scene that should not block." Validation is pure and runs anywhere, including the server.
+
+### `createSpecPlayer(spec, refs)`
+
+Plays a validated DriftSpec: each scene runs its primitive against the matching ref from the `refs` map (`{ title: () => el }`), then the player advances. A scene `duration` acts as a budget, so a long ambient loop never stalls the reel.
+
+```ts
+const player = createSpecPlayer(spec, { title: () => titleEl });
+await player.play(); // scenes in order, ends "done"
+player.stop(); // halt mid-reel; the play() promise resolves
+```
+
+Returns `{ scene, status, play, stop }`. `scene()` is the live scene index (-1 before the first play). Under reduced motion `play()` applies every scene's final state instantly and ends `"done"`.
+
+### `createTxLifecycle(options?)`
+
+Transaction lifecycle for onchain UI, with zero wallet dependencies: feed it wagmi/viem-style state through an accessor (the adapter pattern) and it maps that to `idle`, `signing`, `pending`, `confirming`, `success`, `failed`. `progress()` springs between 0, 0.25, 0.5, 0.75, 1 so progress rings glide instead of jumping.
+
+```ts
+// Adapter: your wagmi/viem state in, tx state out.
+const [chain] = createSignal({ status: "idle" as const, confirmations: 0 });
+const tx = createTxLifecycle({
+  source: () => ({
+    status: chain().status, // "idle" | "pending" | "success" | "error"
+    confirmations: chain().confirmations,
+  }),
+  requiredConfirmations: 2,
+  onEnter: (s) => console.log("tx:", s),
+});
+tx.set("signing"); // manual: the moment the wallet prompt opens
+```
+
+Standard mapping: `set("signing")` when the wallet prompt opens, source `pending` (hash received) maps to `"pending"`, confirmations reaching the threshold promote to `"confirming"`, source `success`/`error` map to `"success"`/`"failed"`. Omit `source` for a fully manual lifecycle. Returns `{ state, set, reset, progress }`. On the server it stays `"idle"` with `progress()` 0; under reduced motion state changes apply instantly and `progress()` jumps to its target.
+
+### `createTicker(source, ref, options?)`
+
+A price ticker with rolling digits: each digit rolls vertically on change, the whole figure flashes green/red on up/down moves, and rapid source updates batch into one render per frame. `display()` always holds the formatted string, so SSR and tests read the price without DOM.
+
+```tsx
+const [price] = createSignal(64218.5);
+const ticker = createTicker(price, () => priceEl, {
+  decimals: 2,
+  locale: "en-US",
+  upColor: "#16a34a",
+  downColor: "#dc2626",
+  flashMs: 600,
+});
+<div>
+  <span ref={priceEl} aria-label={`Price ${ticker.display()}`} />
+</div>
+```
+
+Returns `{ display, direction }`. `direction()` is `"up"`, `"down"`, or `"flat"`. Formatting uses `Intl.NumberFormat` with the given locale. Under reduced motion the text swaps instantly with no rolling digits and no color flash; on the server only `display()` and `direction()` work.
+
+### `createMintReveal(ref, options?)`
+
+An NFT mint reveal: an anticipation shake winds up, the card flips on rotateY, `onFlip` fires at the midpoint (edge-on, so the face swap is invisible), and squash-and-stretch sells the landing. `reset()` returns the card to idle.
+
+```tsx
+let card!: HTMLDivElement;
+const reveal = createMintReveal(() => card, {
+  shakeDuration: 500,
+  flipDuration: 700,
+  squash: true,
+  onFlip: () => setFace("revealed"), // swap the artwork mid-flip
+});
+<button onClick={() => reveal.play()}>Reveal</button>
+<div ref={card} style={{ "transform-style": "preserve-3d" }} />
+```
+
+Returns `{ play, reset, status }`. `status()` walks `"idle"`, `"anticipating"`, `"flipping"`, `"revealed"`. Under reduced motion (and on the server) `play()` applies the revealed state immediately and still calls `onFlip`.
+
+### `createConnectButton(ref, options?)`
+
+Wallet connect button micro-interactions: magnetic pull toward the pointer, a press scale, an animated check overlay for copy-address feedback, and a chain pulse ring. Pointer handling is global (presses that start inside still count if released outside), and everything cleans up on unmount.
+
+```tsx
+let btn!: HTMLButtonElement;
+const connect = createConnectButton(() => btn, { strength: 0.35 });
+<button
+  ref={btn}
+  onClick={() => {
+    navigator.clipboard.writeText(address);
+    connect.copyTick(); // check overlay pops, then fades
+  }}
+>
+  {address}
+</button>
+```
+
+Returns `{ copyTick, chainPulse, status }`. `status()` is `"idle"`, `"ticking"` (check visible), or `"pulsing"` (ring expanding). Call `chainPulse()` after a successful connection or network switch. Under reduced motion there is no magnetic pull or scale; `copyTick()` and `chainPulse()` still show their overlays statically.
 
 ### Easings
 

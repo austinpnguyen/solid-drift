@@ -3,10 +3,12 @@ import { createRoot, createSignal } from "solid-js";
 import {
   createKineticType,
   createScenePlayer,
+  createShowreel,
   createCamera,
   createColorShift,
   createTransition,
   createBeat,
+  createBeatCuts,
 } from "./motion.js";
 
 afterEach(() => {
@@ -793,5 +795,185 @@ describe("createKineticType", () => {
     for (const s of el.spans) {
       expect(s.style.opacity).toBe("1");
     }
+  });
+});
+
+describe("createShowreel", () => {
+  it("plays kind-labeled scenes in order", async () => {
+    const b = stubBrowser();
+    const order: number[] = [];
+    let reel!: ReturnType<typeof createShowreel>;
+    const dispose = createRoot((d) => {
+      reel = createShowreel([
+        { kind: "title", duration: 60, onEnter: () => order.push(0) },
+        { kind: "camera", duration: 60, onEnter: () => order.push(1) },
+        { kind: "cut", duration: 60, onEnter: () => order.push(2) },
+      ]);
+      return d;
+    });
+    const p = reel.play();
+    await b.run(20);
+    await p;
+    expect(order).toEqual([0, 1, 2]);
+    expect(reel.scene()).toBe(2);
+    expect(reel.status()).toBe("done");
+    dispose();
+  });
+
+  it("exposes the full scene player controls", () => {
+    stubBrowser();
+    let reel!: ReturnType<typeof createShowreel>;
+    const dispose = createRoot((d) => {
+      reel = createShowreel([
+        { kind: "title", duration: 100 },
+        { kind: "custom", duration: 100 },
+      ]);
+      return d;
+    });
+    reel.goTo(1);
+    expect(reel.scene()).toBe(1);
+    reel.prev();
+    expect(reel.scene()).toBe(0);
+    reel.next();
+    expect(reel.scene()).toBe(1);
+    dispose();
+  });
+});
+
+describe("createBeatCuts", () => {
+  it("advances the player every N beats while running", async () => {
+    const b = stubBrowser();
+    let player!: ReturnType<typeof createScenePlayer>;
+    let beat!: ReturnType<typeof createBeat>;
+    const dispose = createRoot((d) => {
+      player = createScenePlayer([
+        { duration: 10000 },
+        { duration: 10000 },
+        { duration: 10000 },
+        { duration: 10000 },
+        { duration: 10000 },
+      ]);
+      beat = createBeat({ bpm: 1200, beatsPerBar: 4 }); // 50ms per beat
+      createBeatCuts(beat, player, { every: 2 });
+      return d;
+    });
+    const p = player.play();
+    beat.start();
+    await b.run(20); // beats 0..6 fire; cuts land on 0, 2, 4, 6
+    expect(player.scene()).toBe(4);
+    player.stop();
+    beat.stop();
+    await p;
+    dispose();
+  });
+
+  it("defaults the cut interval to beatsPerBar", async () => {
+    const b = stubBrowser();
+    let player!: ReturnType<typeof createScenePlayer>;
+    let beat!: ReturnType<typeof createBeat>;
+    const dispose = createRoot((d) => {
+      player = createScenePlayer([
+        { duration: 10000 },
+        { duration: 10000 },
+        { duration: 10000 },
+        { duration: 10000 },
+      ]);
+      beat = createBeat({ bpm: 1200, beatsPerBar: 4 });
+      createBeatCuts(beat, player); // every defaults to 4
+      return d;
+    });
+    const p = player.play();
+    beat.start();
+    await b.run(20); // beats 0..6 fire; cuts land on 0 and 4
+    expect(player.scene()).toBe(2);
+    player.stop();
+    beat.stop();
+    await p;
+    dispose();
+  });
+
+  it("does not cut while the player is paused", async () => {
+    const b = stubBrowser();
+    let player!: ReturnType<typeof createScenePlayer>;
+    let beat!: ReturnType<typeof createBeat>;
+    const dispose = createRoot((d) => {
+      player = createScenePlayer([{ duration: 10000 }, { duration: 10000 }]);
+      beat = createBeat({ bpm: 1200, beatsPerBar: 4 });
+      createBeatCuts(beat, player, { every: 1 });
+      return d;
+    });
+    beat.start();
+    await b.run(10); // beats fire, but the player never ran
+    expect(player.scene()).toBe(-1);
+    beat.stop();
+    dispose();
+  });
+});
+
+describe("createKineticType variance", () => {
+  it("variance 0 keeps every unit identical (legacy behavior)", async () => {
+    const b = stubBrowser();
+    const el = fakeElement("ab");
+    let kinetic!: ReturnType<typeof createKineticType>;
+    createRoot(() => {
+      kinetic = createKineticType(() => el as unknown as Element, {
+        duration: 200,
+        stagger: 0, // same local progress for every unit
+        from: { y: 40, variance: 0 },
+      });
+    });
+    const done = kinetic.play();
+    await b.run(3); // mid-flight: both units share the same transform
+    expect(el.spans[0].style.transform).toBe(el.spans[1].style.transform);
+    await b.run(20);
+    await done;
+    expect(kinetic.status()).toBe("done");
+  });
+
+  it("variance above 0 jitters units apart", async () => {
+    const b = stubBrowser();
+    const el = fakeElement("ab");
+    let kinetic!: ReturnType<typeof createKineticType>;
+    createRoot(() => {
+      kinetic = createKineticType(() => el as unknown as Element, {
+        duration: 200,
+        stagger: 0,
+        from: { y: 40, variance: 0.8, seed: 7 },
+      });
+    });
+    const done = kinetic.play();
+    await b.run(3); // mid-flight: seeded jitter separates the units
+    expect(el.spans[0].style.transform).not.toBe(el.spans[1].style.transform);
+    await b.run(20);
+    await done;
+    expect(kinetic.status()).toBe("done");
+  });
+
+  it("the same seed renders the same jitter every run", async () => {
+    const b = stubBrowser();
+    const first = fakeElement("abcd");
+    const second = fakeElement("abcd");
+    const opts = {
+      duration: 200,
+      stagger: 30,
+      from: { y: 40, blur: 12, variance: 0.9, seed: 42 },
+    } as const;
+    let a!: ReturnType<typeof createKineticType>;
+    let c!: ReturnType<typeof createKineticType>;
+    createRoot(() => {
+      a = createKineticType(() => first as unknown as Element, opts);
+    });
+    createRoot(() => {
+      c = createKineticType(() => second as unknown as Element, opts);
+    });
+    const pa = a.play();
+    const pc = c.play();
+    await b.run(3); // same frames, same seed: identical mid-flight frames
+    const t1 = first.spans.map((s) => s.style.transform);
+    const t2 = second.spans.map((s) => s.style.transform);
+    expect(t1).toEqual(t2);
+    await b.run(20);
+    await pa;
+    await pc;
   });
 });

@@ -27,51 +27,9 @@ import {
 import { resolveEasing, type Easing, type EasingName } from "./easing.js";
 import { now, schedule } from "./engine.js";
 import { prefersReducedMotion } from "./reduced-motion.js";
+import { mulberry32, splitUnits } from "./text.js";
 
 type MaybeElement = () => Element | null | undefined;
-
-function ownerDoc(el: Element): Document | undefined {
-  const od = (el as unknown as { ownerDocument?: Document | null })
-    .ownerDocument;
-  if (od) return od ?? undefined;
-  return typeof document !== "undefined" ? document : undefined;
-}
-
-/**
- * Split an element's text into per-unit inline-block spans so each
- * letter (or word) can be transformed independently. The original text
- * is preserved as an aria-label for screen readers.
- */
-function splitUnits(el: Element, unit: "chars" | "words"): HTMLElement[] {
-  const doc = ownerDoc(el);
-  if (!doc) return [];
-  const text = el.textContent ?? "";
-  el.textContent = "";
-  el.setAttribute("aria-label", text);
-  const spans: HTMLElement[] = [];
-  const push = (content: string) => {
-    const s = doc.createElement("span") as HTMLElement;
-    s.textContent = content;
-    s.setAttribute("aria-hidden", "true");
-    s.style.display = "inline-block";
-    s.style.willChange = "transform, opacity, filter";
-    el.appendChild(s);
-    spans.push(s);
-  };
-  if (unit === "words") {
-    for (const word of text.split(/(\s+)/)) {
-      if (word.length === 0) continue;
-      if (/^\s+$/.test(word)) {
-        el.appendChild(doc.createTextNode(word));
-      } else {
-        push(word);
-      }
-    }
-  } else {
-    for (const ch of text) push(ch === " " ? " " : ch);
-  }
-  return spans;
-}
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
@@ -97,6 +55,18 @@ export interface KineticTypeFrom {
   opacity?: number;
   /** Rotation in degrees where each unit starts. Default 0. */
   rotate?: number;
+  /**
+   * Per-unit jitter around the `from` values, 0 to 1. Default 0.
+   * At 0 every unit shares the exact `from` state; above 0 each unit
+   * gets a seeded random offset so the entrance feels hand-set
+   * instead of mechanical.
+   */
+  variance?: number;
+  /**
+   * Seed for the per-unit jitter. Same seed renders the same jitter
+   * on every run. Default 0.
+   */
+  seed?: number;
 }
 
 export interface KineticTypeOptions {
@@ -128,7 +98,7 @@ export interface KineticTypeControls {
 function applyKineticStyle(
   el: HTMLElement,
   e: number,
-  from: Required<KineticTypeFrom>,
+  from: Required<Omit<KineticTypeFrom, "variance" | "seed">>,
 ): void {
   const t = 1 - e;
   const y = from.y * t;
@@ -148,7 +118,8 @@ function applyKineticStyle(
  *
  * One master clock drives every unit, so a headline with 40 characters
  * costs a single rAF task, not 40 timers. Units animate through the
- * same `from` state with per-unit easing.
+ * same `from` state with per-unit easing; set `from.variance` above 0
+ * for seeded per-unit jitter around those values.
  *
  * SSR-safe: no-op on the server. Under reduced motion every unit jumps
  * to its final state when `play()` runs, so the text is fully readable.
@@ -181,11 +152,14 @@ export function createKineticType(
     scale: options.from?.scale ?? 0.85,
     opacity: options.from?.opacity ?? 0,
     rotate: options.from?.rotate ?? 0,
+    variance: options.from?.variance ?? 0,
+    seed: options.from?.seed ?? 0,
   };
   const easing = resolveEasing(easingOpt);
 
   const [status, setStatus] = createSignal<KineticTypeStatus>("idle");
   let units: HTMLElement[] = [];
+  let unitFrom: Required<Omit<KineticTypeFrom, "variance" | "seed">>[] = [];
   let controls: AnimationControls | null = null;
   let runToken = 0;
 
@@ -194,6 +168,7 @@ export function createKineticType(
     controls?.stop();
     controls = null;
     units = [];
+    unitFrom = [];
     if (typeof window !== "undefined") {
       const el = ref();
       if (el) units = splitUnits(el, unit);
@@ -201,6 +176,28 @@ export function createKineticType(
     if (units.length === 0) {
       setStatus("done");
       return Promise.resolve();
+    }
+    // Seeded per-unit jitter around the `from` values. Deterministic
+    // for a given seed, so the same headline renders the same way on
+    // every run. Variance 0 keeps the exact legacy behavior.
+    const variance = clamp01(from.variance);
+    if (variance > 0) {
+      const rand = mulberry32(from.seed);
+      unitFrom = units.map(() => ({
+        y: from.y + variance * (rand() * 2 - 1) * 20,
+        blur: Math.max(0, from.blur + variance * (rand() * 2 - 1) * 8),
+        scale: from.scale + variance * (rand() * 2 - 1) * 0.15,
+        opacity: from.opacity,
+        rotate: from.rotate + variance * (rand() * 2 - 1) * 12,
+      }));
+    } else {
+      unitFrom = units.map(() => ({
+        y: from.y,
+        blur: from.blur,
+        scale: from.scale,
+        opacity: from.opacity,
+        rotate: from.rotate,
+      }));
     }
     setStatus("running");
     const total = duration + stagger * (units.length - 1);
@@ -216,7 +213,7 @@ export function createKineticType(
         onUpdate: (elapsed) => {
           for (let i = 0; i < units.length; i++) {
             const local = clamp01((elapsed - i * stagger) / duration);
-            applyKineticStyle(units[i], easing(local), from);
+            applyKineticStyle(units[i], easing(local), unitFrom[i]);
           }
         },
         onComplete: () => {
@@ -926,6 +923,8 @@ export interface BeatControls {
   bar: Accessor<number>;
   /** Fractional position within the current beat, 0 to 1. */
   phase: Accessor<number>;
+  /** Beats per bar, from the options. Used as the default cut interval. */
+  beatsPerBar: number;
   /**
    * Register a callback fired on every beat with the beat index.
    * Returns an unsubscribe function.
@@ -1007,6 +1006,7 @@ export function createBeat(options: BeatOptions = {}): BeatControls {
     beat,
     bar,
     phase,
+    beatsPerBar: perBar,
     onBeat: (cb) => {
       listeners.add(cb);
       return () => {
@@ -1017,4 +1017,99 @@ export function createBeat(options: BeatOptions = {}): BeatControls {
     stop,
     status,
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* createShowreel                                                      */
+/* ------------------------------------------------------------------ */
+
+/** Named role of a showreel scene, for readability. */
+export type ShowreelSceneKind =
+  | "title"
+  | "camera"
+  | "color"
+  | "cut"
+  | "custom";
+
+/**
+ * One scene in a guided showreel: a `MotionScene` with an optional
+ * named kind describing what the scene does.
+ */
+export interface ShowreelScene extends MotionScene {
+  /**
+   * Named kind for readability: "title" for kinetic-type title cards,
+   * "camera" for camera-move scenes, "color" for color-shift scenes,
+   * "cut" for transition handoffs, "custom" for anything else.
+   * Informational only; it does not change playback.
+   */
+  kind?: ShowreelSceneKind;
+}
+
+/**
+ * Guided showreel recipe: a thin typed wrapper over
+ * `createScenePlayer` for showreels and launch films. Scenes carry a
+ * named `kind` so the reel reads like a shot list, and each scene's
+ * `onEnter` wires one of the motion-graphics primitives
+ * (`createKineticType`, `createCamera`, `createColorShift`,
+ * `createTransition`, `createBeat`).
+ *
+ * Same controls, status values, and reduced-motion behavior as
+ * `createScenePlayer`: `play()` jumps to the final frame under reduced
+ * motion or on the server.
+ *
+ * ```ts
+ * const reel = createShowreel([
+ *   { kind: "title", duration: 1200, onEnter: () => titleCard.play() },
+ *   { kind: "camera", duration: 2000, onEnter: () => dolly.play() },
+ *   { kind: "color", duration: 1500, onEnter: () => finale.play() },
+ * ])
+ * beatCuts = createBeatCuts(beat, reel, { every: 8 })
+ * await reel.play()
+ * ```
+ */
+export function createShowreel(
+  scenes: ShowreelScene[],
+): ScenePlayerControls {
+  return createScenePlayer(scenes);
+}
+
+/* ------------------------------------------------------------------ */
+/* createBeatCuts                                                      */
+/* ------------------------------------------------------------------ */
+
+export interface BeatCutOptions {
+  /**
+   * Cut every N beats. Default: the beat clock's `beatsPerBar`, so a
+   * cut lands on every downbeat.
+   */
+  every?: number;
+}
+
+/**
+ * Beat-synced scene cuts: advance the player every N beats through
+ * the beat clock's `onBeat`. Returns a cleanup function that
+ * unsubscribes the cut listener.
+ *
+ * Cuts only fire while the player is running, so pausing the reel
+ * pauses the cuts too.
+ *
+ * ```ts
+ * const beat = createBeat({ bpm: 128, beatsPerBar: 4 })
+ * const stopCuts = createBeatCuts(beat, player) // cut every bar
+ * beat.start()
+ * await player.play()
+ * stopCuts()
+ * ```
+ */
+export function createBeatCuts(
+  beat: BeatControls,
+  player: Pick<ScenePlayerControls, "next" | "status">,
+  options: BeatCutOptions = {},
+): () => void {
+  const every = Math.max(1, Math.floor(options.every ?? beat.beatsPerBar));
+  return beat.onBeat((b) => {
+    if (b % every === 0 && player.status() === "running") {
+      player.next();
+    }
+  });
 }

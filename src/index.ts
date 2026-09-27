@@ -129,10 +129,12 @@ export {
 export {
   createKineticType,
   createScenePlayer,
+  createShowreel,
   createCamera,
   createColorShift,
   createTransition,
   createBeat,
+  createBeatCuts,
 } from "./motion.js";
 export type {
   KineticTypeFrom,
@@ -142,6 +144,8 @@ export type {
   MotionScene,
   ScenePlayerStatus,
   ScenePlayerControls,
+  ShowreelScene,
+  ShowreelSceneKind,
   CameraKeyframe,
   CameraOptions,
   ColorShiftOptions,
@@ -156,4 +160,46 @@ export type {
   BeatOptions,
   BeatStatus,
   BeatControls,
+  BeatCutOptions,
 } from "./motion.js";
+export {
+  createStreamReveal,
+  createAgentState,
+  parseDriftSpec,
+  createSpecPlayer,
+  DriftSpecError,
+} from "./ai.js";
+export type {
+  StreamRevealStatus,
+  StreamRevealOptions,
+  StreamRevealControls,
+  AgentState,
+  AgentStateTransition,
+  AgentStateOptions,
+  AgentStateControls,
+  DriftSpecPrimitive,
+  DriftSpecStep,
+  DriftSpec,
+  SpecPlayerStatus,
+  SpecPlayerControls,
+} from "./ai.js";
+export {
+  createTxLifecycle,
+  createTicker,
+  createMintReveal,
+  createConnectButton,
+} from "./web3.js";
+export type {
+  TxState,
+  TxStatusInput,
+  TxLifecycleOptions,
+  TxLifecycleControls,
+  TickerOptions,
+  TickerControls,
+  MintRevealStatus,
+  MintRevealOptions,
+  MintRevealControls,
+  ConnectButtonOptions,
+  ConnectButtonStatus,
+  ConnectButtonControls,
+} from "./web3.js";
