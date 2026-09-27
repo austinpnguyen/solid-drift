@@ -24,6 +24,12 @@ export {
   useLowPowerMode,
   type LowPowerOptions,
 } from "./power.js";
+export {
+  createSlotMachine,
+  type SlotMachineControls,
+  type SlotMachineOptions,
+  type SlotMachineStatus,
+} from "./fun.js";
 export { createStagger } from "./stagger.js";
 export {
   createHorizontalScroll,

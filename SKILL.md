@@ -108,6 +108,10 @@ One line per primitive. Full docs with examples live in `README.md`.
 
 - `createToast(options?)` - signal-native toast queue, you render the UI. Returns `{ toasts, toast, info, success, warning, error, dismiss, clear }`.
 
+**Fun**
+
+- `createSlotMachine(options)` - gacha reels with momentum spin, staggered stops, riggable landing. Returns `{ values, result, status, spin, stop, reset }`.
+
 **Utilities**
 
 - `usePrefersReducedMotion()` / `prefersReducedMotion()` - reactive / one-shot reduced-motion check.

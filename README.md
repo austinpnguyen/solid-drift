@@ -1145,6 +1145,25 @@ const confettiCount = () => (lowPower() ? 20 : 150)
 
 Options: `maxDeviceMemory` (GB, default `4`), `maxHardwareConcurrency` (default `4`): a device at or below either threshold counts as low-end. Where the device signals are unsupported they degrade to "not low-end". SSR-safe: always `false` on the server.
 
+### `createSlotMachine(options)`
+
+Gacha slot machine: reels launch fast, decelerate with momentum, and stop left to right. Spin-to-mint theater for reveals, loot boxes, and prize draws. Pass `landing` to `spin()` when the outcome is already decided (the minted NFT, the prize): the reels still spin with full drama and land exactly on your symbols. Omit it for a fair random spin.
+
+```tsx
+import { createSlotMachine } from "solid-drift"
+
+const machine = createSlotMachine({
+  symbols: ["🍒", "⭐", "💎", "🚀"],
+  onTick: (reel) => navigator.vibrate?.(10), // haptic tick per symbol
+  onDone: (result) => console.log("minted:", result),
+})
+
+<button onClick={() => machine.spin()}>SPIN</button>
+<div>{machine.values().join(" ")}</div>
+```
+
+Options: `symbols` (required, at least 2), `reels` (default `3`), `duration` (ms for the first reel, default `1400`), `stagger` (extra ms per subsequent reel, default `500`), `minSpins` (full rotations before stopping, default `3`), `easing` (default `"easeOutQuart"`), `onTick(reel, symbol)`, `onDone(result)`. Returns `{ values, result, status, spin, stop, reset }`: `values()` is the visible symbol per reel, `result()` the final symbols of the last spin, `status()` is `"idle"`, `"spinning"`, or `"done"`. `stop()` halts at the current symbols; `reset()` returns to idle. SSR-safe and reduced-motion safe: `spin()` jumps straight to the result.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
