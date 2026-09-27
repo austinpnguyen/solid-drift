@@ -1104,6 +1104,28 @@ const reveal = createMintReveal(() => card, {
 
 Returns `{ play, reset, status }`. `status()` walks `"idle"`, `"anticipating"`, `"flipping"`, `"revealed"`. Under reduced motion (and on the server) `play()` applies the revealed state immediately and still calls `onFlip`.
 
+### `createDepixelate(image, canvas, options?)`
+
+Pixel-to-sharp image reveal, the classic NFT mint ceremony. An image renders into a canvas fully pixelated, then resolves to sharp in discrete chunky steps on the shared animation clock. Owns the canvas drawing: give it an image and a canvas, call `play()` when the art should reveal. The pixelated teaser frame paints itself as soon as the image loads, so the pre-reveal state needs no manual setup. Pair with `createMintReveal` for the full ceremony: flip the card, depixelate the art.
+
+```tsx
+let img!: HTMLImageElement
+let cvs!: HTMLCanvasElement
+const reveal = createDepixelate(() => img, () => cvs, { duration: 1800 })
+<img ref={img} src={artUrl} style={{ display: "none" }} />
+<canvas ref={cvs} />
+<button onClick={() => reveal.play()}>Reveal</button>
+```
+
+| Option       | Default           | Description                                    |
+| ------------ | ----------------- | ---------------------------------------------- |
+| `levels`     | `10`              | Discrete pixelation steps from blocky to sharp |
+| `duration`   | `1600`            | Full reveal duration in ms                     |
+| `easing`     | `"easeInOutCubic"`| Easing for the reveal progress                 |
+| `onComplete` | none              | Called when the reveal reaches sharp           |
+
+Returns `{ pixelSize, progress, status, play, complete, reset, stop }`. `status()` walks `"idle"`, `"revealing"`, `"revealed"`; `pixelSize()` is the current block size in px (1 means sharp). `stop()` halts mid-reveal and resolves the pending `play()` promise; `reset()` repaints the teaser; `complete()` jumps to sharp. Under reduced motion (and on the server) the art is sharp immediately.
+
 ### `createConnectButton(ref, options?)`
 
 Wallet connect button micro-interactions: magnetic pull toward the pointer, a press scale, an animated check overlay for copy-address feedback, and a chain pulse ring. Pointer handling is global (presses that start inside still count if released outside), and everything cleans up on unmount.

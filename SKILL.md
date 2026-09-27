@@ -103,6 +103,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createTxLifecycle(options?)` - transaction state machine (`idle`, `signing`, `pending`, `confirming`, `success`, `failed`) with spring-smoothed `progress()`. Feed wagmi/viem-style state via `source`.
 - `createTicker(source, ref, options?)` - rolling-digit price ticker. Returns `{ display, direction }`.
 - `createMintReveal(ref, options?)` - anticipation shake, rotateY flip, `onFlip` at the midpoint. Returns `{ play, reset, status }`.
+- `createDepixelate(image, canvas, options?)` - pixel-to-sharp NFT reveal on a canvas: `{ pixelSize, progress, status, play, complete, reset, stop }`. Teaser frame self-paints on image load.
 - `createConnectButton(ref, options?)` - magnetic connect button with copy tick and chain pulse. Returns `{ copyTick, chainPulse, status }`.
 - `createAgentTx(options?)` - AI proposes, user approves, tx executes: `idle`, `proposed`, `approved`, `executing`, `confirmed`, `rejected`, `failed`. Invalid transitions are no-ops. Returns `{ state, proposal, tx, propose, approve, reject, execute, reset, progress }`.
 

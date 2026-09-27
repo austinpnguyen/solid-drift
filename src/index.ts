@@ -69,6 +69,12 @@ export {
 } from "./pointer.js";
 export { createTrail, type TrailOptions } from "./trail.js";
 export {
+  createDepixelate,
+  type DepixelateOptions,
+  type DepixelateStatus,
+  type DepixelateControls,
+} from "./depixelate.js";
+export {
   createTimeline,
   type TimelineStep,
   type TimelineStatus,
