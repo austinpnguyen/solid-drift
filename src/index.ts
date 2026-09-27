@@ -60,6 +60,17 @@ export {
   type InfiniteScrollOptions,
 } from "./dom.js";
 export {
+  createHaptic,
+  hapticPatterns,
+  type HapticOptions,
+  type HapticControls,
+  type HapticPattern,
+  createHapticBeat,
+  hapticBeatPresets,
+  type HapticBeatOptions,
+  type HapticBeatControls,
+} from "./haptic.js";
+export {
   createHorizontalScroll,
   type HorizontalScrollOptions,
   type HorizontalScrollResult,

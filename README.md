@@ -1445,6 +1445,34 @@ createInfiniteScroll(() => sentinel, {
 - `createScrollLock()` returns `{ locked, lock, unlock }`: sets `document.body.style.overflow = "hidden"`, restores the previous value when the last lock releases, and reference-counts nested locks so stacked modals cannot unlock each other early. Unmounting releases the locks.
 - `createInfiniteScroll(ref, options)` observes a sentinel with IntersectionObserver and calls `onLoadMore` as it approaches the viewport (`threshold` px prefetch via `rootMargin`, default `200`). `disabled` is a reactive kill switch (e.g. `() => !hasMore()`).
 
+### Haptics
+
+Tactile feedback through the Vibration API: `createHaptic` wraps `navigator.vibrate` with an iOS-style vocabulary (light/medium/heavy, success/warning/error), one-shot presets, and morse-code encoding; `createHapticBeat` is a 16-step haptic sequencer (heartbeat pulses, metronome ticks, breathing guides) running on the shared animation clock.
+
+```tsx
+import { createHaptic, createHapticBeat, hapticBeatPresets } from "solid-drift"
+
+const haptic = createHaptic()
+// Buttons get a physical click:
+<button onClick={() => { haptic.light(); confirm() }}>Confirm</button>
+// Morse code: dots, dashes, letter gaps, word gaps.
+<button onClick={() => haptic.morse("... --- ...")}>SOS</button>
+
+// A heartbeat pulse the user can toggle:
+const beat = createHapticBeat(haptic, {
+  bpm: 60,
+  pattern: hapticBeatPresets.heartbeat,
+  onStep: (i) => setFlash(i === 0),
+})
+<button onClick={() => beat.toggle()}>
+  {beat.playing() ? "Stop pulse" : "Start pulse"}
+</button>
+```
+
+- `createHaptic(options?)` returns `{ supported, vibrate, light, medium, heavy, success, warning, error, morse }`. `vibrate(pattern)` fires a raw ms pattern; `morse(code, unit?)` encodes `"."`, `"-"`, `" "` (letter gap), `"/"` (word gap) with a configurable dot length (default 60ms). `hapticPatterns` holds the one-shot presets (`tap`, `doubleTap`, `longPress`, `tick`, `heartbeat`, `success`, `warning`, `error`). `options.enabled` is a boolean or a signal master switch (wire it to `useLowPowerMode()`).
+- `createHapticBeat(haptic, options?)` returns `{ playing, bpm, step, start, stop, toggle, setBpm }`. The 16-step pattern uses `"x"` for a hit, `"X"` for an accent, anything else for a rest; steps run as 16th notes at `bpm` (live-changeable via `setBpm`), the downbeat fires immediately on `start()`, and `onStep(i)` reports each step index. `hapticBeatPresets` ships `heartbeat`, `metronome`, `ticks`, and `pulse`.
+- Haptics are tactile, not visual, so they fire under reduced motion too; the `enabled` switch is the way to offer quiet. Everything is a no-op where vibration is unsupported, and SSR-safe.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
