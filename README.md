@@ -1164,6 +1164,36 @@ const machine = createSlotMachine({
 
 Options: `symbols` (required, at least 2), `reels` (default `3`), `duration` (ms for the first reel, default `1400`), `stagger` (extra ms per subsequent reel, default `500`), `minSpins` (full rotations before stopping, default `3`), `easing` (default `"easeOutQuart"`), `onTick(reel, symbol)`, `onDone(result)`. Returns `{ values, result, status, spin, stop, reset }`: `values()` is the visible symbol per reel, `result()` the final symbols of the last spin, `status()` is `"idle"`, `"spinning"`, or `"done"`. `stop()` halts at the current symbols; `reset()` returns to idle. SSR-safe and reduced-motion safe: `spin()` jumps straight to the result.
 
+### `createRedPacket(options?)`
+
+Crypto red packet ceremony: tap to open, coins burst out with physics, the amount counts up. The primitive owns the ceremony state machine (`"sealed"`, `"opening"`, `"bursting"`, `"revealed"`) and the coin particle physics; you render the envelope and the coins. Each coin carries position, rotation, size, opacity, and its share of the total, split randomly like a real red packet grab.
+
+```tsx
+import { createRedPacket } from "solid-drift"
+
+const packet = createRedPacket({ amount: 88, coins: 14 })
+
+<button onClick={() => packet.open()}>
+  {packet.status() === "sealed"
+    ? "🧧 Tap to open"
+    : `$${packet.revealed().toFixed(2)}`}
+</button>
+<For each={packet.coins()}>
+  {(coin) => (
+    <div
+      class="coin"
+      style={{
+        transform: `translate(${coin.x}px, ${coin.y}px) rotate(${coin.rotation}deg)`,
+        opacity: coin.opacity,
+        width: `${coin.size}px`,
+      }}
+    />
+  )}
+</For>
+```
+
+Options: `coins` (default `12`), `amount` (total, default `88`), `spread` (burst size in px, default `160`), `gravity` (px/s^2, default `900`), `openDuration` (ms, default `500`), `burstDuration` (ms, default `1600`), `revealDuration` (ms, default `800`), `onOpen`, `onReveal(amount)`. Returns `{ status, coins, revealed, open, reset }`. SSR-safe and reduced-motion safe: `open()` jumps straight to revealed with no burst.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

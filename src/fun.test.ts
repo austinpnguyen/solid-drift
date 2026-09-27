@@ -2,8 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createRoot } from "solid-js";
 import {
   createSlotMachine,
+  createRedPacket,
   type SlotMachineControls,
   type SlotMachineOptions,
+  type RedPacketOptions,
 } from "./fun.js";
 
 afterEach(() => {
@@ -201,5 +203,147 @@ describe("createSlotMachine", () => {
     machine.spin(["B", "C", "A"]);
     expect(machine.status()).toBe("done");
     expect(machine.values()).toEqual(["B", "C", "A"]);
+  });
+});
+
+describe("createRedPacket", () => {
+  function setupPacket(options?: RedPacketOptions) {
+    let packet!: ReturnType<typeof createRedPacket>;
+    const dispose = createRoot((d) => {
+      packet = createRedPacket(options);
+      return d;
+    });
+    return { packet, dispose };
+  }
+
+  it("starts sealed with no coins and zero revealed", () => {
+    stubBrowser();
+    const { packet, dispose } = setupPacket();
+    expect(packet.status()).toBe("sealed");
+    expect(packet.coins()).toHaveLength(0);
+    expect(packet.revealed()).toBe(0);
+    dispose();
+  });
+
+  it("runs the full ceremony: opening -> bursting -> revealed", () => {
+    const b = stubBrowser();
+    const revealed: number[] = [];
+    const { packet, dispose } = setupPacket({
+      coins: 8,
+      amount: 100,
+      openDuration: 100,
+      burstDuration: 400,
+      revealDuration: 200,
+      onReveal: (a) => revealed.push(a),
+    });
+    packet.open();
+    expect(packet.status()).toBe("opening");
+
+    b.frames(10); // 167ms > 100ms open
+    expect(packet.status()).toBe("bursting");
+    expect(packet.coins()).toHaveLength(8);
+    const coin = packet.coins()[0];
+    expect(coin.size).toBeGreaterThanOrEqual(24);
+    expect(coin.opacity).toBe(1);
+
+    b.frames(30); // 668ms > 100 + 400ms burst
+    expect(packet.status()).toBe("revealed");
+    expect(packet.coins()).toHaveLength(0);
+    expect(revealed).toEqual([100]);
+
+    b.frames(20); // let the count-up finish (200ms)
+    expect(packet.revealed()).toBeCloseTo(100, 5);
+    dispose();
+  });
+
+  it("coins fall under gravity", () => {
+    const b = stubBrowser();
+    const { packet, dispose } = setupPacket({
+      coins: 4,
+      openDuration: 50,
+      burstDuration: 2000,
+    });
+    packet.open();
+    b.frames(10); // bursting
+    const y1 = packet.coins()[0].y;
+    b.frames(30); // 668ms of flight
+    const y2 = packet.coins()[0].y;
+    // Launched upward (negative vy), gravity pulls down: y grows over time.
+    expect(y2).toBeGreaterThan(y1);
+    dispose();
+  });
+
+  it("coin shares split the total amount", () => {
+    const b = stubBrowser();
+    const { packet, dispose } = setupPacket({
+      coins: 10,
+      amount: 88,
+      openDuration: 50,
+      burstDuration: 2000,
+    });
+    packet.open();
+    b.frames(10);
+    const total = packet.coins().reduce((a, c) => a + c.amount, 0);
+    expect(total).toBeCloseTo(88, 8);
+    dispose();
+  });
+
+  it("ignores open() when not sealed", () => {
+    const b = stubBrowser();
+    let opens = 0;
+    const { packet, dispose } = setupPacket({
+      openDuration: 50,
+      burstDuration: 200,
+      onOpen: () => opens++,
+    });
+    packet.open();
+    packet.open(); // already opening: ignored
+    expect(opens).toBe(1);
+    b.frames(30);
+    expect(packet.status()).toBe("revealed");
+    packet.open(); // revealed: ignored
+    expect(opens).toBe(1);
+    dispose();
+  });
+
+  it("reset() returns to sealed", () => {
+    const b = stubBrowser();
+    const { packet, dispose } = setupPacket({
+      openDuration: 50,
+      burstDuration: 200,
+    });
+    packet.open();
+    b.frames(30);
+    expect(packet.status()).toBe("revealed");
+    packet.reset();
+    expect(packet.status()).toBe("sealed");
+    expect(packet.coins()).toHaveLength(0);
+    // Can be opened again.
+    packet.open();
+    expect(packet.status()).toBe("opening");
+    dispose();
+  });
+
+  it("opens instantly under reduced motion", () => {
+    stubBrowser({ reduced: true });
+    const revealed: number[] = [];
+    const { packet, dispose } = setupPacket({
+      amount: 88,
+      onReveal: (a) => revealed.push(a),
+    });
+    packet.open();
+    expect(packet.status()).toBe("revealed");
+    expect(packet.coins()).toHaveLength(0);
+    expect(packet.revealed()).toBe(88);
+    expect(revealed).toEqual([88]);
+    dispose();
+  });
+
+  it("open() jumps to revealed on the server", () => {
+    // No window stubbed: SSR path.
+    const { packet } = setupPacket({ amount: 88 });
+    packet.open();
+    expect(packet.status()).toBe("revealed");
+    expect(packet.revealed()).toBe(88);
   });
 });

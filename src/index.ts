@@ -29,6 +29,11 @@ export {
   type SlotMachineControls,
   type SlotMachineOptions,
   type SlotMachineStatus,
+  createRedPacket,
+  type RedPacketCoin,
+  type RedPacketControls,
+  type RedPacketOptions,
+  type RedPacketStatus,
 } from "./fun.js";
 export { createStagger } from "./stagger.js";
 export {

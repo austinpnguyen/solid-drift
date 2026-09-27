@@ -111,6 +111,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 **Fun**
 
 - `createSlotMachine(options)` - gacha reels with momentum spin, staggered stops, riggable landing. Returns `{ values, result, status, spin, stop, reset }`.
+- `createRedPacket(options?)` - red packet ceremony: tap to open, coin burst physics, amount count-up. Returns `{ status, coins, revealed, open, reset }`.
 
 **Utilities**
 
