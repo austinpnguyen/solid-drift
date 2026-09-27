@@ -46,6 +46,20 @@ export {
 } from "./fun.js";
 export { createStagger } from "./stagger.js";
 export {
+  createDebounced,
+  createThrottled,
+  createLocalStorage,
+  type LocalStorageOptions,
+  type LocalStorageControls,
+  createMediaQuery,
+  createClickOutside,
+  type ClickOutsideOptions,
+  createScrollLock,
+  type ScrollLockControls,
+  createInfiniteScroll,
+  type InfiniteScrollOptions,
+} from "./dom.js";
+export {
   createHorizontalScroll,
   type HorizontalScrollOptions,
   type HorizontalScrollResult,

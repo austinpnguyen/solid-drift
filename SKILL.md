@@ -136,6 +136,12 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createConfetti(canvas, options?)` - canvas confetti bursts (gravity, drag, sway, paper flutter) on the shared clock. `burst(origin?)`, `clear()`, `active()`. Reduced motion skips particles but still calls `onDone`.
 - `createEmojiBurst(canvas, options?)` - same particle physics with emoji glyphs. `{ active, burst, clear }`.
 - `createScratch(canvas, options?)` - scratch-off foil cover with `destination-out` erasing, alpha-sampled `cleared()` fraction, `onComplete` past `threshold`, custom `paint` cover art. `{ cleared, done, reset }`.
+- `createDebounced(source, delay)` / `createThrottled(source, interval)` - signal transforms: debounced waits for a pause (trailing edge), throttled is leading + collapsed trailing. Both return `Accessor<T>`.
+- `createLocalStorage(key, initialValue, options?)` - persisted signal: reads on creation, writes through on set, syncs across tabs via `storage` events, custom serialize/deserialize. `{ value, set, remove }`.
+- `createMediaQuery(query)` - live boolean signal tracking a CSS media query.
+- `createClickOutside(ref, handler, options?)` - outside-press dismissal (default `pointerdown`, shadow-DOM aware). No-op on server.
+- `createScrollLock()` - body scroll lock with nested reference counting; restores original overflow. `{ locked, lock, unlock }`.
+- `createInfiniteScroll(ref, options)` - IntersectionObserver sentinel with `threshold` prefetch and reactive `disabled` kill switch; calls `onLoadMore` on approach.
 
 **Utilities**
 

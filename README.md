@@ -1390,6 +1390,61 @@ const scratch = createScratch(() => foil, {
 
 Options: `threshold` (fraction cleared to complete, default `0.45`), `brush` (eraser radius in px, default `26`), `paint(ctx, w, h)` (custom cover art), `onComplete`. Returns `{ cleared, done, reset }`: `cleared()` is the 0..1 fraction erased, `reset()` repaints the cover. Scratching is direct manipulation, so it works identically under reduced motion. SSR-safe: `cleared()` stays 0.
 
+### DOM utilities
+
+Everyday DOM glue, signal-native: debounced and throttled signal transforms, a persisted signal, a live media query, outside-press dismissal, body scroll locking, and infinite scroll. All SSR-safe.
+
+```tsx
+import {
+  createDebounced,
+  createThrottled,
+  createLocalStorage,
+  createMediaQuery,
+  createClickOutside,
+  createScrollLock,
+  createInfiniteScroll,
+} from "solid-drift"
+
+// Debounced search: the query waits for a 300ms pause before firing.
+const [query, setQuery] = createSignal("")
+const debounced = createDebounced(query, 300)
+createEffect(() => { if (debounced()) search(debounced()) })
+
+// Throttled scroll position: at most one update per 100ms.
+const throttledY = createThrottled(scrollY, 100)
+
+// Persisted theme, synced across tabs.
+const theme = createLocalStorage<"light" | "dark">("theme", "light")
+theme.set("dark")
+
+// Live media query.
+const wide = createMediaQuery("(min-width: 1024px)")
+
+// Dismiss a menu on outside press.
+let menu!: HTMLDivElement
+createClickOutside(() => menu, () => setOpen(false))
+
+// Lock body scroll while a modal is open (nested locks stack).
+const scroll = createScrollLock()
+createEffect(() => { modalOpen() ? scroll.lock() : scroll.unlock() })
+
+// Infinite scroll: prefetch as the sentinel approaches.
+let sentinel!: HTMLDivElement
+createInfiniteScroll(() => sentinel, {
+  onLoadMore: () => loadPage(),
+  disabled: () => !hasMore(),
+})
+<div ref={sentinel} />
+```
+
+- `createDebounced(source, delay)` returns an `Accessor<T>` that follows the source after it stops changing for `delay` ms (trailing edge).
+- `createThrottled(source, interval)` returns an `Accessor<T>` that updates at most once per `interval` ms: leading change applies immediately, the rest collapse into one trailing update.
+- `createLocalStorage<T>(key, initialValue, options?)` returns `{ value, set, remove }`: reads the stored value on creation (falling back on missing or corrupt JSON), writes through on every set, and stays in sync across tabs via the `storage` event (`sync: true` default). Custom `serialize`/`deserialize` supported. Behaves like a plain signal where storage is unavailable.
+- `createMediaQuery(query)` returns an `Accessor<boolean>` that tracks the query live (`false` on the server).
+- `createClickOutside(ref, handler, options?)` calls `handler` on `pointerdown` (default, configurable via `events`) outside the element. Shadow-DOM aware via `composedPath`. No-op on the server.
+- `createScrollLock()` returns `{ locked, lock, unlock }`: sets `document.body.style.overflow = "hidden"`, restores the previous value when the last lock releases, and reference-counts nested locks so stacked modals cannot unlock each other early. Unmounting releases the locks.
+- `createInfiniteScroll(ref, options)` observes a sentinel with IntersectionObserver and calls `onLoadMore` as it approaches the viewport (`threshold` px prefetch via `rootMargin`, default `200`). `disabled` is a reactive kill switch (e.g. `() => !hasMore()`).
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
