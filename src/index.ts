@@ -472,3 +472,18 @@ export type {
   FullscreenOptions,
   FullscreenControls,
 } from "./apputils.js";
+export {
+  createPresence,
+  createViewTransition,
+  createScrollReveal,
+} from "./presence.js";
+export type {
+  PresenceStatus,
+  PresenceOptions,
+  PresenceControls,
+  ViewTransitionControls,
+  RevealVariant,
+  ScrollRevealOptions,
+  ScrollRevealItem,
+  ScrollRevealControls,
+} from "./presence.js";

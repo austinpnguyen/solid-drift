@@ -1726,6 +1726,43 @@ const fs = createFullscreen(() => stage); // fullscreen toggle
 - `createUndo(initial, options?)`: undoable state: `{ value, set, undo, redo, clear, reset, canUndo, canRedo, past, future }`. `set()` (value or updater) records history trimmed to `capacity` (default 50); a new `set()` discards the redo stack. Pure logic, SSR-safe.
 - `createFullscreen(ref, options?)`: `{ fullscreen, enter, exit, toggle }`. Tracks `document.fullscreenElement` so Escape and external changes stay in sync; failures go to `onError` instead of throwing. SSR-safe.
 
+### Presence, view transitions, and scroll reveals
+
+```tsx
+import { createPresence, createViewTransition, createScrollReveal } from "solid-drift";
+
+// Exit animations that actually run
+const dialog = createPresence({ when: open, exitDuration: 250 });
+<Show when={dialog.mounted()}>
+  <div
+    style={{
+      opacity: dialog.exiting() ? "0" : "1",
+      transition: "opacity 250ms",
+    }}
+  >
+    ...
+  </div>
+</Show>;
+
+// Native-feel page transitions
+const vt = createViewTransition();
+const switchTab = (tab: string) => vt.transition(() => setTab(tab));
+
+// Scroll-triggered reveal choreography
+const reveal = createScrollReveal(3, { stagger: 90 });
+<For each={cards}>
+  {(card, i) => (
+    <div ref={reveal.items[i()].ref} style={reveal.items[i()].style()}>
+      {card.title}
+    </div>
+  )}
+</For>;
+```
+
+- `createPresence({ when, exitDuration?, onExitStart?, onExitComplete? })`: `{ mounted, status, exiting, forceExit }`. When `when` flips false, content stays mounted for `exitDuration` ms (default 300) so the exit animation finishes, then unmounts; flipping back mid-exit cancels it. `forceExit()` unmounts immediately. Skips the exit phase under reduced motion. SSR-safe.
+- `createViewTransition()`: `{ supported, transitioning, transition }`. Wraps `document.startViewTransition`: `transition(update)` animates between old and new DOM when supported, otherwise runs the update directly. SSR-safe (`supported()` is false on the server).
+- `createScrollReveal(count, options?)`: `{ items, replay, reset }`. Each `items[i]` has `ref`, `revealed`, and `style` (empty on the server so content stays visible without JS). Staggered entrance (`stagger`, default 60ms), variants (`fade`, `fade-up`, `fade-down`, `fade-left`, `fade-right`, `scale`, `none`), `once` semantics (default true), and instant reveal under reduced motion.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.
