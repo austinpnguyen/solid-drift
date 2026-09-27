@@ -145,6 +145,8 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createHaptic(options?)` - Vibration API wrapper: `{ supported, vibrate, light, medium, heavy, success, warning, error, morse }`; morse encodes `.`/`-`/` `//` gaps; `hapticPatterns` one-shot presets; `enabled` boolean-or-signal master switch. Tactile so it fires under reduced motion; no-op where unsupported.
 - `createHapticBeat(haptic, options?)` - 16-step haptic sequencer on the shared clock (`"x"` hit, `"X"` accent); `{ playing, bpm, step, start, stop, toggle, setBpm }`; `hapticBeatPresets` ships heartbeat, metronome, ticks, pulse.
 - `createBottomSheet(ref, options?)` - draggable bottom sheet on `createDrag`: `{ open, snapIndex, y, status, openSheet, close, snapTo }`; `snapPoints` are height fractions (clamped/sorted, default `[0.5, 1]`); release target is nearest snap to `y + velocity * 0.18`, dismiss past midpoint or on fast downward flick; rubber-banded 1:1 tracking while dragging; `measureRef` when the drag ref is a handle.
+- `createChatModel(options)` - streaming chat over `openai` / `anthropic` / `meta` (Llama API `/compat/v1`) or a custom `{ kind: "custom", stream, parseDelta }`: `{ messages, streamingText, status, error, send, stop, reset }`; deltas append to a live assistant message; Anthropic needs `maxTokens` (default 1024) and, from browsers, a proxy/`baseUrl` since api.anthropic.com sends no CORS headers.
+- `createSSE(url, options?)` - fetch-based SSE client (any method, custom headers): `{ status, events, lastEvent, error, connect, disconnect }`; full SSE framing; manual reconnect; SSR-safe.
 
 **Utilities**
 

@@ -1506,6 +1506,34 @@ const bs = createBottomSheet(() => handle, {
 - While the pointer is down the sheet tracks 1:1 with light rubber-banding past the fully-open top and the dismissed bottom. On release, the target is the nearest snap to `y + velocity * 0.18`; dismissal happens past the midpoint between the lowest snap and closed, or on a downward flick over 700 px/s. Snap travel uses a spring (`options.spring`, default stiffness 400 / damping 40).
 - Bind `ref` to the drag handle when the sheet body scrolls (keeps drag and scroll from fighting), to the sheet root otherwise. The moving element gets `translateY(y())`; the drag target needs `touch-action: none`. Starts dismissed on the server (SSR-safe); under reduced motion it jumps straight to snap targets.
 
+### Streaming
+
+Token-by-token chat over OpenAI, Anthropic, Meta's Llama API, or your own provider, plus a low-level fetch-based SSE client for any event stream.
+
+```tsx
+import { createChatModel } from "solid-drift"
+
+const chat = createChatModel({
+  provider: "openai",
+  apiKey: () => localStorage.getItem("openai_key") ?? "",
+  model: "gpt-4o-mini",
+  system: "You are a concise assistant.",
+})
+
+// In your component:
+<For each={chat.messages()}>
+  {(m) => <div class={m.role}>{m.content}</div>}
+</For>
+<button onClick={() => chat.send(input())} disabled={chat.status() === "streaming"}>
+  Send
+</button>
+```
+
+- `createChatModel(options)` returns `{ messages, streamingText, status, error, send, stop, reset }`. `send(content)` appends the user message and streams the reply into a live assistant message, so UI bound to `messages()` renders token by token; `status()` is `idle`, `streaming`, or `error`. `stop()` aborts and keeps the partial reply; `send()` while streaming is ignored.
+- `provider` is `"openai"`, `"anthropic"`, `"meta"`, or a custom `{ kind: "custom", stream, parseDelta }`. OpenAI and Meta (Llama API via `/compat/v1`, OpenAI-compatible) use Bearer auth and `data:` chunks terminated by `[DONE]`; Anthropic uses `x-api-key` plus `anthropic-version: 2023-06-01`, a top-level `system` prompt, and `content_block_delta` text deltas (required `maxTokens` defaults to 1024).
+- Honest limitation: api.anthropic.com does not send CORS headers for browser origins, so from a browser Anthropic must go through your own server route or proxy; point `baseUrl` at it. For production with any provider, prefer a server route that holds the key and set `baseUrl` to it so keys never ship to the browser.
+- `createSSE(url, options?)` is a fetch-based event-stream client (`{ status, events, lastEvent, error, connect, disconnect }`): unlike `EventSource` it supports any method and custom headers, parses the full SSE framing (named events, multi-line data, comments, chunk splits), and leaves reconnection manual via `connect()`. SSR-safe: nothing connects until `connect()` (or `autoConnect`) runs on the client.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

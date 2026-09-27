@@ -345,3 +345,19 @@ export type {
   ENSOptions,
   IdenticonOptions,
 } from "./web3data.js";
+export {
+  createSSEParser,
+  createSSE,
+  createChatModel,
+} from "./stream.js";
+export type {
+  SSEEvent,
+  StreamStatus,
+  SSEOptions,
+  SSEControls,
+  ChatMessage,
+  ChatProviderKind,
+  CustomChatProvider,
+  ChatModelOptions,
+  ChatModelControls,
+} from "./stream.js";
