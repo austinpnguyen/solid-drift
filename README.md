@@ -1833,7 +1833,7 @@ const check = validatePost(
   ["x", "threads", "linkedin"],
 );
 if (!check.valid) {
-  // check.issues: [{ platform, code, message }] — show what to fix
+  // check.issues: [{ platform, code, message }]: show what to fix
   // before the network silently truncates or rejects the post.
 }
 

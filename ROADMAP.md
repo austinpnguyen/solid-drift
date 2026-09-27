@@ -8,24 +8,31 @@ chat and publish to npm.
 ## Release plan
 
 - v0.33.0: animation presence family (createPresence,
-  createViewTransition, createScrollReveal) — shipped 2026-09-27
-- v0.34.0: agent trust family (createApprovalGate, createTokenStream) — shipped 2026-09-27
-- v0.35.0: web3 security (sanitizeOnchain) — shipped 2026-09-27
-- v0.36.0: offline (createOfflineQueue) — shipped 2026-09-27
-- v0.37.0: social kit (validatePost, normalizeAnalytics) — shipped 2026-09-27
+  createViewTransition, createScrollReveal), shipped 2026-09-27
+- v0.34.0: agent trust family (createApprovalGate, createTokenStream), shipped 2026-09-27
+- v0.35.0: web3 security (sanitizeOnchain), shipped 2026-09-27
+- v0.36.0: offline (createOfflineQueue), shipped 2026-09-27
+- v0.37.0: social kit (validatePost, normalizeAnalytics), shipped 2026-09-27
 - v0.38.0: network family (createApi, createWebSocket, createSearch,
-  createUpload, createPagination, verifyWebhookSignature) — shipped 2026-09-27
+  createUpload, createPagination, verifyWebhookSignature), shipped 2026-09-27
 - v0.39.0: browser API family (createGeolocation, createElementSize,
   createEventListener, createHotkey, createTimeAgo, createPermission,
-  createScriptLoader) — shipped 2026-09-27
-- v0.40.0: auth session (createAuthSession) — shipped 2026-09-27
+  createScriptLoader), shipped 2026-09-27
+- v0.40.0: auth session (createAuthSession), shipped 2026-09-27
 - v0.41.0: analytics lite family (createTracker, useConsent,
-  createFunnel) — shipped 2026-09-27
+  createFunnel), shipped 2026-09-27
 
-All nine releases are pushed and tagged (2026-09-27). npm registry
-confirmation: v0.33.0 through v0.38.0 confirmed; v0.39.0, v0.40.0, and
-v0.41.0 publish workflows succeeded and registry confirmation was in
-flight at the time of writing.
+All nine releases are pushed and tagged (2026-09-27).
+npm registry confirmation (2026-09-27): v0.33.0 through v0.39.0 and
+v0.41.0 are live on the registry; dist-tags.latest = 0.41.0.
+v0.40.0 was pushed and tagged but NOT published: its GitHub Actions
+run failed at the `npm test` step on the pre-existing flaky red-packet
+gravity test (a random launch velocity could beat the assertion window;
+fixed in the v0.41.0 commit by extending the flight window). v0.41.0
+was built on top of the v0.40.0 commit, so the registry has all
+v0.40.0 code. Re-running the v0.40.0 workflow was deliberately not
+done: `npm publish` would move the `latest` dist-tag back to 0.40.0
+and there is no npm auth on this machine to move it back.
 Final suite: 775 Vitest tests passing, tsc clean, production build clean.
 
 Each release: implement, export, document in README, full Vitest suite,
