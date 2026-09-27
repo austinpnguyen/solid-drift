@@ -471,6 +471,31 @@ describe("createTextScramble", () => {
     expect(result.scrambling()).toBe(false);
     dispose();
   });
+
+  it("seeds an empty element from the text option", () => {
+    const b = stubBrowser();
+    const el = new FakeElement();
+    el.textContent = "";
+    let result!: ReturnType<typeof createTextScramble>;
+    const dispose = createRoot((d) => {
+      result = createTextScramble(() => el as unknown as Element, {
+        text: "Hi",
+        stagger: 28,
+        duration: 100,
+        frameRate: 50,
+        autostart: false,
+      });
+      return d;
+    });
+    result.start();
+    expect(result.scrambling()).toBe(true);
+    // Two characters were seeded from the option, not from empty content.
+    expect(el.children).toHaveLength(2);
+    b.frames(30);
+    expect(textOf(el)).toBe("Hi");
+    expect(result.scrambling()).toBe(false);
+    dispose();
+  });
 });
 
 describe("createTextWave", () => {

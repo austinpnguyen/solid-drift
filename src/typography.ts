@@ -960,7 +960,15 @@ export function createTextScramble(
   const ensureSplit = () => {
     const el = ref();
     if (!el || chars) return;
-    if (!textOpt) full = el.textContent ?? "";
+    if (textOpt) {
+      // The text option is authoritative: seed the element with it so
+      // splitChars produces one span per character even when the
+      // element starts out empty.
+      full = textOpt;
+      el.textContent = textOpt;
+    } else {
+      full = el.textContent ?? "";
+    }
     chars = splitChars(el);
   };
 
