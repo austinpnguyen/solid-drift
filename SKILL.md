@@ -104,6 +104,23 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createMintReveal(ref, options?)` - anticipation shake, rotateY flip, `onFlip` at the midpoint. Returns `{ play, reset, status }`.
 - `createConnectButton(ref, options?)` - magnetic connect button with copy tick and chain pulse. Returns `{ copyTick, chainPulse, status }`.
 
+**Web3 data** (read-only, zero deps, SSR-safe, all share `{ data, error, status, retry, abort }`)
+
+- `createPoll(fetcher, options?)` - backoff polling infra: immediate fetch, `interval` (30s), error backoff x2 up to `maxInterval` (5min).
+- `createTokenPrice(tokenId, options?)` - CoinGecko price signal (60s default). Returns `{ price, change24h }` plus poll controls.
+- `createPriceChange(source, options?)` - percent change of any numeric signal over a rolling window. Returns `{ change, reset }`.
+- `createPriceCompare(a, b)` - two price signals compared: `{ ratio, diffPercent, leader }`.
+- `createGasPrice(options?)` - `eth_gasPrice` every 15s. Returns `{ wei, gwei }`.
+- `createBalance(address, options?)` - native or ERC20 balance every 20s. Returns `{ balance, formatted }`.
+- `createTxReceipt(hash, options?)` - polls every 4s until the receipt lands, then stops. Returns `{ receipt, mined }`.
+- `createBlockNumber(options?)` - latest block every 12s, chain-health heartbeat. Returns `{ blockNumber }`.
+- `createChainlinkPrice(feed, options?)` - on-chain Chainlink feed, `decimals()` once then `latestRoundData()` every 30s. Returns `{ price }`.
+- `createNFTMetadata(contract, tokenId, options?)` - `tokenURI` on-chain plus JSON metadata, one-shot with `retry`, `ipfs://` rewritten via gateway. Returns `{ metadata, image }`.
+- `createENS(address, options?)` - reverse-resolves via the ENS registry, one-shot with `retry`. Returns `{ name }`.
+- `createIdenticon(address, options?)` - deterministic SVG identicon data URI, pure computation, SSR-safe.
+- `CHAINS` / `createChain(id)` - registry of 7 EVM chains (name, currency, explorer, RPC).
+- `shortenAddress(address, chars?)`, `isAddress(value)`, `formatUnits(value, decimals?)`, `parseUnits(value, decimals?)` - pure BigInt-safe helpers.
+
 **Feedback**
 
 - `createToast(options?)` - signal-native toast queue, you render the UI. Returns `{ toasts, toast, info, success, warning, error, dismiss, clear }`.

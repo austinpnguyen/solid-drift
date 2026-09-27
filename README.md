@@ -1094,6 +1094,37 @@ const connect = createConnectButton(() => btn, { strength: 0.35 });
 
 Returns `{ copyTick, chainPulse, status }`. `status()` is `"idle"`, `"ticking"` (check visible), or `"pulsing"` (ring expanding). Call `chainPulse()` after a successful connection or network switch. Under reduced motion there is no magnetic pull or scale; `copyTick()` and `chainPulse()` still show their overlays statically.
 
+### Web3 data layer
+
+A zero-dependency read layer for chain and market data as signals: public RPC and API endpoints over `fetch`, with user-swappable endpoints. Every network primitive shares the `{ data, error, status, retry, abort }` shape, is SSR-safe (nothing fetches on the server), and polls with error backoff. Defaults are conservative because public endpoints are rate-limited. This is read-only: transaction signing stays with wallet libraries.
+
+```tsx
+import {
+  createPoll, createTokenPrice, createPriceChange, createPriceCompare,
+  createGasPrice, createBalance, createTxReceipt, createBlockNumber,
+  createChainlinkPrice, createNFTMetadata, createENS, createIdenticon,
+  createChain, CHAINS, shortenAddress, isAddress, formatUnits, parseUnits,
+} from "solid-drift";
+```
+
+**Polling infra.** `createPoll(fetcher, options?)` fetches immediately (unless `immediate: false`), then on `interval` (default 30s). On error the interval multiplies by `backoff` (default 2) up to `maxInterval` (default 5min) and resets on the next success. Returns `{ data, error, status, retry, abort }`; `status()` is `"idle"`, `"loading"`, `"success"`, or `"error"`.
+
+**Pure helpers.** `isAddress(value)` checks `0x` + 40 hex chars. `shortenAddress(address, chars = 4)` renders `0xd8dA…6045` and passes invalid input through. `formatUnits(value, decimals = 18)` formats wei-style bigints as decimal strings without float artifacts; `parseUnits(value, decimals = 18)` parses them back and throws on invalid input. `CHAINS` maps seven chain ids (Ethereum, Optimism, BNB Chain, Polygon, Base, Arbitrum One, Sepolia) to name, currency, decimals, explorer, and a public RPC; `createChain(id)` looks one up as a reactive accessor (`undefined` for unknown ids).
+
+**Market.** `createTokenPrice(tokenId, options?)` polls CoinGecko's public API (default 60s; swap `endpoint` or `vsCurrency`) and exposes `price()` and `change24h()`. `createPriceChange(source, options?)` samples any numeric signal on change and on `sampleMs` (default 60s), keeps a rolling `windowMs` (default 1h), and reports the percent change between the first and last sample; `reset()` clears the window. `createPriceCompare(a, b)` compares two price signals with `ratio()`, `diffPercent()`, and `leader()` (`"a"`, `"b"`, or `"tie"`).
+
+**Chain (JSON-RPC).** `createGasPrice(options?)` reads `eth_gasPrice` every 15s as `{ wei, gwei }`. `createBalance(address, options?)` reads the native balance every 20s, or an ERC20 `balanceOf` when `token` is set, exposing `balance()` (bigint) and `formatted()`. `createTxReceipt(hash, options?)` polls every 4s until the receipt lands, then stops on its own; `mined()` mirrors that and `receipt()` carries `transactionHash`, `blockNumber`, `success`, and `gasUsed`. `createBlockNumber(options?)` polls the latest block every 12s as a chain-health heartbeat. `createChainlinkPrice(feed, options?)` reads a Chainlink `AggregatorV3Interface` feed on-chain (`decimals()` once, then `latestRoundData()` every 30s). All take an `endpoint` option defaulting to a public mainnet RPC.
+
+**Identity and NFTs.** `createNFTMetadata(contract, tokenId, options?)` fetches `tokenURI` on-chain, resolves the JSON (one-shot with `retry`), rewrites `ipfs://` through a gateway, and exposes `metadata()` (`name`, `description`, `image`, `attributes`, `raw`) plus `image()`. `createENS(address, options?)` reverse-resolves an address through the public ENS registry (one-shot with `retry`); `name()` is `undefined` when no name is set. `createIdenticon(address, options?)` renders a deterministic mirrored-grid SVG avatar as a data URI, pure computation, works on the server.
+
+```tsx
+const { price, change24h } = createTokenPrice("ethereum");
+const { change } = createPriceChange(price);
+const { formatted } = createBalance("0xd8dA…6045");
+const { mined, receipt } = createTxReceipt("0x5c50…f7b");
+const avatar = createIdenticon("0xd8dA…6045");
+```
+
 ### `createToast(options?)`
 
 A signal-native toast queue with choreographed lifecycle. The primitive owns timing and state; you own the rendering, so no component opinions leak into your design system. Each toast moves through `"entering"` to `"visible"` to `"leaving"` to removed on the shared animation clock: bind `state` to CSS classes or drift values for enter/exit motion without any timers of your own.
