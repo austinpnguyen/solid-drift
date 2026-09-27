@@ -183,6 +183,95 @@ export function parseUnits(value: string, decimals = 18): bigint {
   return BigInt(`${m[1]}${clean}`);
 }
 
+export interface SanitizeOnchainOptions {
+  /**
+   * URL schemes allowed in href/src style attributes. Anything else
+   * (plus `data:` outside images) is replaced with `"#"`.
+   * Default `["http", "https", "mailto"]`. Relative URLs, anchors,
+   * and `data:image/` are always allowed.
+   */
+  allowedSchemes?: string[];
+  /**
+   * Truncate the output to this many characters. Default 0 (no limit).
+   */
+  maxLength?: number;
+}
+
+const URL_ATTRS = "href|src|action|formaction|xlink:href|cite|poster";
+
+const stripEventHandlers = (input: string): string =>
+  input.replace(/\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+
+const neutralizeDangerousUrls = (
+  input: string,
+  allowedSchemes: string[],
+): string => {
+  const allowed = new Set(allowedSchemes.map((s) => s.toLowerCase()));
+  const attrRe = new RegExp(
+    `\\b(${URL_ATTRS})\\s*=\\s*("[^"]*"|'[^']*'|[^\\s>]+)`,
+    "gi",
+  );
+  return input.replace(
+    attrRe,
+    (match: string, name: string, rawValue: string) => {
+      const quote = rawValue[0] === '"' || rawValue[0] === "'" ? rawValue[0] : "";
+      const value = quote
+        ? rawValue.slice(1, -1)
+        : rawValue;
+      const trimmed = value.trim();
+      const schemeMatch = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(trimmed);
+      if (!schemeMatch) return match;
+      const scheme = schemeMatch[1].toLowerCase();
+      if (allowed.has(scheme)) return match;
+      if (scheme === "data" && /^data:image\//i.test(trimmed)) return match;
+      return `${name}=${quote}#${quote}`;
+    },
+  );
+};
+
+const escapeHtml = (input: string): string =>
+  input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+/**
+ * Sanitize an untrusted onchain string (token name, memo, ENS label)
+ * for display. Onchain strings are attacker-controlled: token names
+ * have been used to inject `<img onerror>` payloads and
+ * `javascript:` URLs into dApp UIs.
+ *
+ * The function strips event handler attributes (`onerror=...`),
+ * neutralizes dangerous URL schemes in href/src style attributes
+ * (`javascript:`, `vbscript:`, non-image `data:`), then HTML-escapes
+ * the result. The output is safe to render via `innerHTML` and, with
+ * no markup left, also safe as plain text.
+ *
+ * Pure function, SSR-safe.
+ *
+ * ```ts
+ * sanitizeOnchain('<img src=x onerror=alert(1)>');
+ * // "&lt;img src=x&gt;"
+ * sanitizeOnchain('<a href="javascript:alert(1)">x</a>');
+ * // "&lt;a href=\"#\"&gt;x&lt;/a&gt;"
+ * ```
+ */
+export function sanitizeOnchain(
+  input: unknown,
+  options: SanitizeOnchainOptions = {},
+): string {
+  const { allowedSchemes = ["http", "https", "mailto"], maxLength = 0 } =
+    options;
+  const str = input === null || input === undefined ? "" : String(input);
+  let out = escapeHtml(neutralizeDangerousUrls(stripEventHandlers(str), allowedSchemes));
+  if (maxLength > 0 && out.length > maxLength) {
+    out = out.slice(0, maxLength);
+  }
+  return out;
+}
+
 export interface ChainInfo {
   id: number;
   name: string;

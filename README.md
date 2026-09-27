@@ -1256,12 +1256,13 @@ import {
   createGasPrice, createBalance, createTxReceipt, createBlockNumber,
   createChainlinkPrice, createNFTMetadata, createENS, createIdenticon,
   createChain, CHAINS, shortenAddress, isAddress, formatUnits, parseUnits,
+  sanitizeOnchain,
 } from "solid-drift";
 ```
 
 **Polling infra.** `createPoll(fetcher, options?)` fetches immediately (unless `immediate: false`), then on `interval` (default 30s). On error the interval multiplies by `backoff` (default 2) up to `maxInterval` (default 5min) and resets on the next success. Returns `{ data, error, status, retry, abort }`; `status()` is `"idle"`, `"loading"`, `"success"`, or `"error"`.
 
-**Pure helpers.** `isAddress(value)` checks `0x` + 40 hex chars. `shortenAddress(address, chars = 4)` renders `0xd8dA…6045` and passes invalid input through. `formatUnits(value, decimals = 18)` formats wei-style bigints as decimal strings without float artifacts; `parseUnits(value, decimals = 18)` parses them back and throws on invalid input. `CHAINS` maps seven chain ids (Ethereum, Optimism, BNB Chain, Polygon, Base, Arbitrum One, Sepolia) to name, currency, decimals, explorer, and a public RPC; `createChain(id)` looks one up as a reactive accessor (`undefined` for unknown ids).
+**Pure helpers.** `isAddress(value)` checks `0x` + 40 hex chars. `shortenAddress(address, chars = 4)` renders `0xd8dA…6045` and passes invalid input through. `formatUnits(value, decimals = 18)` formats wei-style bigints as decimal strings without float artifacts; `parseUnits(value, decimals = 18)` parses them back and throws on invalid input. `sanitizeOnchain(input, options?)` sanitizes an untrusted onchain string (token name, memo, ENS label) for display: strips event handler attributes (`onerror=...`), neutralizes dangerous URL schemes in href/src style attributes (`javascript:`, `vbscript:`, non-image `data:` become `"#"`; `http`, `https`, `mailto`, relative URLs, anchors, and `data:image/` pass, with `allowedSchemes` customizable), then HTML-escapes the result, so the output is safe for `innerHTML`. Non-strings coerce (`null`/`undefined` become `""`); `maxLength` truncates. `CHAINS` maps seven chain ids (Ethereum, Optimism, BNB Chain, Polygon, Base, Arbitrum One, Sepolia) to name, currency, decimals, explorer, and a public RPC; `createChain(id)` looks one up as a reactive accessor (`undefined` for unknown ids).
 
 **Market.** `createTokenPrice(tokenId, options?)` polls CoinGecko's public API (default 60s; swap `endpoint` or `vsCurrency`) and exposes `price()` and `change24h()`. `createPriceChange(source, options?)` samples any numeric signal on change and on `sampleMs` (default 60s), keeps a rolling `windowMs` (default 1h), and reports the percent change between the first and last sample; `reset()` clears the window. `createPriceCompare(a, b)` compares two price signals with `ratio()`, `diffPercent()`, and `leader()` (`"a"`, `"b"`, or `"tie"`).
 

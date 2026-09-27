@@ -19,6 +19,7 @@ import {
   isAddress,
   keccak256,
   parseUnits,
+  sanitizeOnchain,
   shortenAddress,
 } from "./web3data.js";
 
@@ -843,5 +844,94 @@ describe("createIdenticon", () => {
     const first = a!();
     setAddr("0x0000000000000000000000000000000000000001");
     expect(a!()).not.toBe(first);
+  });
+});
+
+describe("sanitizeOnchain", () => {
+  it("escapes HTML markup", () => {
+    expect(sanitizeOnchain("<script>alert(1)</script>")).toBe(
+      "&lt;script&gt;alert(1)&lt;/script&gt;",
+    );
+    expect(sanitizeOnchain("a & b")).toBe("a &amp; b");
+    expect(sanitizeOnchain('"quoted"')).toBe("&quot;quoted&quot;");
+  });
+
+  it("strips event handler attributes", () => {
+    expect(sanitizeOnchain('<img src="x" onerror="alert(1)">')).toBe(
+      "&lt;img src=&quot;x&quot;&gt;",
+    );
+    expect(sanitizeOnchain("<div ONCLICK=alert(1)>x</div>")).toBe(
+      "&lt;div&gt;x&lt;/div&gt;",
+    );
+    expect(sanitizeOnchain("<a onmouseover = 'evil()'>x</a>")).toBe(
+      "&lt;a&gt;x&lt;/a&gt;",
+    );
+  });
+
+  it("neutralizes javascript: URLs in link attributes", () => {
+    expect(sanitizeOnchain('<a href="javascript:alert(1)">x</a>')).toBe(
+      "&lt;a href=&quot;#&quot;&gt;x&lt;/a&gt;",
+    );
+    expect(sanitizeOnchain("<a href=JaVaScRiPt:alert(1)>x</a>")).toBe(
+      "&lt;a href=#&gt;x&lt;/a&gt;",
+    );
+    expect(sanitizeOnchain('<form action="vbscript:msgbox(1)">')).toBe(
+      "&lt;form action=&quot;#&quot;&gt;",
+    );
+  });
+
+  it("blocks dangerous data: URLs but keeps images and safe schemes", () => {
+    expect(sanitizeOnchain('<img src="data:text/html,<b>x</b>">')).toBe(
+      "&lt;img src=&quot;#&quot;&gt;",
+    );
+    expect(sanitizeOnchain('<img src="data:image/png;base64,AAA">')).toBe(
+      "&lt;img src=&quot;data:image/png;base64,AAA&quot;&gt;",
+    );
+    expect(sanitizeOnchain('<a href="https://example.com">x</a>')).toBe(
+      "&lt;a href=&quot;https://example.com&quot;&gt;x&lt;/a&gt;",
+    );
+    expect(sanitizeOnchain('<a href="/path?q=1">x</a>')).toBe(
+      "&lt;a href=&quot;/path?q=1&quot;&gt;x&lt;/a&gt;",
+    );
+    expect(sanitizeOnchain('<a href="#top">x</a>')).toBe(
+      "&lt;a href=&quot;#top&quot;&gt;x&lt;/a&gt;",
+    );
+  });
+
+  it("respects a custom allowed scheme list", () => {
+    expect(
+      sanitizeOnchain('<a href="ipfs://Qm123">x</a>', {
+        allowedSchemes: ["ipfs"],
+      }),
+    ).toBe("&lt;a href=&quot;ipfs://Qm123&quot;&gt;x&lt;/a&gt;");
+    expect(sanitizeOnchain('<a href="ipfs://Qm123">x</a>')).toBe(
+      "&lt;a href=&quot;#&quot;&gt;x&lt;/a&gt;",
+    );
+  });
+
+  it("handles combined payloads", () => {
+    expect(
+      sanitizeOnchain(
+        'Evil<img src=x onerror=alert(document.domain)> <a href="javascript:steal()">claim</a>',
+      ),
+    ).toBe(
+      "Evil&lt;img src=x&gt; &lt;a href=&quot;#&quot;&gt;claim&lt;/a&gt;",
+    );
+  });
+
+  it("coerces non-string input", () => {
+    expect(sanitizeOnchain(null)).toBe("");
+    expect(sanitizeOnchain(undefined)).toBe("");
+    expect(sanitizeOnchain(123)).toBe("123");
+  });
+
+  it("truncates to maxLength", () => {
+    expect(sanitizeOnchain("abcdef", { maxLength: 3 })).toBe("abc");
+    expect(sanitizeOnchain("ab", { maxLength: 10 })).toBe("ab");
+  });
+
+  it("leaves ordinary token names readable", () => {
+    expect(sanitizeOnchain("Wrapped Ether")).toBe("Wrapped Ether");
+    expect(sanitizeOnchain("USDC (v2)")).toBe("USDC (v2)");
   });
 });
