@@ -1338,6 +1338,58 @@ const packet = createRedPacket({ amount: 88, coins: 14 })
 
 Options: `coins` (default `12`), `amount` (total, default `88`), `spread` (burst size in px, default `160`), `gravity` (px/s^2, default `900`), `openDuration` (ms, default `500`), `burstDuration` (ms, default `1600`), `revealDuration` (ms, default `800`), `onOpen`, `onReveal(amount)`. Returns `{ status, coins, revealed, open, reset }`. SSR-safe and reduced-motion safe: `open()` jumps straight to revealed with no burst.
 
+### `createConfetti(canvas, options?)`
+
+Canvas confetti bursts: celebration physics with gravity, drag, sway, and tumbling paper flutter, rendered on the shared animation clock. Give it a canvas (a fullscreen fixed overlay with `pointer-events: none` is the classic setup) and call `burst()` from party moments: mints, wins, onboarding completions. Bursts accumulate, so rapid celebrations stack instead of replacing. The canvas is fitted to its CSS size times the device pixel ratio automatically.
+
+```tsx
+import { createConfetti } from "solid-drift"
+
+let cvs!: HTMLCanvasElement
+const confetti = createConfetti(() => cvs, {
+  onDone: () => console.log("party over"),
+})
+<canvas ref={cvs} style={{ position: "fixed", inset: "0", "pointer-events": "none" }} />
+<button onClick={() => confetti.burst()}>Celebrate</button>
+<button onClick={() => confetti.burst({ x: 0.2, y: 0.8 })}>Side popper</button>
+```
+
+Options: `count` (particles per burst, default `120`), `colors` (default a festive palette), `spread` (launch cone in degrees around straight up, default `70`), `power` (launch speed in px/s, default `900`), `gravity` (px/s^2, default `1100`), `drag` (default `1.2`), `size` ([min, max] px, default `[6, 12]`), `shapes` (default `["rect", "circle"]`), `lifetime` (ms, default `2600`), `onDone` (called when the last particle fades). Returns `{ active, burst, clear }`: `burst(origin?)` fires from a normalized origin (default `{ x: 0.5, y: 0.6 }`), `clear()` removes every particle immediately. SSR-safe: `burst()` is a no-op on the server. Under reduced motion `burst()` skips the particles but still calls `onDone`, so chained logic (show the prize after the celebration) keeps working. Tip: pair with `useLowPowerMode` to drop the count on weak devices.
+
+### `createEmojiBurst(canvas, options?)`
+
+Emoji celebration burst: the same particle physics as confetti, but the particles are emoji glyphs that rise, tumble gently, and fade. Reactions, likes, level-ups, chat celebrations. Same canvas setup, same safety rules.
+
+```tsx
+import { createEmojiBurst } from "solid-drift"
+
+let cvs!: HTMLCanvasElement
+const burst = createEmojiBurst(() => cvs, { emoji: ["❤️", "🔥"] })
+<canvas ref={cvs} style={{ position: "fixed", inset: "0", "pointer-events": "none" }} />
+<button onClick={() => burst.burst()}>Send love</button>
+```
+
+Options: `emoji` (default `["🎉", "✨", "💥", "⭐", "💖", "🥳"]`), `count` (default `24`), `power` (default `650`), `gravity` (default `700`: floatier than confetti), `drag` (default `1.6`), `size` ([min, max] px, default `[24, 48]`), `spread` (default `90`), `lifetime` (default `1800`), `onDone`. Returns `{ active, burst, clear }`.
+
+### `createScratch(canvas, options?)`
+
+Scratch-off cover: a lottery-ticket foil over hidden content. The canvas paints an opaque cover (silver holographic foil by default, or your own art via `paint`) and pointer drags erase through it with `destination-out`. The cleared fraction is sampled from the alpha channel on a throttled cadence, and `onComplete` fires once past `threshold`. Layer it over the prize with absolute positioning, and set `touch-action: none` on the canvas so touch scratches do not scroll the page.
+
+```tsx
+import { createScratch } from "solid-drift"
+
+let foil!: HTMLCanvasElement
+const scratch = createScratch(() => foil, {
+  onComplete: () => console.log("revealed!"),
+})
+<div style={{ position: "relative" }}>
+  <div>YOU WON 50 STARS</div>
+  <canvas ref={foil} style={{ position: "absolute", inset: "0", "touch-action": "none" }} />
+</div>
+```
+
+Options: `threshold` (fraction cleared to complete, default `0.45`), `brush` (eraser radius in px, default `26`), `paint(ctx, w, h)` (custom cover art), `onComplete`. Returns `{ cleared, done, reset }`: `cleared()` is the 0..1 fraction erased, `reset()` repaints the cover. Scratching is direct manipulation, so it works identically under reduced motion. SSR-safe: `cleared()` stays 0.
+
 ### Easings
 
 Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, plus the cartoon set: `easeInBack` (anticipation dip before movement), `easeInOutBack` (wind-up, overshoot, settle), `easeOutElastic` (decaying rubber-band oscillation), `easeOutBounce` (shrinking cartoon bounces). Also `cubicBezier(x1, y1, x2, y2)` for CSS-style curves. Pass a name or a custom `(t) => number` function anywhere an easing is accepted.

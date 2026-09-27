@@ -133,6 +133,9 @@ One line per primitive. Full docs with examples live in `README.md`.
 
 - `createSlotMachine(options)` - gacha reels with momentum spin, staggered stops, riggable landing. Returns `{ values, result, status, spin, stop, reset }`.
 - `createRedPacket(options?)` - red packet ceremony: tap to open, coin burst physics, amount count-up. Returns `{ status, coins, revealed, open, reset }`.
+- `createConfetti(canvas, options?)` - canvas confetti bursts (gravity, drag, sway, paper flutter) on the shared clock. `burst(origin?)`, `clear()`, `active()`. Reduced motion skips particles but still calls `onDone`.
+- `createEmojiBurst(canvas, options?)` - same particle physics with emoji glyphs. `{ active, burst, clear }`.
+- `createScratch(canvas, options?)` - scratch-off foil cover with `destination-out` erasing, alpha-sampled `cleared()` fraction, `onComplete` past `threshold`, custom `paint` cover art. `{ cleared, done, reset }`.
 
 **Utilities**
 

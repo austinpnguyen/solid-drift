@@ -3,6 +3,9 @@ import { createRoot } from "solid-js";
 import {
   createSlotMachine,
   createRedPacket,
+  createConfetti,
+  createEmojiBurst,
+  createScratch,
   type SlotMachineControls,
   type SlotMachineOptions,
   type RedPacketOptions,
@@ -345,5 +348,325 @@ describe("createRedPacket", () => {
     packet.open();
     expect(packet.status()).toBe("revealed");
     expect(packet.revealed()).toBe(88);
+  });
+});
+
+/* Canvas fakes for the particle and scratch tests. */
+
+function makeCtx() {
+  const gradient = { addColorStop: vi.fn() };
+  return {
+    fillStyle: "",
+    strokeStyle: "",
+    globalAlpha: 1,
+    globalCompositeOperation: "source-over",
+    font: "",
+    textAlign: "",
+    textBaseline: "",
+    lineWidth: 1,
+    setTransform: vi.fn(),
+    clearRect: vi.fn(),
+    fillRect: vi.fn(),
+    beginPath: vi.fn(),
+    arc: vi.fn(),
+    fill: vi.fn(),
+    save: vi.fn(),
+    restore: vi.fn(),
+    translate: vi.fn(),
+    rotate: vi.fn(),
+    scale: vi.fn(),
+    stroke: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    fillText: vi.fn(),
+    createLinearGradient: vi.fn(() => gradient),
+    getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(0) })),
+  };
+}
+
+interface CanvasFake {
+  el: unknown;
+  ctx: ReturnType<typeof makeCtx>;
+  fire: (type: string, event?: Record<string, unknown>) => void;
+}
+
+function makeCanvas(w = 300, h = 150): CanvasFake {
+  const listeners = new Map<string, Set<(e: unknown) => void>>();
+  const ctx = makeCtx();
+  const el = {
+    width: w,
+    height: h,
+    clientWidth: w,
+    clientHeight: h,
+    getContext: () => ctx,
+    getBoundingClientRect: () => ({
+      left: 0,
+      top: 0,
+      width: w,
+      height: h,
+      right: w,
+      bottom: h,
+    }),
+    setPointerCapture: vi.fn(),
+    addEventListener: vi.fn((type: string, fn: (e: unknown) => void) => {
+      let set = listeners.get(type);
+      if (!set) {
+        set = new Set();
+        listeners.set(type, set);
+      }
+      set.add(fn);
+    }),
+    removeEventListener: vi.fn((type: string, fn: (e: unknown) => void) => {
+      listeners.get(type)?.delete(fn);
+    }),
+  };
+  return {
+    el: el as unknown as HTMLCanvasElement,
+    ctx,
+    fire: (type: string, event: Record<string, unknown> = {}) => {
+      listeners.get(type)?.forEach((fn) => fn(event));
+    },
+  };
+}
+
+/** Alpha-channel data with the first `frac` of sampled pixels erased. */
+function alphaData(w: number, h: number, frac: number) {
+  const step = 6;
+  let total = 0;
+  for (let y = 0; y < h; y += step)
+    for (let x = 0; x < w; x += step) total++;
+  const data = new Uint8ClampedArray(w * h * 4);
+  let i = 0;
+  for (let y = 0; y < h; y += step) {
+    for (let x = 0; x < w; x += step) {
+      const o = (y * w + x) * 4;
+      data[o] = 200;
+      data[o + 1] = 200;
+      data[o + 2] = 200;
+      data[o + 3] = i / total < frac ? 0 : 255;
+      i++;
+    }
+  }
+  return { data };
+}
+
+describe("createConfetti", () => {
+  it("burst() spawns particles that fall, fade, and complete", () => {
+    const b = stubBrowser();
+    const { el, ctx } = makeCanvas();
+    const onDone = vi.fn();
+    let controls!: ReturnType<typeof createConfetti>;
+    const dispose = createRoot((d) => {
+      controls = createConfetti(() => el as HTMLCanvasElement, {
+        count: 20,
+        lifetime: 300,
+        onDone,
+      });
+      return d;
+    });
+    expect(controls.active()).toBe(false);
+    controls.burst();
+    expect(controls.active()).toBe(true);
+    b.frames(3);
+    // Particles were drawn (rects and/or circles).
+    expect(ctx.fillRect.mock.calls.length + ctx.arc.mock.calls.length).toBeGreaterThan(0);
+    b.frames(40); // past the longest possible life (300 * 1.3)
+    expect(controls.active()).toBe(false);
+    expect(onDone).toHaveBeenCalledTimes(1);
+    dispose();
+  });
+
+  it("burst() from a custom origin and clear() stops everything", () => {
+    const b = stubBrowser();
+    const { el } = makeCanvas();
+    let controls!: ReturnType<typeof createConfetti>;
+    const dispose = createRoot((d) => {
+      controls = createConfetti(() => el as HTMLCanvasElement, {
+        count: 30,
+        lifetime: 5000,
+      });
+      return d;
+    });
+    controls.burst({ x: 0.2, y: 0.8 });
+    b.frames(2);
+    expect(controls.active()).toBe(true);
+    controls.clear();
+    expect(controls.active()).toBe(false);
+    dispose();
+  });
+
+  it("reduced motion skips the particles but still calls onDone", () => {
+    stubBrowser({ reduced: true });
+    const { el, ctx } = makeCanvas();
+    const onDone = vi.fn();
+    let controls!: ReturnType<typeof createConfetti>;
+    const dispose = createRoot((d) => {
+      controls = createConfetti(() => el as HTMLCanvasElement, { onDone });
+      return d;
+    });
+    controls.burst();
+    expect(controls.active()).toBe(false);
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(ctx.fillRect).not.toHaveBeenCalled();
+    dispose();
+  });
+
+  it("is SSR-safe: burst() is a no-op", () => {
+    // No window stubbed: server path.
+    let controls!: ReturnType<typeof createConfetti>;
+    const dispose = createRoot((d) => {
+      controls = createConfetti(() => null);
+      return d;
+    });
+    controls.burst();
+    expect(controls.active()).toBe(false);
+    dispose();
+  });
+});
+
+describe("createEmojiBurst", () => {
+  it("burst() draws emoji glyphs that complete", () => {
+    const b = stubBrowser();
+    const { el, ctx } = makeCanvas();
+    const onDone = vi.fn();
+    let controls!: ReturnType<typeof createEmojiBurst>;
+    const dispose = createRoot((d) => {
+      controls = createEmojiBurst(() => el as HTMLCanvasElement, {
+        emoji: ["\u{1F4A5}"],
+        count: 6,
+        lifetime: 300,
+        onDone,
+      });
+      return d;
+    });
+    controls.burst();
+    b.frames(3);
+    expect(ctx.fillText).toHaveBeenCalledWith("\u{1F4A5}", 0, 0);
+    b.frames(40);
+    expect(controls.active()).toBe(false);
+    expect(onDone).toHaveBeenCalledTimes(1);
+    dispose();
+  });
+
+  it("reduced motion skips the particles but still calls onDone", () => {
+    stubBrowser({ reduced: true });
+    const { el } = makeCanvas();
+    const onDone = vi.fn();
+    let controls!: ReturnType<typeof createEmojiBurst>;
+    const dispose = createRoot((d) => {
+      controls = createEmojiBurst(() => el as HTMLCanvasElement, { onDone });
+      return d;
+    });
+    controls.burst();
+    expect(controls.active()).toBe(false);
+    expect(onDone).toHaveBeenCalledTimes(1);
+    dispose();
+  });
+});
+
+describe("createScratch", () => {
+  it("paints the foil cover on bind", async () => {
+    stubBrowser();
+    const { el, ctx } = makeCanvas();
+    let controls!: ReturnType<typeof createScratch>;
+    const dispose = createRoot((d) => {
+      controls = createScratch(() => el as HTMLCanvasElement);
+      return d;
+    });
+    await new Promise((r) => setTimeout(r, 0)); // let the bind effect run
+    expect(ctx.fillRect).toHaveBeenCalled();
+    expect(controls.cleared()).toBe(0);
+    expect(controls.done()).toBe(false);
+    dispose();
+  });
+
+  it("scratching erases and completes past the threshold", async () => {
+    const b = stubBrowser();
+    const { el, ctx, fire } = makeCanvas(300, 150);
+    let erasedFrac = 0;
+    ctx.getImageData.mockImplementation(() => alphaData(300, 150, erasedFrac));
+    const onComplete = vi.fn();
+    let controls!: ReturnType<typeof createScratch>;
+    const dispose = createRoot((d) => {
+      controls = createScratch(() => el as HTMLCanvasElement, {
+        threshold: 0.5,
+        onComplete,
+      });
+      return d;
+    });
+    await new Promise((r) => setTimeout(r, 0));
+    fire("pointerdown", { clientX: 150, clientY: 75, pointerId: 1, isPrimary: true });
+    // Erasing punches destination-out holes.
+    expect(ctx.arc).toHaveBeenCalled();
+    expect(ctx.fill).toHaveBeenCalled();
+    // Nothing erased yet in the pixel data.
+    expect(controls.cleared()).toBe(0);
+    // Simulate heavy scratching, then move to trigger the throttled sample.
+    erasedFrac = 0.9;
+    b.frames(10);
+    fire("pointermove", { clientX: 160, clientY: 80 });
+    expect(controls.cleared()).toBeCloseTo(0.9, 1);
+    expect(controls.done()).toBe(true);
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    // Further scratching does not re-fire onComplete.
+    fire("pointermove", { clientX: 170, clientY: 85 });
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    dispose();
+  });
+
+  it("reset() repaints the cover and clears progress", async () => {
+    const b = stubBrowser();
+    const { el, ctx, fire } = makeCanvas(300, 150);
+    let erasedFrac = 0;
+    ctx.getImageData.mockImplementation(() => alphaData(300, 150, erasedFrac));
+    let controls!: ReturnType<typeof createScratch>;
+    const dispose = createRoot((d) => {
+      controls = createScratch(() => el as HTMLCanvasElement, {
+        threshold: 0.5,
+      });
+      return d;
+    });
+    await new Promise((r) => setTimeout(r, 0));
+    const paints = ctx.fillRect.mock.calls.length;
+    fire("pointerdown", { clientX: 150, clientY: 75, pointerId: 1, isPrimary: true });
+    erasedFrac = 0.9;
+    b.frames(10);
+    fire("pointermove", { clientX: 160, clientY: 80 });
+    expect(controls.done()).toBe(true);
+    controls.reset();
+    expect(controls.cleared()).toBe(0);
+    expect(controls.done()).toBe(false);
+    expect(ctx.fillRect.mock.calls.length).toBeGreaterThan(paints);
+    dispose();
+  });
+
+  it("supports a custom cover painter", async () => {
+    stubBrowser();
+    const { el } = makeCanvas();
+    const paint = vi.fn();
+    let controls!: ReturnType<typeof createScratch>;
+    const dispose = createRoot((d) => {
+      controls = createScratch(() => el as HTMLCanvasElement, { paint });
+      return d;
+    });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(paint).toHaveBeenCalledTimes(1);
+    expect(paint.mock.calls[0][1]).toBe(300);
+    expect(paint.mock.calls[0][2]).toBe(150);
+    expect(controls.done()).toBe(false);
+    dispose();
+  });
+
+  it("is SSR-safe: cleared stays 0", () => {
+    // No window stubbed: server path.
+    let controls!: ReturnType<typeof createScratch>;
+    const dispose = createRoot((d) => {
+      controls = createScratch(() => null);
+      return d;
+    });
+    expect(controls.cleared()).toBe(0);
+    expect(controls.done()).toBe(false);
+    controls.reset();
+    dispose();
   });
 });

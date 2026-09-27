@@ -34,6 +34,15 @@ export {
   type RedPacketControls,
   type RedPacketOptions,
   type RedPacketStatus,
+  createConfetti,
+  type ConfettiControls,
+  type ConfettiOptions,
+  createEmojiBurst,
+  type EmojiBurstControls,
+  type EmojiBurstOptions,
+  createScratch,
+  type ScratchControls,
+  type ScratchOptions,
 } from "./fun.js";
 export { createStagger } from "./stagger.js";
 export {
