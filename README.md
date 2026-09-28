@@ -2148,6 +2148,8 @@ One shared `requestAnimationFrame` loop drives every animation in the app, so hu
 
 solid-drift is free and MIT-licensed, maintained by Austin Nguyen. If it saves you time, consider [becoming a sponsor](https://github.com/sponsors/austinpnguyen): every contribution funds maintenance and new primitives.
 
+Want a specific feature built? You can [fund an issue on Polar](https://polar.sh/austinpnguyen): pooled bounties tell the maintainer which features the community wants most.
+
 ## License
 
 MIT © Austin Nguyen

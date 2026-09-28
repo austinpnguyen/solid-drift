@@ -4,6 +4,14 @@ All notable changes to solid-drift are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
+## [0.41.3] - 2026-09-28
+
+### Added
+- `FUNDING.yml`: added the `polar` key, so the repo Sponsor button also
+  offers Polar issue funding alongside GitHub Sponsors.
+- README: the "Support the project" section now points to Polar for
+  funding specific features (issue bounties).
+
 ## [0.41.2] - 2026-09-27
 
 ### Added
