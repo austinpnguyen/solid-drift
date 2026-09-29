@@ -136,6 +136,17 @@ the Auth.js adapter is retired):
   with Solid, composed with createApi and createWebSocket.
 - Receiving webhooks. Requires a server by definition.
 
+## Solid 2 (deferred until stable)
+
+Checked 2026-09-29 against `solid-js@2.0.0-rc.11` (no stable 2.x on npm
+yet): 63 type errors and 455 of 780 test failures. Solid 2 removes
+single-arg `createEffect`, defers signal writes until `flush()`, and
+drops `batch`. The deferred-write model also conflicts with the
+library's synchronous animation engine, so the port may need
+engine-level rethinking. Revisit after the stable 2.0 release with a
+dedicated migration spike (estimate 2 to 4 days), likely as a new
+solid-drift major. Until then the peer range stays `^1.0.0`.
+
 ## Demoted backlog (unchanged)
 
 createFavicon, createBlip, createGlitch, createMatrix. createTxExplainer

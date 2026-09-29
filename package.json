@@ -34,7 +34,7 @@
   "main": "./dist/index.js",
   "name": "solid-drift",
   "peerDependencies": {
-    "solid-js": "^1.0.0 || ^2.0.0"
+    "solid-js": "^1.0.0"
   },
   "repository": {
     "type": "git",
@@ -49,5 +49,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "0.41.4"
+  "version": "0.41.5"
 }

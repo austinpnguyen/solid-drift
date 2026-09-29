@@ -4,6 +4,18 @@ All notable changes to solid-drift are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
+## [0.41.5] - 2026-09-29
+
+### Fixed
+- `peerDependencies`: narrowed `solid-js` from `^1.0.0 || ^2.0.0` to
+  `^1.0.0`. Tested against `solid-js@2.0.0-rc.11` (no stable 2.x exists
+  yet): 63 type errors and 455 of 780 test failures, caused by Solid 2
+  breaking changes (single-arg `createEffect` removed, signal writes
+  deferred until `flush()`, `batch` removed). The old range promised
+  support that does not exist, so it was removed. Solid 2 support will
+  be revisited after the stable 2.0 release; it needs a dedicated
+  migration, not a version bump.
+
 ## [0.41.4] - 2026-09-29
 
 ### Changed
