@@ -4,6 +4,18 @@ All notable changes to solid-drift are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
+## [0.41.6] - 2026-09-29
+
+### Added
+- `playground/`: a complete interactive playground (Vite + SolidJS +
+  TypeScript) with 40 live demos covering all 18 primitive families. Each
+  demo has live controls bound to the primitive's real options and a code
+  snippet generated from the current control values. It runs against the
+  current library source through an alias, so demos never go stale. Run it
+  with `cd playground && npm install && npm run dev`. The playground is
+  dev tooling only and is excluded from the npm package.
+- README: a new "Local playground" section.
+
 ## [0.41.5] - 2026-09-29
 
 ### Fixed

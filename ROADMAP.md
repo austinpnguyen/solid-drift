@@ -166,3 +166,21 @@ bounties. Sponsorship is thank-you only.
 - Docs and playground ads (later): one small discreet banner such as
   EthicalAds or Carbon Ads once traffic justifies it. Automatic revenue,
   no sales work.
+
+## Planned phase 2: onchain sponsor badges (not built)
+
+Fully automatic sponsor perk with zero human interaction. A sponsor on
+GitHub Sponsors can claim a soulbound NFT badge per tier ($3/$10/$25)
+through a claim page hosted on the playground: sign in with GitHub to
+verify the sponsorship, connect a wallet, mint. The badge is
+non-transferable proof of support, not a product.
+
+- Chain: Base (deployment about 2 to 10 USD once, mint about 0.05 to
+  0.30 USD each). Contract: ERC-1155 with one token id per tier, or a
+  no-code deploy through thirdweb.
+- Verification: GitHub Sponsors GraphQL API plus the sponsorship webhook.
+  Backend fits on a free Cloudflare Worker; a small hot wallet covers gas
+  if the project sponsors it.
+- Sequencing: build only after the playground ships AND real sponsors
+  exist. It boosts conversion, it does not create demand. The claim page
+  doubles as a live demo of the library's web3 and animation primitives.

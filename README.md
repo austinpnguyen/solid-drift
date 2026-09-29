@@ -2165,6 +2165,18 @@ Sponsorship is a thank-you: it does not include support, consulting, or feature 
 If solid-drift saves you time, consider [becoming a sponsor](https://github.com/sponsors/austinpnguyen): every contribution funds maintenance and new primitives.
 -->
 
+## Local playground
+
+The repo ships an interactive playground with a live demo for every
+primitive family. It runs against the current library source, so what you
+see is always what the code does.
+
+```bash
+cd playground
+npm install
+npm run dev
+```
+
 ## License
 
 MIT © Austin Nguyen
