@@ -1,7 +1,9 @@
 # solid-drift
 
 [![npm version](https://img.shields.io/npm/v/solid-drift)](https://www.npmjs.com/package/solid-drift)
+<!-- Sponsor badge: uncomment after the GitHub Sponsors profile is approved.
 [![Sponsor](https://img.shields.io/badge/sponsor-austinpnguyen-ff69b4)](https://github.com/sponsors/austinpnguyen)
+-->
 
 Signal-native animation for SolidJS. Animate **values, not elements**: springs and tweens follow your signals, and retargeting mid-flight is seamless by design, with no restarts and no jumps.
 
@@ -59,6 +61,7 @@ function Panel() {
 - [Analytics](#analytics)
 - [Easings](#easings)
 - [Support the project](#support-the-project)
+- [Sponsors](#sponsors)
 - [How it works](#how-it-works)
 - [License](#license)
 
@@ -2144,11 +2147,23 @@ Named easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCu
 
 One shared `requestAnimationFrame` loop drives every animation in the app, so hundreds of springs cost a single rAF tick per frame. Springs integrate with semi-implicit Euler, tweens sample an easing curve. When the tab becomes hidden the engine pauses the loop and freezes its clock, so nothing burns battery in the background; on return the clock continues where it left off and in-flight animations resume seamlessly. Everything is SSR-safe (animations simply don't run on the server).
 
+## Sponsors
+
+Thanks to everyone who keeps this project going.
+
+<!-- sponsors:start -->
+<!-- This list is refreshed automatically by .github/workflows/sponsors.yml. -->
+<!-- sponsors:end -->
+
 ## Support the project
 
-solid-drift is free and MIT-licensed, maintained by Austin Nguyen. If it saves you time, consider [becoming a sponsor](https://github.com/sponsors/austinpnguyen): every contribution funds maintenance and new primitives.
+solid-drift is free and MIT-licensed, maintained by Austin Nguyen. If it saves you time, you can support its continued development.
 
-Want a specific feature built? You can [fund an issue on Polar](https://polar.sh/austinpnguyen): pooled bounties tell the maintainer which features the community wants most.
+Sponsorship is a thank-you: it does not include support, consulting, or feature requests.
+
+<!-- Uncomment after the GitHub Sponsors profile is approved.
+If solid-drift saves you time, consider [becoming a sponsor](https://github.com/sponsors/austinpnguyen): every contribution funds maintenance and new primitives.
+-->
 
 ## License
 

@@ -4,6 +4,26 @@ All notable changes to solid-drift are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
+## [0.41.4] - 2026-09-29
+
+### Changed
+- `FUNDING.yml`: removed the `polar` key. GitHub Sponsors is the only
+  funding channel. Sponsorship is thank-you only: no consulting, no
+  per-sponsor perks, no issue bounties.
+- README: the sponsor badge and the sponsor link in "Support the
+  project" are commented out until the GitHub Sponsors profile is
+  approved, so no visitor lands on a dead page. "Support the project"
+  now states that sponsorship does not include support or feature
+  requests.
+
+### Added
+- README: a new "Sponsors" section, refreshed automatically by a weekly
+  GitHub Action (`.github/workflows/sponsors.yml`) from the Sponsors
+  API, so no manual edits are ever needed.
+- ROADMAP: planned monetization notes (a Pro recipes pack sold
+  one-time through Lemon Squeezy or Gumroad, docs ads later). Not built
+  yet.
+
 ## [0.41.3] - 2026-09-28
 
 ### Added

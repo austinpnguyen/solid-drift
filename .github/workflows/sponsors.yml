@@ -1,0 +1,34 @@
+# Refreshes the sponsor list in README.md from the GitHub Sponsors API.
+# Runs weekly and on demand. Needs a SPONSORS_TOKEN secret (a classic
+# personal access token with the read:user scope); the run skips quietly
+# until that secret exists, so nothing fails before GitHub Sponsors is set up.
+
+name: Refresh sponsors
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sponsors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Update sponsor list
+        env:
+          SPONSORS_TOKEN: ${{ secrets.SPONSORS_TOKEN }}
+        run: node .github/workflows/update-sponsors.mjs
+      - name: Commit if changed
+        run: |
+          git config user.name "Austin Nguyen"
+          git config user.email "austinnguyen89@gmail.com"
+          git add README.md
+          git diff --cached --quiet || git commit -m "docs: refresh sponsor list"
+          git push

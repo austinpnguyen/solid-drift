@@ -140,3 +140,18 @@ the Auth.js adapter is retired):
 
 createFavicon, createBlip, createGlitch, createMatrix. createTxExplainer
 stays a documentation recipe.
+
+## Planned monetization (not built)
+
+Deliberately hands-off: no consulting, no per-sponsor perks, no issue
+bounties. Sponsorship is thank-you only.
+
+- Pro recipes pack: a paid one-time download (landing page, onboarding,
+  and pricing page animation recipes built on solid-drift), sold through
+  Lemon Squeezy or Gumroad so checkout, delivery, and refunds are fully
+  automatic. Target price 19 to 49 USD. The sale page states clearly that
+  no support is included and that refunds within 14 days are handled by
+  the platform. Start after the playground ships and real usage exists.
+- Docs and playground ads (later): one small discreet banner such as
+  EthicalAds or Carbon Ads once traffic justifies it. Automatic revenue,
+  no sales work.
