@@ -15,8 +15,8 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 - Playground: every demo now has its own URL (`#/<family>/<demo>`, e.g.
   `#/core/createSpring`). Reloading or sharing the link preserves the
   selected demo, and browser back/forward works.
-- Docs: all 18 `docs/families/*.md` files gained "Try it" links that open
-  the matching live demo.
+- Docs: 16 of the 18 `docs/families/*.md` files gained "Try it" links
+  (39 links) that open the live demo matching each documented primitive.
 
 ### Fixed
 - Playground: `createSpring` and `createTween` demos measured travel from

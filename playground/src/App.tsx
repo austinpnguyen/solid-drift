@@ -72,17 +72,16 @@ export default function App() {
   };
 
   // Follow the hash when it changes (back/forward buttons, pasted links).
-  // An unknown or empty hash points the URL back at the shown demo so
-  // the address bar always holds a shareable link.
+  // An unknown or empty hash falls back to the default demo, and the URL
+  // is rewritten so the address bar always holds a shareable link.
   if (typeof window !== "undefined") {
     const onHashChange = () => {
-      const parsed = parseHash();
-      if (parsed) {
-        setSelection(parsed);
-        setOpenFamily(parsed.family);
-      } else {
-        const { family, demo } = current();
-        window.history.replaceState(null, "", hashFor(family.id, demo.id));
+      const parsed = parseHash() ?? DEFAULT_SELECTION;
+      setSelection(parsed);
+      setOpenFamily(parsed.family);
+      const h = hashFor(parsed.family, parsed.demo);
+      if (window.location.hash !== h) {
+        window.history.replaceState(null, "", h);
       }
     };
     window.addEventListener("hashchange", onHashChange);
