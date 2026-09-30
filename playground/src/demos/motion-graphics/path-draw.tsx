@@ -1,4 +1,4 @@
-import { createEffect, createSignal } from "solid-js";
+import { createSignal, onCleanup, onMount } from "solid-js";
 import { createPathDraw } from "solid-drift";
 import { DemoShell } from "../../framework/DemoShell";
 import { Slider, Button } from "../../framework/controls";
@@ -13,17 +13,29 @@ export function PathDrawDemo() {
   const [duration, setDuration] = createSignal(1400);
 
   let path!: SVGPathElement;
-  let draw!: ReturnType<typeof createPathDraw>;
+  let draw: ReturnType<typeof createPathDraw> | null = null;
 
-  // autoStart draws on creation; rebuilding on duration change restarts
-  // the draw with the new timing.
-  createEffect(() => {
+  // autoStart draws on creation. The primitive is built imperatively (not
+  // inside a reactive effect); changing the duration stops the old draw
+  // and builds a new one with the new timing.
+  const build = () => {
+    draw?.stop();
     draw = createPathDraw(() => path, { duration: duration() });
+  };
+
+  onMount(() => {
+    build();
+    onCleanup(() => draw?.stop());
   });
 
+  const onDurationChange = (v: number) => {
+    setDuration(v);
+    build();
+  };
+
   const replay = () => {
-    draw.reset();
-    draw.start();
+    draw?.reset();
+    draw?.start();
   };
 
   const snippet = () => `import { createPathDraw } from "solid-drift"
@@ -57,7 +69,7 @@ const draw = createPathDraw(() => path, {
             max={3000}
             step={100}
             value={duration()}
-            onChange={setDuration}
+            onChange={onDurationChange}
           />
           <Button onClick={replay}>Replay</Button>
         </>
