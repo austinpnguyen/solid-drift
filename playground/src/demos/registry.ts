@@ -44,7 +44,11 @@ import { MediaQueryDemo } from "./utilities/media-query";
 /* Demo registry. Adding a new demo is two steps:
    1. Write the component in src/demos/<family>/<demo>.tsx using DemoShell
       and the shared controls.
-   2. Add one entry to the right family below (about ten lines). */
+   2. Add one entry to the right family below (about ten lines).
+   The entry id is the demo's URL slug: #/<family>/<id>. Use the
+   primitive's export name when the demo showcases one primitive
+   (createSpring, validatePost); a short kebab-case name otherwise
+   (press-hover, address-utils). */
 
 export interface DemoEntry {
   id: string;
@@ -77,13 +81,13 @@ export const families: DemoFamily[] = [
       "Basic building blocks: springs, tweens, staggered lists, timelines, imperative animation.",
     demos: [
       entry(
-        "spring",
+        "createSpring",
         "createSpring",
         "A signal that chases its target with spring physics.",
         SpringDemo,
       ),
       entry(
-        "tween",
+        "createTween",
         "createTween",
         "A signal that tweens toward its source over a fixed duration.",
         TweenDemo,
@@ -95,13 +99,13 @@ export const families: DemoFamily[] = [
         AnimateDemo,
       ),
       entry(
-        "stagger",
+        "createStagger",
         "createStagger",
         "A delay lookup so list items entrance one after another.",
         StaggerDemo,
       ),
       entry(
-        "drift-directive",
+        "drift",
         "drift directive",
         "Binds signals straight to an element's style with use:drift.",
         DriftDemo,
@@ -114,13 +118,13 @@ export const families: DemoFamily[] = [
     useWhen: "Animation or state that follows scroll position.",
     demos: [
       entry(
-        "scroll-progress",
+        "createScrollProgress",
         "createScrollProgress",
         "A 0..1 signal tracking scroll progress for the page or one element.",
         ScrollProgressDemo,
       ),
       entry(
-        "in-view",
+        "createInView",
         "createInView",
         "A boolean signal reporting whether an element is visible.",
         InViewDemo,
@@ -133,13 +137,13 @@ export const families: DemoFamily[] = [
     useWhen: "Elements that react to the pointer or simulate real physics.",
     demos: [
       entry(
-        "tilt-card",
+        "createTiltCard",
         "Tilt Card",
         "Holographic 3D card tilt with glare and shine that follow the pointer.",
         TiltCardDemo,
       ),
       entry(
-        "magnetic",
+        "createMagnetic",
         "Magnetic Button",
         "A button that gets pulled toward the pointer and springs back on release.",
         MagneticDemo,
@@ -152,13 +156,13 @@ export const families: DemoFamily[] = [
     useWhen: "Drag or swipe interactions with touch parity.",
     demos: [
       entry(
-        "drag",
+        "createDrag",
         "Drag",
         "Draggable box with axis lock, elastic constraints, and momentum.",
         DragDemo,
       ),
       entry(
-        "swipe",
+        "createSwipe",
         "Swipe",
         "Swipe the card left or right; direction, distance, and velocity are reported.",
         SwipeDemo,
@@ -177,19 +181,19 @@ export const families: DemoFamily[] = [
     useWhen: "Cartoon-style motion: squash, anticipation, wobble.",
     demos: [
       entry(
-        "squash-stretch",
+        "createSquashStretch",
         "Squash and Stretch",
         "A bouncing ball that stretches in flight and pancakes on impact.",
         SquashStretchDemo,
       ),
       entry(
-        "wobble",
+        "createWobble",
         "Wobble",
         "Jelly badge that wobbles with decaying rotation and counter-phase scale.",
         WobbleDemo,
       ),
       entry(
-        "anticipation",
+        "createAnticipation",
         "Anticipation",
         "A box that winds up backwards, holds, then jumps forward.",
         AnticipationDemo,
@@ -202,19 +206,19 @@ export const families: DemoFamily[] = [
     useWhen: "Text itself as the animation.",
     demos: [
       entry(
-        "typing",
+        "createTyping",
         "Typing",
         "Types out text with human-like timing jitter and a blinking cursor.",
         TypingDemo,
       ),
       entry(
-        "count-up",
+        "createCountUp",
         "Count Up",
         "A numeric signal glides to each new value as a formatted string.",
         CountUpDemo,
       ),
       entry(
-        "kinetic-type",
+        "createKineticType",
         "Kinetic Type",
         "Characters fly in with blur, scale and position on one master clock.",
         KineticTypeDemo,
@@ -227,13 +231,13 @@ export const families: DemoFamily[] = [
     useWhen: "Directing scenes: cameras, cuts, beats, showreels.",
     demos: [
       entry(
-        "path-draw",
+        "createPathDraw",
         "Path Draw",
         "An SVG stroke draws itself on via animated stroke-dashoffset.",
         PathDrawDemo,
       ),
       entry(
-        "marquee",
+        "createMarquee",
         "Marquee",
         "An infinite scroller with a doubled strip looping seamlessly.",
         MarqueeDemo,
@@ -246,19 +250,19 @@ export const families: DemoFamily[] = [
     useWhen: "AI chat, voice, streaming, and agent interfaces.",
     demos: [
       entry(
-        "stream-reveal",
+        "createStreamReveal",
         "Stream Reveal",
         "Simulated LLM tokens revealing with calm, batched entrances.",
         StreamRevealDemo,
       ),
       entry(
-        "thinking",
+        "createThinking",
         "Thinking Indicator",
         "Voice-style thinking label that cycles dots, then phrases.",
         ThinkingDemo,
       ),
       entry(
-        "approval-gate",
+        "createApprovalGate",
         "Approval Gate",
         "Human-in-the-loop approval for agent actions.",
         ApprovalGateDemo,
@@ -271,7 +275,7 @@ export const families: DemoFamily[] = [
     useWhen: "Onchain UI: transactions, prices, NFTs, identity.",
     demos: [
       entry(
-        "ticker",
+        "createTicker",
         "Price Ticker",
         "Per-digit roll with a direction flash on every update.",
         TickerDemo,
@@ -290,25 +294,25 @@ export const families: DemoFamily[] = [
     useWhen: "Delight: toasts, gacha, confetti, scratch-offs.",
     demos: [
       entry(
-        "confetti",
+        "createConfetti",
         "Confetti",
         "Celebration bursts of confetti particles on a canvas layer.",
         ConfettiDemo,
       ),
       entry(
-        "slot-machine",
+        "createSlotMachine",
         "Slot Machine",
         "Gacha reels that launch fast and stop left to right.",
         SlotMachineDemo,
       ),
       entry(
-        "red-packet",
+        "createRedPacket",
         "Red Packet",
         "Tap the envelope: coins burst out and the amount reveals.",
         RedPacketDemo,
       ),
       entry(
-        "toast",
+        "createToast",
         "Toast",
         "A signal-native toast queue with a choreographed lifecycle.",
         ToastDemo,
@@ -321,25 +325,25 @@ export const families: DemoFamily[] = [
     useWhen: "Everyday app glue: DOM helpers, haptics, storage, gesture state.",
     demos: [
       entry(
-        "copy",
+        "createCopy",
         "Copy to clipboard",
         "Copy text with a built-in copied flag for transient feedback.",
         CopyDemo,
       ),
       entry(
-        "countdown",
+        "createCountdown",
         "Countdown",
         "Countdown to a wall-clock moment with start, pause, and reset.",
         CountdownDemo,
       ),
       entry(
-        "haptic",
+        "createHaptic",
         "Haptics",
         "Tactile presets through the Vibration API with an enabled switch.",
         HapticDemo,
       ),
       entry(
-        "media-query",
+        "createMediaQuery",
         "Media query",
         "Boolean signals that track CSS media queries and update live.",
         MediaQueryDemo,
@@ -352,7 +356,7 @@ export const families: DemoFamily[] = [
     useWhen: "Mutations that survive flaky networks.",
     demos: [
       entry(
-        "offline-queue",
+        "createOfflineQueue",
         "Offline queue",
         "Mutations that wait while offline and replay in order on reconnect.",
         OfflineQueueDemo,
@@ -365,7 +369,7 @@ export const families: DemoFamily[] = [
     useWhen: "Validating posts and normalizing analytics across platforms.",
     demos: [
       entry(
-        "validate-post",
+        "validatePost",
         "Validate Post",
         "Check a draft against platform character limits.",
         ValidatePostDemo,
@@ -378,7 +382,7 @@ export const families: DemoFamily[] = [
     useWhen: "Talking to HTTP APIs, WebSockets, uploads, verifying webhooks.",
     demos: [
       entry(
-        "webhook-verify",
+        "verifyWebhookSignature",
         "Webhook Verify",
         "Sign a payload locally, then verify it with the library.",
         WebhookVerifyDemo,
@@ -391,7 +395,7 @@ export const families: DemoFamily[] = [
     useWhen: "Browser and mobile hardware APIs wrapped as signals.",
     demos: [
       entry(
-        "time-ago",
+        "createTimeAgo",
         "Time ago",
         "Relative timestamps that refresh on an interval, in any locale.",
         TimeAgoDemo,
@@ -404,7 +408,7 @@ export const families: DemoFamily[] = [
     useWhen: "Auth sessions and JWT decoding.",
     demos: [
       entry(
-        "jwt-decode",
+        "decodeJwtPayload",
         "JWT decode",
         "Read the claims out of a JWT payload without verifying its signature.",
         JwtDecodeDemo,
@@ -417,7 +421,7 @@ export const families: DemoFamily[] = [
     useWhen: "Lightweight, consent-aware analytics.",
     demos: [
       entry(
-        "consent",
+        "useConsent",
         "Consent banner",
         "A cookie consent banner: accept, decline, persist the choice, reset.",
         ConsentDemo,
@@ -430,7 +434,7 @@ export const families: DemoFamily[] = [
     useWhen: "The easing curves everything runs on.",
     demos: [
       entry(
-        "easing-curves",
+        "easings",
         "Easing curves",
         "Plot every easing in the library and ride a dot along the curve.",
         EasingCurvesDemo,

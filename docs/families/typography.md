@@ -24,6 +24,8 @@ Options: `to` (font family), `toWeight`, `duration` (ms per half-roll), `stagger
 
 ### `createTyping(ref, options?)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/typography/createTyping)
+
 Types out text character by character with human-like variable speed: each character's delay jitters around the base speed, and punctuation gets its own beat. A blinking cursor rides along and parks itself when done.
 
 ```ts
@@ -144,6 +146,8 @@ Options: `amplitude`, `wavelength` (characters per wave), `period`, `tilt` (defa
 
 ### `createCountUp(source, options?)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/typography/createCountUp)
+
 A signal that counts toward a source number with an eased tween, rendering as a formatted string: dashboard stats, prices, scores. When the source changes mid-count the tween retargets from the current displayed value, with no snapping.
 
 ```tsx
@@ -162,6 +166,8 @@ setRevenue(1234.5)
 Options: `decimals` (default 0), `duration` (ms, default 1000), `easing` (default `"easeOutExpo"`), `prefix` (default `""`), `suffix` (default `""`), `separator` (thousands separator, default `""`). Returns an accessor of the formatted string. SSR-safe: renders the formatted source value. Under reduced motion the text jumps straight to each new value.
 
 ### `createKineticType(ref, options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/typography/createKineticType)
 
 Kinetic typography: each character (or word) flies in with position, blur, scale, and opacity, staggered for that showreel title feel. One master clock drives every unit, so a 40-character headline costs a single rAF task.
 

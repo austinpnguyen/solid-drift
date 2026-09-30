@@ -40,7 +40,7 @@ analytics.load(); // analytics.loaded()
 - `createElementSize(() => el, { ResizeObserverImpl? })`: `{ width, height }` via ResizeObserver, 0x0 until the first measurement.
 - `createEventListener(target | (() => target), type, handler, options?)`: attaches with automatic cleanup; safe with an undefined target.
 - `createHotkey(keys, handler, { target?, preventDefault?, enabled? })`: combos like `"ctrl+k"`, `"cmd+shift+p"`, or `"?"` (modifiers: ctrl, cmd/meta, alt/opt, shift). Case-insensitive, multiple combos supported, `enabled` can be a signal.
-- `createTimeAgo(() => date, { updateIntervalMs?, locale? })`: reactive `"5 minutes ago"`, `"yesterday"`, `"in 3 hours"` via `Intl.RelativeTimeFormat`; `"just now"` under 5 seconds. Recomputes on an interval on the client only.
+- `createTimeAgo(() => date, { updateIntervalMs?, locale? })`: reactive `"5 minutes ago"`, `"yesterday"`, `"in 3 hours"` via `Intl.RelativeTimeFormat`; `"just now"` under 5 seconds. Recomputes on an interval on the client only. [Try it](https://austinpnguyen.github.io/solid-drift/#/browser/createTimeAgo)
 - `createPermission(name, { immediate?, navigatorImpl? })`: `{ state, supported, query }` around the Permissions API.
 - `createScriptLoader(src, { attrs?, documentImpl? })`: `{ loaded, error, status, load }`. Injects the script once per URL (repeat loads resolve immediately) and tracks it reactively. No-op on the server.
 

@@ -4,6 +4,43 @@ All notable changes to solid-drift are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
+## [0.41.8] - 2026-09-30
+
+### Added
+- Playground: deployed to GitHub Pages at
+  https://austinpnguyen.github.io/solid-drift/ via a new
+  `.github/workflows/pages.yml` (builds `playground/` on every push to
+  `main`). README links it as "Live playground" right under the
+  description.
+- Playground: every demo now has its own URL (`#/<family>/<demo>`, e.g.
+  `#/core/createSpring`). Reloading or sharing the link preserves the
+  selected demo, and browser back/forward works.
+- Docs: all 18 `docs/families/*.md` files gained "Try it" links that open
+  the matching live demo.
+
+### Fixed
+- Playground: `createSpring` and `createTween` demos measured travel from
+  a fixed pixel value and rendered the value label inside the moving box.
+  Both now measure the stage width with `createElementSize` and show the
+  value outside the box, so nothing overflows on narrow screens.
+- Playground: fresh-clone `npm run build` failed with "Cannot find module
+  'solid-js'" because library source outside the playground root resolved
+  a different Solid copy. The playground Vite config and tsconfig now pin
+  `solid-js` to the playground's own install.
+- README: the Sponsors section is now hidden until the first sponsor
+  exists; the sponsors workflow creates it automatically on the first
+  sponsorship and removes it again if the list ever empties.
+
+### Removed
+- ROADMAP: dropped the planned onchain sponsor badges idea.
+
+## [0.41.7] - 2026-09-29
+
+### Changed
+- README: shortened from 2,182 lines to 104 lines. The full API reference
+  moved into 18 files under `docs/families/`, one per primitive family.
+  No implementation changes.
+
 ## [0.41.6] - 2026-09-29
 
 ### Added

@@ -7,6 +7,8 @@ Use when you want delight: toasts, gacha, confetti, scratch-offs.
 
 ### `createToast(options?)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/fun/createToast)
+
 A signal-native toast queue with choreographed lifecycle. The primitive owns timing and state; you own the rendering, so no component opinions leak into your design system. Each toast moves through `"entering"` to `"visible"` to `"leaving"` to removed on the shared animation clock: bind `state` to CSS classes or drift values for enter/exit motion without any timers of your own.
 
 ```tsx
@@ -43,6 +45,8 @@ Push helpers: `toast(title, options?)`, `info(...)`, `success(...)`, `warning(..
 
 ### `createSlotMachine(options)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/fun/createSlotMachine)
+
 Gacha slot machine: reels launch fast, decelerate with momentum, and stop left to right. Spin-to-mint theater for reveals, loot boxes, and prize draws. Pass `landing` to `spin()` when the outcome is already decided (the minted NFT, the prize): the reels still spin with full drama and land exactly on your symbols. Omit it for a fair random spin.
 
 ```tsx
@@ -61,6 +65,8 @@ const machine = createSlotMachine({
 Options: `symbols` (required, at least 2), `reels` (default `3`), `duration` (ms for the first reel, default `1400`), `stagger` (extra ms per subsequent reel, default `500`), `minSpins` (full rotations before stopping, default `3`), `easing` (default `"easeOutQuart"`), `onTick(reel, symbol)`, `onDone(result)`. Returns `{ values, result, status, spin, stop, reset }`: `values()` is the visible symbol per reel, `result()` the final symbols of the last spin, `status()` is `"idle"`, `"spinning"`, or `"done"`. `stop()` halts at the current symbols; `reset()` returns to idle. SSR-safe and reduced-motion safe: `spin()` jumps straight to the result.
 
 ### `createRedPacket(options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/fun/createRedPacket)
 
 Crypto red packet ceremony: tap to open, coins burst out with physics, the amount counts up. The primitive owns the ceremony state machine (`"sealed"`, `"opening"`, `"bursting"`, `"revealed"`) and the coin particle physics; you render the envelope and the coins. Each coin carries position, rotation, size, opacity, and its share of the total, split randomly like a real red packet grab.
 
@@ -91,6 +97,8 @@ const packet = createRedPacket({ amount: 88, coins: 14 })
 Options: `coins` (default `12`), `amount` (total, default `88`), `spread` (burst size in px, default `160`), `gravity` (px/s^2, default `900`), `openDuration` (ms, default `500`), `burstDuration` (ms, default `1600`), `revealDuration` (ms, default `800`), `onOpen`, `onReveal(amount)`. Returns `{ status, coins, revealed, open, reset }`. SSR-safe and reduced-motion safe: `open()` jumps straight to revealed with no burst.
 
 ### `createConfetti(canvas, options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/fun/createConfetti)
 
 Canvas confetti bursts: celebration physics with gravity, drag, sway, and tumbling paper flutter, rendered on the shared animation clock. Give it a canvas (a fullscreen fixed overlay with `pointer-events: none` is the classic setup) and call `burst()` from party moments: mints, wins, onboarding completions. Bursts accumulate, so rapid celebrations stack instead of replacing. The canvas is fitted to its CSS size times the device pixel ratio automatically.
 

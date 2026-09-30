@@ -7,6 +7,8 @@ Use when animation or state should follow scroll position.
 
 ### `createScrollProgress(target?)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/scroll/createScrollProgress)
+
 Reports scroll progress as a 0-to-1 signal. Defaults to whole-page progress; pass an element ref accessor for element-scoped progress. Updates are rAF-throttled. SSR-safe: reports 0 on the server.
 
 ```tsx
@@ -18,6 +20,8 @@ const section = createScrollProgress(() => sectionRef); // element progress
 ```
 
 ### `createInView(ref, options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/scroll/createInView)
 
 Element visibility as a boolean signal, via IntersectionObserver. `threshold` (default 0.15) sets how much of the element must be visible; `once` (default true) stops observing after the first entry. SSR-safe: always `false` on the server.
 

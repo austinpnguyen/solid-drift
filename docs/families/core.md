@@ -7,6 +7,8 @@ Use when you need the basic building blocks: springs, tweens, staggered lists, t
 
 ### `createSpring(source, options?)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/core/createSpring)
+
 Returns a signal that follows `source` with spring physics. Changing the source mid-flight bends the spring toward the new target, keeping its velocity.
 
 | Option      | Default | Description                           |
@@ -19,6 +21,8 @@ Returns a signal that follows `source` with spring physics. Changing the source 
 
 ### `createTween(source, options?)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/core/createTween)
+
 Returns a signal that tweens toward `source` over a fixed duration. Interrupting retargets from the current value.
 
 | Option       | Default          | Description                    |
@@ -29,6 +33,8 @@ Returns a signal that tweens toward `source` over a fixed duration. Interrupting
 | `onComplete` | none             | Called when the tween finishes |
 
 ### `animate(from, to, options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/core/animate)
 
 Imperative one-shot animation. Returns `{ stop, finished }`.
 
@@ -42,6 +48,8 @@ await ctl.finished; // or ctl.stop()
 ```
 
 ### `drift` directive
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/core/drift)
 
 Binds animated values directly to an element's style. Each prop accepts a plain number or any signal.
 
@@ -110,6 +118,8 @@ const x = createSpring(target, { ...springPresets.wobbly });
 | `molasses` | Heavy and deliberate, like moving through syrup |
 
 ### `createStagger(count, delayMs)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/core/createStagger)
 
 Builds a stagger-delay lookup for cascading animations across a list. Given an item index, returns its delay in milliseconds (`index * delayMs`). Pair with `createTween`'s `delay` option (or `animate`) so items enter one after another instead of all at once. Pure function, no reactivity involved.
 

@@ -32,6 +32,8 @@ SSR-safe and reduced-motion safe: both return a constant `0` accessor.
 
 ### `createMagnetic(ref, options?)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/pointer/createMagnetic)
+
 Magnetic attraction toward the pointer. When the pointer comes within `radius` of the element's center, the element is pulled toward it with a strength that fades with distance. When the pointer leaves, the element springs back to rest. The pull itself is a spring, so arrivals and releases glide instead of snapping. Built on `pointermove`, so touch drags work the same as mouse hovers.
 
 ```tsx
@@ -77,6 +79,8 @@ const { rotateX, rotateY } = createTilt(() => card, { maxAngle: 12 })
 Returns `{ rotateX, rotateY }`: spring-smoothed tilt in degrees. SSR-safe and reduced-motion safe: both return constant `0` accessors.
 
 ### `createTiltCard(ref, options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/pointer/createTiltCard)
 
 Holographic trading-card tilt: 3D lean plus every signal a holo foil needs. Beyond `createTilt`'s rotation, this tracks `glareX`/`glareY` (pointer position 0..1, for a radial glare overlay), `holoAngle` (a rainbow angle that sweeps with the pointer, for a gradient foil overlay), `shine` (0..1 overlay intensity that fades in on hover and out on leave), `scale` (hover pop), `hovering`, and a ready-made `transform()` string (perspective, rotateX/rotateY, scale). SSR-safe and reduced-motion safe: static constants, no tilt, no shine. Touch drags tilt while touching, release settles back.
 

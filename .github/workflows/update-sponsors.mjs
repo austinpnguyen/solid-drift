@@ -1,5 +1,7 @@
-// Refreshes the sponsor list in README.md between the sponsors markers.
-// Reads sponsorships through the GitHub GraphQL API.
+// Refreshes the sponsor section in README.md from the GitHub Sponsors API.
+// The whole "## Sponsors" section is managed here: it is created when the
+// first sponsor appears and removed again if the list ever becomes empty,
+// so the README never shows an empty Sponsors section.
 // Requires SPONSORS_TOKEN (a classic personal access token with the
 // read:user scope) in the environment. Exits quietly when the token is
 // missing or the API call fails, so the scheduled run never breaks
@@ -59,27 +61,50 @@ async function fetchSponsors() {
 
 const sponsors = await fetchSponsors();
 
-const cards = sponsors
-  .map((s) => {
-    const label = String(s.name || s.login).replace(/"/g, "");
-    return `<a href="${s.url}"><img src="${s.avatarUrl}&s=96" width="48" height="48" alt="${label}" title="${label}" /></a>`;
-  })
-  .join("\n");
+// Matches the entire Sponsors section, from its heading through the
+// closing marker, including the newline that precedes the heading.
+const SECTION_RE = /\n## Sponsors\n[\s\S]*?<!-- sponsors:end -->\n/;
 
-const start = "<!-- sponsors:start -->";
-const end = "<!-- sponsors:end -->";
+function buildSection(sponsors) {
+  const cards = sponsors
+    .map((s) => {
+      const label = String(s.name || s.login).replace(/"/g, "");
+      return `<a href="${s.url}"><img src="${s.avatarUrl}&s=96" width="48" height="48" alt="${label}" title="${label}" /></a>`;
+    })
+    .join("\n");
+  return (
+    "\n## Sponsors\n" +
+    "\n" +
+    "Thanks to everyone who keeps this project going.\n" +
+    "\n" +
+    "<!-- sponsors:start -->\n" +
+    "<!-- This list is refreshed automatically by .github/workflows/sponsors.yml. -->\n" +
+    cards +
+    "\n" +
+    "<!-- sponsors:end -->\n"
+  );
+}
+
 const path = "README.md";
 const readme = readFileSync(path, "utf8");
-const startIndex = readme.indexOf(start);
-const endIndex = readme.indexOf(end);
-if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-  console.log("Sponsor markers not found in README.md.");
-  process.exit(1);
+let next;
+if (sponsors.length > 0) {
+  const section = buildSection(sponsors);
+  next = SECTION_RE.test(readme)
+    ? readme.replace(SECTION_RE, section)
+    : readme.replace("\n## Support the project", section + "\n## Support the project");
+  console.log(`Sponsor section written: ${sponsors.length} sponsor(s).`);
+} else if (SECTION_RE.test(readme)) {
+  next = readme.replace(SECTION_RE, "\n").replace(/\n{3,}/g, "\n\n");
+  console.log("No sponsors: removed the Sponsors section.");
+} else {
+  console.log("No sponsors and no Sponsors section: nothing to do.");
+  process.exit(0);
 }
-const next = readme.slice(0, startIndex + start.length) + "\n" + cards + "\n" + readme.slice(endIndex);
+
 if (next !== readme) {
   writeFileSync(path, next);
-  console.log(`Updated sponsor list: ${sponsors.length} sponsor(s).`);
+  console.log("README.md updated.");
 } else {
-  console.log("Sponsor list is already up to date.");
+  console.log("Sponsor section is already up to date.");
 }

@@ -55,7 +55,7 @@ createInfiniteScroll(() => sentinel, {
 - `createDebounced(source, delay)` returns an `Accessor<T>` that follows the source after it stops changing for `delay` ms (trailing edge).
 - `createThrottled(source, interval)` returns an `Accessor<T>` that updates at most once per `interval` ms: leading change applies immediately, the rest collapse into one trailing update.
 - `createLocalStorage<T>(key, initialValue, options?)` returns `{ value, set, remove }`: reads the stored value on creation (falling back on missing or corrupt JSON), writes through on every set, and stays in sync across tabs via the `storage` event (`sync: true` default). Custom `serialize`/`deserialize` supported. Behaves like a plain signal where storage is unavailable.
-- `createMediaQuery(query)` returns an `Accessor<boolean>` that tracks the query live (`false` on the server).
+- `createMediaQuery(query)` returns an `Accessor<boolean>` that tracks the query live (`false` on the server). [Try it](https://austinpnguyen.github.io/solid-drift/#/utilities/createMediaQuery)
 - `createClickOutside(ref, handler, options?)` calls `handler` on `pointerdown` (default, configurable via `events`) outside the element. Shadow-DOM aware via `composedPath`. No-op on the server.
 - `createScrollLock()` returns `{ locked, lock, unlock }`: sets `document.body.style.overflow = "hidden"`, restores the previous value when the last lock releases, and reference-counts nested locks so stacked modals cannot unlock each other early. Unmounting releases the locks.
 - `createInfiniteScroll(ref, options)` observes a sentinel with IntersectionObserver and calls `onLoadMore` as it approaches the viewport (`threshold` px prefetch via `rootMargin`, default `200`). `disabled` is a reactive kill switch (e.g. `() => !hasMore()`).
@@ -84,7 +84,7 @@ const beat = createHapticBeat(haptic, {
 </button>
 ```
 
-- `createHaptic(options?)` returns `{ supported, vibrate, light, medium, heavy, success, warning, error, morse }`. `vibrate(pattern)` fires a raw ms pattern; `morse(code, unit?)` encodes `"."`, `"-"`, `" "` (letter gap), `"/"` (word gap) with a configurable dot length (default 60ms). `hapticPatterns` holds the one-shot presets (`tap`, `doubleTap`, `longPress`, `tick`, `heartbeat`, `success`, `warning`, `error`). `options.enabled` is a boolean or a signal master switch (wire it to `useLowPowerMode()`).
+- `createHaptic(options?)` returns `{ supported, vibrate, light, medium, heavy, success, warning, error, morse }`. `vibrate(pattern)` fires a raw ms pattern; `morse(code, unit?)` encodes `"."`, `"-"`, `" "` (letter gap), `"/"` (word gap) with a configurable dot length (default 60ms). `hapticPatterns` holds the one-shot presets (`tap`, `doubleTap`, `longPress`, `tick`, `heartbeat`, `success`, `warning`, `error`). `options.enabled` is a boolean or a signal master switch (wire it to `useLowPowerMode()`). [Try it](https://austinpnguyen.github.io/solid-drift/#/utilities/createHaptic)
 - `createHapticBeat(haptic, options?)` returns `{ playing, bpm, step, start, stop, toggle, setBpm }`. The 16-step pattern uses `"x"` for a hit, `"X"` for an accent, anything else for a rest; steps run as 16th notes at `bpm` (live-changeable via `setBpm`), the downbeat fires immediately on `start()`, and `onStep(i)` reports each step index. `hapticBeatPresets` ships `heartbeat`, `metronome`, `ticks`, and `pulse`.
 - Haptics are tactile, not visual, so they fire under reduced motion too; the `enabled` switch is the way to offer quiet. Everything is a no-op where vibration is unsupported, and SSR-safe.
 
@@ -180,8 +180,8 @@ const sale = createCountdown(new Date("2026-12-01T00:00:00"), {
 <p>{sale.days()}d {sale.hours()}h {sale.minutes()}m {sale.seconds()}s</p>
 ```
 
-- `createCopy(options?)` copies text to the clipboard: `{ copied, error, copy, reset }`. Uses the async Clipboard API with an `execCommand` fallback (`noFallback: true` disables it). `copied()` flips true for `resetDelay` ms (default 2000) for transient "Copied!" feedback. SSR-safe.
-- `createCountdown(target, options?)` counts down to a date, timestamp, or accessor: `{ remaining, days, hours, minutes, seconds, done, running, start, stop, reset }`. Wall-clock based (the moment is fixed even if the tab hides); recomputes on the shared clock throttled to `interval` ms (default 1000); stops itself at zero and fires `onDone` once. SSR-safe.
+- `createCopy(options?)` copies text to the clipboard: `{ copied, error, copy, reset }`. Uses the async Clipboard API with an `execCommand` fallback (`noFallback: true` disables it). `copied()` flips true for `resetDelay` ms (default 2000) for transient "Copied!" feedback. SSR-safe. [Try it](https://austinpnguyen.github.io/solid-drift/#/utilities/createCopy)
+- `createCountdown(target, options?)` counts down to a date, timestamp, or accessor: `{ remaining, days, hours, minutes, seconds, done, running, start, stop, reset }`. Wall-clock based (the moment is fixed even if the tab hides); recomputes on the shared clock throttled to `interval` ms (default 1000); stops itself at zero and fires `onDone` once. SSR-safe. [Try it](https://austinpnguyen.github.io/solid-drift/#/utilities/createCountdown)
 
 ### Marquee, variants, path drawing, press and hover
 
@@ -213,11 +213,11 @@ createPress(() => btn, { onChange: (p) => card.go(p ? "press" : "idle") });
 const draw = createPathDraw(() => mark, { duration: 1600 });
 ```
 
-- `createMarquee(options?)` infinite scroller: `{ offset, running, setContentSize, start, stop }`. The offset advances at `speed` px/s (`direction` left/right/up/down) on the shared clock and wraps at the content size; render the content twice and translate by `-offset()`. Measure one loop unit and pass it to `setContentSize`. Static under reduced motion; SSR-safe.
+- `createMarquee(options?)` infinite scroller: `{ offset, running, setContentSize, start, stop }`. The offset advances at `speed` px/s (`direction` left/right/up/down) on the shared clock and wraps at the content size; render the content twice and translate by `-offset()`. Measure one loop unit and pass it to `setContentSize`. Static under reduced motion; SSR-safe. [Try it](https://austinpnguyen.github.io/solid-drift/#/motion-graphics/createMarquee)
 - `createVariants(defs, options?)` named animation states: `{ current, values, go }`. `go(name)` tweens numeric props from the current values to the target variant (`duration` ms, easing) and snaps non-numeric props at the end; unknown names are ignored. Snaps instantly under reduced motion; SSR-safe.
-- `createPathDraw(ref, options?)` SVG stroke draw-on: `{ progress, running, start, stop, reset }`. Reads the length with `getTotalLength()` and drives `stroke-dashoffset` to 0, eased; `onDone` fires once; resume keeps a constant speed. Renders fully drawn under reduced motion; SSR-safe.
-- `createPress(ref, options?)` press gesture state: `{ pressed }`. Pointer down/up/cancel/leave plus Enter/Space keys for keyboard parity; `onChange` fires on change only. State only, no animation; pair with `createVariants`. SSR-safe.
-- `createHover(ref, options?)` hover gesture state: `{ hovering }`. Pointer enter/leave plus focus/blur for keyboard parity; `onChange` fires on change only. SSR-safe.
+- `createPathDraw(ref, options?)` SVG stroke draw-on: `{ progress, running, start, stop, reset }`. Reads the length with `getTotalLength()` and drives `stroke-dashoffset` to 0, eased; `onDone` fires once; resume keeps a constant speed. Renders fully drawn under reduced motion; SSR-safe. [Try it](https://austinpnguyen.github.io/solid-drift/#/motion-graphics/createPathDraw)
+- `createPress(ref, options?)` press gesture state: `{ pressed }`. Pointer down/up/cancel/leave plus Enter/Space keys for keyboard parity; `onChange` fires on change only. State only, no animation; pair with `createVariants`. SSR-safe. [Try it](https://austinpnguyen.github.io/solid-drift/#/gesture/press-hover)
+- `createHover(ref, options?)` hover gesture state: `{ hovering }`. Pointer enter/leave plus focus/blur for keyboard parity; `onChange` fires on change only. SSR-safe. [Try it](https://austinpnguyen.github.io/solid-drift/#/gesture/press-hover)
 
 ### App utilities
 

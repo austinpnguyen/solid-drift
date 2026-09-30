@@ -7,6 +7,8 @@ Use when building AI chat, voice, streaming, or agent interfaces.
 
 ### `createStreamReveal(ref, options?)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/ai/createStreamReveal)
+
 Streaming text for chat and agent UIs: push characters as they arrive and each batch reveals with the kinetic treatment (rise, deblur, settle). Batches flush on a short cadence, or early when the queue grows past `maxBatch`, so fast streams never fall behind.
 
 ```tsx
@@ -74,6 +76,8 @@ agent.prev(); // "idle"
 Agent UI recipe: `thinking` pairs with `createWobble` on typing dots, `streaming` drives `createStreamReveal`, `tool-call` overlays a `createTransition`, and `done`/`error` tint a status pill with `createColorShift`. Returns `{ state, prev, set, reset, is }`. Illegal moves are ignored. State is logic, not motion, so it behaves identically under reduced motion.
 
 ### `createApprovalGate(options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/ai/createApprovalGate)
 
 Human in the loop for agent flows. An agent that mints, transfers, or publishes should not run unattended: `propose()` parks the flow in `"pending"`, the host renders an approve/deny UI, and the agent resumes only after a decision.
 
@@ -193,5 +197,5 @@ const prompt = createPrompt({
 - `createSpeech(options?)` wraps the Web Speech API (`SpeechRecognition` with `webkitSpeechRecognition` fallback): `{ supported, listening, transcript, interim, error, start, stop, reset }`. Final results accumulate into `transcript()`; `continuous` sessions auto-restart if the browser ends them mid-turn.
 - `createWaveform(canvas, options)` draws the analyser's time-domain wave (`mode: "line"`) or spectrum (`mode: "bars"`) on a canvas, DPR-aware, on the shared clock; under reduced motion it redraws at most every 250ms.
 - `createTTS(options?)` speaks via `speechSynthesis` by default (`{ supported, speaking, voices, speak, cancel }`, async voice loading, `speak()` cancels the current utterance first) and upgrades to any cloud voice through `provider: { speak(text, { signal }) }`.
-- `createThinking(options?)` cycles `"Thinking"`, `"Thinking."`, ... through `phrases` at `interval` ms: `{ text, running, start, stop }`.
+- `createThinking(options?)` cycles `"Thinking"`, `"Thinking."`, ... through `phrases` at `interval` ms: `{ text, running, start, stop }`. [Try it](https://austinpnguyen.github.io/solid-drift/#/ai/createThinking)
 - `createPrompt(options?)` is the voice-enabled input: `{ value, setValue, listening, interim, supported, toggleMic, submit, clear }`. Mic finals are appended to the value as they arrive; `submit()` fires `onSubmit` and clears by default. Everything is SSR-safe: unsupported primitives report `supported: false` and their actions no-op on the server.

@@ -7,6 +7,8 @@ Use when you want cartoon-style motion: squash, anticipation, wobble.
 
 ### `createSquashStretch(ref, options)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/cartoon/createSquashStretch)
+
 Cartoon squash and stretch driven by real velocity. Give it a motion source (a signal, or an element it watches) and it stretches the element along its direction of travel, preserving volume on the cross axis. Slam to a stop and it squash-pancakes on impact, then jiggles back to rest. The deform is applied through the CSS `scale` property, so it composes with `translate` and `rotate` from other primitives.
 
 ```tsx
@@ -38,6 +40,8 @@ Options: `links` (default 3), `delayPerLink` (ms, default 70), `spring` (stiffne
 
 ### `createAnticipation(from, to, options?)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/cartoon/createAnticipation)
+
 The wind-up before the punch. Moves opposite the travel direction, holds a beat, then fires the main animation. Returns `AnimationControls` (`finished`, `stop()`).
 
 ```ts
@@ -57,6 +61,8 @@ createAnticipation(0, 200, {
 Options: `windupDistance` (px opposite travel, default 24), `windupDuration` (default 140), `holdDuration` (default 50), plus every `animate()` option (`duration`, `easing`, `delay`, `onUpdate`, `onComplete`). Under reduced motion it skips straight to the main animation with no wind-up.
 
 ### `createWobble(ref?, options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/cartoon/createWobble)
 
 A triggerable cartoon wobble: decaying rotational oscillation with a counter-phase scale pulse, like a jelly nudged on a plate. Call `wobble()` yourself or let a pointer-down on the element trigger it.
 

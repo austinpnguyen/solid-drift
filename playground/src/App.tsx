@@ -1,7 +1,33 @@
-import { createMemo, createSignal, For, Show, onCleanup } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { families } from "./demos/registry";
+import { families, findDemo } from "./demos/registry";
 import "./styles.css";
+
+/* Every demo has a shareable URL: #/<family>/<demo> (for example
+   #/core/createSpring). The hash is the source of truth for the
+   selection, so reloading keeps the current demo and the browser
+   back/forward buttons work. */
+
+function hashFor(familyId: string, demoId: string) {
+  return `#/${familyId}/${demoId}`;
+}
+
+function parseHash(): { family: string; demo: string } | null {
+  if (typeof window === "undefined") return null;
+  const m = /^#\/([A-Za-z0-9-]+)\/([A-Za-z0-9-]+)$/.exec(window.location.hash);
+  if (!m) return null;
+  return findDemo(m[1], m[2]) ? { family: m[1], demo: m[2] } : null;
+}
+
+const DEFAULT_SELECTION = { family: "core", demo: "createSpring" };
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = createSignal(
@@ -19,27 +45,67 @@ function useMediaQuery(query: string) {
 export default function App() {
   const isNarrow = useMediaQuery("(max-width: 860px)");
   const [openFamily, setOpenFamily] = createSignal<string | null>("core");
-  const [selection, setSelection] = createSignal({
-    family: "core",
-    demo: "",
-  });
+  const [selection, setSelection] = createSignal(
+    typeof window !== "undefined"
+      ? (parseHash() ?? DEFAULT_SELECTION)
+      : DEFAULT_SELECTION,
+  );
 
-  // Default to the first available demo once the registry is populated.
+  // Resolve the selection against the registry; unknown families or
+  // demos fall back to the first available demo.
   const current = createMemo(() => {
     const sel = selection();
-    const fam =
-      families.find((f) => f.id === sel.family) ?? families[0];
-    const demo =
-      fam.demos.find((d) => d.id === sel.demo) ?? fam.demos[0];
-    return { fam, demo };
+    const found = findDemo(sel.family, sel.demo);
+    if (found) return found;
+    const family = families.find((f) => f.id === sel.family) ?? families[0];
+    return { family, demo: family.demos[0] };
   });
 
   const pick = (familyId: string, demoId: string) => {
+    if (!findDemo(familyId, demoId)) return;
     setSelection({ family: familyId, demo: demoId });
     setOpenFamily(familyId);
+    if (typeof window !== "undefined") {
+      const h = hashFor(familyId, demoId);
+      if (window.location.hash !== h) window.location.hash = h;
+    }
   };
 
-  const DemoComponent = createMemo(() => current().demo?.component);
+  // Follow the hash when it changes (back/forward buttons, pasted links).
+  // An unknown or empty hash points the URL back at the shown demo so
+  // the address bar always holds a shareable link.
+  if (typeof window !== "undefined") {
+    const onHashChange = () => {
+      const parsed = parseHash();
+      if (parsed) {
+        setSelection(parsed);
+        setOpenFamily(parsed.family);
+      } else {
+        const { family, demo } = current();
+        window.history.replaceState(null, "", hashFor(family.id, demo.id));
+      }
+    };
+    window.addEventListener("hashchange", onHashChange);
+    onCleanup(() => window.removeEventListener("hashchange", onHashChange));
+  }
+
+  // On first load without a hash, write the shown demo into the URL so
+  // the address bar always shows a shareable link.
+  onMount(() => {
+    if (!parseHash()) {
+      const { family, demo } = current();
+      window.history.replaceState(null, "", hashFor(family.id, demo.id));
+    }
+  });
+
+  // Keep the tab title in sync with the demo.
+  createEffect(() => {
+    if (typeof document !== "undefined") {
+      document.title = `${current().demo.title} - solid-drift playground`;
+    }
+  });
+
+  const DemoComponent = createMemo(() => current().demo.component);
 
   return (
     <div class="app">
@@ -102,8 +168,8 @@ export default function App() {
                           <option
                             value={`${fam.id}::${demo.id}`}
                             selected={
-                              current().fam.id === fam.id &&
-                              current().demo?.id === demo.id
+                              current().family.id === fam.id &&
+                              current().demo.id === demo.id
                             }
                           >
                             {demo.title}
@@ -140,7 +206,7 @@ export default function App() {
                             <button
                               type="button"
                               class={
-                                current().demo?.id === demo.id
+                                current().demo.id === demo.id
                                   ? "demo-link active"
                                   : "demo-link"
                               }
@@ -160,17 +226,7 @@ export default function App() {
         </Show>
 
         <main class="main">
-          {(() => {
-            const Cmp = DemoComponent();
-            return Cmp ? (
-              <Dynamic component={Cmp} />
-            ) : (
-              <div class="empty">
-                <h2>No demos yet</h2>
-                <p>Demos are being added family by family.</p>
-              </div>
-            );
-          })()}
+          <Dynamic component={DemoComponent()} />
         </main>
       </div>
     </div>

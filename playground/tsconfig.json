@@ -1,1 +1,28 @@
-{"compilerOptions":{"allowSyntheticDefaultImports":true,"baseUrl":".","esModuleInterop":true,"forceConsistentCasingInFileNames":true,"isolatedModules":true,"jsx":"preserve","jsxImportSource":"solid-js","module":"ESNext","moduleResolution":"bundler","noEmit":true,"paths":{"solid-drift":["../src/index.ts"]},"resolveJsonModule":true,"skipLibCheck":true,"strict":true,"target":"ES2022","types":["vite/client"]},"include":["src","vite.config.ts"]}
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "paths": {
+      "solid-drift": ["../src/index.ts"],
+      // The library source lives outside the playground root, so its bare
+      // "solid-js" imports would resolve from the repo root, which may not
+      // be installed on a fresh clone. Point them at the playground's own
+      // copy instead (mirrors the vite alias in vite.config.ts).
+      "solid-js": ["./node_modules/solid-js"]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "types": ["vite/client"]
+  },
+  "include": ["src", "vite.config.ts"]
+}

@@ -7,6 +7,8 @@ Use when you need drag or swipe interactions with touch parity.
 
 ### `createDrag(ref, options?)`
 
+[Try it](https://austinpnguyen.github.io/solid-drift/#/gesture/createDrag)
+
 Pointer drag with spring physics, constraints, and momentum. The gesture workhorse: draggable cards, sliders, bottom-sheet handles, sortable rows. While the pointer is down the element tracks it 1:1; on release it glides with inertia and springs into its constraints, stretching elastically past the edges while dragged. Set `touch-action: none` on the draggable element so touch drags do not fight the page scroll. For the physics-toy flavor (exponential friction plus bouncing off walls), see `createFling` instead.
 
 ```tsx
@@ -43,6 +45,8 @@ const { x, y, status } = createDrag(() => card, {
 Returns `{ x, y, status }`: the drag offset in pixels and `status` (`"idle"`, `"dragging"`, `"settling"`). SSR-safe: everything rests at 0. Under reduced motion the drag still tracks the pointer (direct manipulation is not animation) but release snaps instantly to the constrained target with no glide.
 
 ### `createSwipe(ref, options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/gesture/createSwipe)
 
 Touch swipe gesture recognition: swipe-to-dismiss, carousels. While `createDrag` tracks the pointer continuously, `createSwipe` makes the discrete decision: was that gesture a swipe, and which way? On pointerup it compares travel, duration, and velocity against the thresholds and fires the matching callbacks plus the `lastSwipe` signal. Pointer Events give touch parity for free: mouse, touch, and pen run through the same path. For touch, set `touch-action: pan-y` on a horizontal swipe surface (or `pan-x` for vertical) so the browser does not hijack the gesture; use `none` when recognizing both axes.
 

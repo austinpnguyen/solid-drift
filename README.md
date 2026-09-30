@@ -7,6 +7,8 @@
 
 Signal-native animation for SolidJS. Animate **values, not elements**: springs and tweens follow your signals, and retargeting mid-flight is seamless by design, with no restarts and no jumps.
 
+[Live playground](https://austinpnguyen.github.io/solid-drift/)
+
 Built with AI assistance.
 
 ## Install
@@ -68,14 +70,6 @@ Full documentation lives in the [docs folder](https://github.com/austinpnguyen/s
 ## How it works
 
 One shared `requestAnimationFrame` loop drives every animation in the app, so hundreds of springs cost a single rAF tick per frame. Springs integrate with semi-implicit Euler, tweens sample an easing curve. When the tab becomes hidden the engine pauses the loop and freezes its clock, so nothing burns battery in the background; on return the clock continues where it left off and in-flight animations resume seamlessly. Everything is SSR-safe (animations simply don't run on the server).
-
-## Sponsors
-
-Thanks to everyone who keeps this project going.
-
-<!-- sponsors:start -->
-<!-- This list is refreshed automatically by .github/workflows/sponsors.yml. -->
-<!-- sponsors:end -->
 
 ## Support the project
 
