@@ -4,6 +4,16 @@ All notable changes to solid-drift are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
+## [Unreleased]
+
+### Fixed
+- Playground: the `motion-graphics/createPathDraw` demo built the
+  `createPathDraw` primitive inside a reactive `createEffect`, which caused
+  an infinite reactive update loop (`RangeError: Maximum call stack size
+  exceeded`) on the live site. The demo now builds the primitive
+  imperatively on mount and rebuilds it explicitly when the duration
+  slider changes.
+
 ## [0.41.8] - 2026-09-30
 
 ### Added
