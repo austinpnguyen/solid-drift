@@ -6,6 +6,8 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
 ## [Unreleased]
 
+## [0.44.0] - 2026-10-01
+
 ### Added
 - New `solid-drift/devtools` subpath with the `DriftDevtools` overlay
   component: shows live animation count, measured FPS, and slow-motion
