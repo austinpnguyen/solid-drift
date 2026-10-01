@@ -21,6 +21,10 @@ import { CountUpDemo } from "./typography/count-up";
 import { KineticTypeDemo } from "./typography/kinetic-type";
 import { PathDrawDemo } from "./motion-graphics/path-draw";
 import { MarqueeDemo } from "./motion-graphics/marquee";
+import { HeroSectionDemo } from "./sections/hero";
+import { ScrollStorySectionDemo } from "./sections/scroll-story";
+import { PricingSectionDemo } from "./sections/pricing";
+import { MarqueeSectionDemo } from "./sections/marquee";
 import { ConfettiDemo } from "./fun/confetti";
 import { SlotMachineDemo } from "./fun/slot-machine";
 import { RedPacketDemo } from "./fun/red-packet";
@@ -438,6 +442,37 @@ export const families: DemoFamily[] = [
         "Easing curves",
         "Plot every easing in the library and ride a dot along the curve.",
         EasingCurvesDemo,
+      ),
+    ],
+  },
+  {
+    id: "sections",
+    name: "Page sections",
+    useWhen: "Copy-paste page sections: hero, pricing, testimonials, scroll stories.",
+    demos: [
+      entry(
+        "hero",
+        "Hero",
+        "Landing hero with spring entrance and staggered blocks.",
+        HeroSectionDemo,
+      ),
+      entry(
+        "scroll-story",
+        "Scroll story",
+        "Chapters that advance with scroll progress.",
+        ScrollStorySectionDemo,
+      ),
+      entry(
+        "pricing",
+        "Pricing",
+        "Monthly/yearly toggle with counting prices.",
+        PricingSectionDemo,
+      ),
+      entry(
+        "testimonials",
+        "Testimonial marquee",
+        "Infinite testimonial ticker, pauses on hover.",
+        MarqueeSectionDemo,
       ),
     ],
   },
