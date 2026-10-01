@@ -99,6 +99,20 @@ gzipped cost per family (measured from the built `dist/` output).
 Full library (all families): ~466 KB raw, ~118 KB gzipped. A typical app
 importing one or two families pays only a few kilobytes.
 
+### Subpath imports
+
+For the smallest bundles, import directly from a family subpath instead
+of the root. Both styles work; the root re-exports everything.
+
+```ts
+import { createSpring } from "solid-drift";           // root: all families
+import { createTicker } from "solid-drift/web3";      // subpath: web3 only
+import { createAgentTx } from "solid-drift/ai";       // subpath: ai only
+```
+
+Every family module under `src/` is available as `solid-drift/<name>`:
+`ai`, `analytics`, `gesture`, `motion`, `scroll`, `web3`, and the rest.
+
 ## Support the project
 
 solid-drift is free and MIT-licensed, maintained by Austin Nguyen. If it saves you time, you can support its continued development.

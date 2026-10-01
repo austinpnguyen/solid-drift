@@ -6,6 +6,11 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
 ## [Unreleased]
 
+### Added
+- `package.json` `exports` now maps every family module as a subpath
+  (`solid-drift/web3`, `solid-drift/ai`, ...), additive alongside the
+  root import. README documents subpath imports under "Bundle size".
+
 ## [0.42.0] - 2026-10-01
 
 ### Added
