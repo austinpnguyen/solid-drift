@@ -6,6 +6,17 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
 ## [Unreleased]
 
+### Added
+- New `solid-drift/devtools` subpath with the `DriftDevtools` overlay
+  component: shows live animation count, measured FPS, and slow-motion
+  buttons (0.25x / 0.5x / 1x). It is never imported by the library root,
+  so production bundles that do not import it contain zero devtools code.
+  The component also renders nothing unless `import.meta.env.DEV` is true
+  (or `forceShow` is set), and it is SSR-safe. Engine gains internal
+  `setTimeScale` / `getTimeScale` / `getActiveTaskCount` hooks used only
+  by devtools; the time scale defaults to 1 and production behavior is
+  unchanged.
+
 ## [0.43.0] - 2026-10-01
 
 ### Added

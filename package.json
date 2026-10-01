@@ -82,6 +82,10 @@
     "./easings": {
       "types": "./dist/groups/easings.d.ts",
       "default": "./dist/groups/easings.js"
+    },
+    "./devtools": {
+      "types": "./dist/devtools.d.ts",
+      "default": "./dist/devtools.js"
     }
   },
   "files": [
