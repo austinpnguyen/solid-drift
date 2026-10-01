@@ -6,14 +6,6 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
 ## [Unreleased]
 
-### Fixed
-- Playground: the `motion-graphics/createPathDraw` demo built the
-  `createPathDraw` primitive inside a reactive `createEffect`, which caused
-  an infinite reactive update loop (`RangeError: Maximum call stack size
-  exceeded`) on the live site. The demo now builds the primitive
-  imperatively on mount and rebuilds it explicitly when the duration
-  slider changes.
-
 ## [0.41.9] - 2026-10-01
 
 ### Fixed
@@ -24,6 +16,12 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
   square with white bold text instead of overlapping the top-left corner.
 - Playground: `core/createTween` demo box is now always visible; only its
   position tweens, so the motion reads clearly from v = 0.
+- Playground: the `motion-graphics/createPathDraw` demo built the
+  `createPathDraw` primitive inside a reactive `createEffect`, which caused
+  an infinite reactive update loop (`RangeError: Maximum call stack size
+  exceeded`) on the live site. The demo now builds the primitive
+  imperatively on mount and rebuilds it explicitly when the duration
+  slider changes.
 
 ## [0.41.8] - 2026-09-30
 

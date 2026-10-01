@@ -503,6 +503,36 @@ describe("createTicker", () => {
     expect(el.children.length).toBe(0);
     dispose();
   });
+
+  it("clips each digit strip to one line: wrapper height 1em with overflow hidden", () => {
+    // Regression test: without the fixed one-line height, the wrapper
+    // grows to fit the whole 0-9 strip and all ten digits show as a
+    // column below the price.
+    const b = stubBrowser();
+    const el = fakeEl();
+    const [price] = createSignal(48210.5);
+    let ticker!: ReturnType<typeof createTicker>;
+    const dispose = createRoot((d) => {
+      ticker = createTicker(price, () => asElement(el), { decimals: 2 });
+      return d;
+    });
+    b.frames(5); // initial build of the digit strips
+    expect(ticker.display()).toBe("48,210.50");
+    // "48,210.50" has 7 digits, each wrapped in a clipping container.
+    const wrappers = el.children.filter((c) => c.firstChild !== null);
+    expect(wrappers.length).toBe(7);
+    for (const wrap of wrappers) {
+      expect(wrap.style.height).toBe("1em");
+      expect(wrap.style.overflow).toBe("hidden");
+      const strip = wrap.firstChild!;
+      // The strip holds exactly the 10 digit cells, each one line tall.
+      expect(strip.children.length).toBe(10);
+      for (const cell of strip.children) {
+        expect(cell.style.height).toBe("1em");
+      }
+    }
+    dispose();
+  });
 });
 
 describe("createMintReveal", () => {
