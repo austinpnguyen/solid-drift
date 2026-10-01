@@ -60,3 +60,18 @@ jobs:
           fi
 
       - run: npm publish --access public
+
+      - name: Verify version on npm
+        run: |
+          pkg_version="$(node -p "require('./package.json').version")"
+          echo "Waiting for solid-drift@$pkg_version on npm..."
+          for i in 1 2 3 4 5 6; do
+            sleep 30
+            if npm view "solid-drift@$pkg_version" version 2>/dev/null | grep -q "$pkg_version"; then
+              echo "Verified: solid-drift@$pkg_version is live on npm."
+              exit 0
+            fi
+            echo "Attempt $i: not yet visible, retrying..."
+          done
+          echo "ERROR: solid-drift@$pkg_version did not appear on npm after 3 minutes."
+          exit 1

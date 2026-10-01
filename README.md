@@ -74,44 +74,57 @@ One shared `requestAnimationFrame` loop drives every animation in the app, so hu
 ## Bundle size
 
 The package ships `sideEffects: false`, so bundlers tree-shake unused
-primitives away. Import only what you use; the table below shows the
-gzipped cost per family (measured from the built `dist/` output).
+primitives away. Import only what you use. Sizes below are minified +
+gzipped, measured with esbuild (solid-js external).
 
-| Family | Gzip |
+| Family | Gzip | What it covers |
+|---|---|---|
+| core | 2.2 KB | springs, tweens, staggered lists, timelines |
+| scroll | 5.0 KB | scroll progress, in-view, scrub, parallax |
+| pointer | 3.5 KB | pointer tracking, physics, velocity, trails |
+| gesture | 2.9 KB | drag, swipe, press, bottom sheets |
+| cartoon | 4.5 KB | squash, anticipation, wobble, flips |
+| typography | 6.2 KB | text animation, marquees, countdowns |
+| motion-graphics | 7.0 KB | cameras, cuts, path drawing, variants |
+| ai | 14.8 KB | agent UI, voice, streaming |
+| web3 | 9.8 KB | transactions, tickers, market data |
+| fun | 5.3 KB | toasts, confetti, gacha |
+| utilities | 4.1 KB | DOM helpers, haptics, storage |
+| offline | 1.4 KB | offline mutations, optimistic UI |
+| social | 0.9 KB | post validation, analytics normalize |
+| network | 2.5 KB | HTTP, WebSockets, uploads, webhooks |
+| browser | 4.6 KB | browser and hardware APIs as signals |
+| auth | 0.6 KB | auth sessions, JWT decode |
+| analytics | 1.3 KB | consent-aware analytics |
+| easings | 0.8 KB | named easing curves |
+
+Full library (all families, minified): ~53 KB gzipped.
+
+Popular single imports (tree-shaken from the root):
+
+| Import | Gzip |
 |---|---|
-| web3data | 8.4 KB |
-| ai | 7.6 KB |
-| fun | 7.2 KB |
-| web3 | 7.1 KB |
-| typography | 6.8 KB |
-| motion | 6.5 KB |
-| voice | 5.4 KB |
-| hardware | 4.8 KB |
-| stream | 4.2 KB |
-| cartoon | 4.0 KB |
-| network | 4.0 KB |
-| color | 3.6 KB |
-| gesture | 3.6 KB |
-| physics | 3.5 KB |
-| apputils | 3.2 KB |
-| remaining families | ~1-3 KB each |
-
-Full library (all families): ~466 KB raw, ~118 KB gzipped. A typical app
-importing one or two families pays only a few kilobytes.
+| `createSpring` | 0.8 KB |
+| `createTween` | 1.2 KB |
+| `createTicker` | 2.3 KB |
 
 ### Subpath imports
 
-For the smallest bundles, import directly from a family subpath instead
-of the root. Both styles work; the root re-exports everything.
+Each family is also available as a subpath, so you can organize imports
+by feature. Thanks to `sideEffects: false`, importing from the root or
+from a subpath produces the same bundle size; subpaths are purely for
+code clarity.
 
 ```ts
-import { createSpring } from "solid-drift";           // root: all families
-import { createTicker } from "solid-drift/web3";      // subpath: web3 only
-import { createAgentTx } from "solid-drift/ai";       // subpath: ai only
+import { createSpring } from "solid-drift";           // root
+import { createTicker } from "solid-drift/web3";      // subpath: web3 group
+import { createAgentTx } from "solid-drift/ai";       // subpath: ai group
 ```
 
-Every family module under `src/` is available as `solid-drift/<name>`:
-`ai`, `analytics`, `gesture`, `motion`, `scroll`, `web3`, and the rest.
+Available subpaths: `core`, `scroll`, `pointer`, `gesture`, `cartoon`,
+`typography`, `motion-graphics`, `ai`, `web3`, `fun`, `utilities`,
+`offline`, `social`, `network`, `browser`, `auth`, `analytics`,
+`easings`.
 
 ## Support the project
 

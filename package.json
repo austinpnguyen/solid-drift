@@ -11,225 +11,77 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./ai": {
-      "types": "./dist/ai.d.ts",
-      "default": "./dist/ai.js"
-    },
-    "./analytics": {
-      "types": "./dist/analytics.d.ts",
-      "default": "./dist/analytics.js"
-    },
-    "./animate": {
-      "types": "./dist/animate.d.ts",
-      "default": "./dist/animate.js"
-    },
-    "./apputils": {
-      "types": "./dist/apputils.d.ts",
-      "default": "./dist/apputils.js"
-    },
-    "./auth": {
-      "types": "./dist/auth.d.ts",
-      "default": "./dist/auth.js"
-    },
-    "./browser": {
-      "types": "./dist/browser.d.ts",
-      "default": "./dist/browser.js"
-    },
-    "./cartoon": {
-      "types": "./dist/cartoon.d.ts",
-      "default": "./dist/cartoon.js"
-    },
-    "./color": {
-      "types": "./dist/color.d.ts",
-      "default": "./dist/color.js"
-    },
-    "./copy": {
-      "types": "./dist/copy.d.ts",
-      "default": "./dist/copy.js"
-    },
-    "./countdown": {
-      "types": "./dist/countdown.d.ts",
-      "default": "./dist/countdown.js"
-    },
-    "./depixelate": {
-      "types": "./dist/depixelate.d.ts",
-      "default": "./dist/depixelate.js"
-    },
-    "./directive": {
-      "types": "./dist/directive.d.ts",
-      "default": "./dist/directive.js"
-    },
-    "./dom": {
-      "types": "./dist/dom.d.ts",
-      "default": "./dist/dom.js"
-    },
-    "./easing": {
-      "types": "./dist/easing.d.ts",
-      "default": "./dist/easing.js"
-    },
-    "./engine": {
-      "types": "./dist/engine.d.ts",
-      "default": "./dist/engine.js"
-    },
-    "./flip": {
-      "types": "./dist/flip.d.ts",
-      "default": "./dist/flip.js"
-    },
-    "./fun": {
-      "types": "./dist/fun.d.ts",
-      "default": "./dist/fun.js"
-    },
-    "./gesture": {
-      "types": "./dist/gesture.d.ts",
-      "default": "./dist/gesture.js"
-    },
-    "./haptic": {
-      "types": "./dist/haptic.d.ts",
-      "default": "./dist/haptic.js"
-    },
-    "./hardware": {
-      "types": "./dist/hardware.d.ts",
-      "default": "./dist/hardware.js"
-    },
-    "./horizontal": {
-      "types": "./dist/horizontal.d.ts",
-      "default": "./dist/horizontal.js"
-    },
-    "./inview": {
-      "types": "./dist/inview.d.ts",
-      "default": "./dist/inview.js"
-    },
-    "./marquee": {
-      "types": "./dist/marquee.d.ts",
-      "default": "./dist/marquee.js"
-    },
-    "./motion": {
-      "types": "./dist/motion.d.ts",
-      "default": "./dist/motion.js"
-    },
-    "./network": {
-      "types": "./dist/network.d.ts",
-      "default": "./dist/network.js"
-    },
-    "./offline": {
-      "types": "./dist/offline.d.ts",
-      "default": "./dist/offline.js"
-    },
-    "./optimistic": {
-      "types": "./dist/optimistic.d.ts",
-      "default": "./dist/optimistic.js"
-    },
-    "./pathdraw": {
-      "types": "./dist/pathdraw.d.ts",
-      "default": "./dist/pathdraw.js"
-    },
-    "./physics": {
-      "types": "./dist/physics.d.ts",
-      "default": "./dist/physics.js"
-    },
-    "./pointer": {
-      "types": "./dist/pointer.d.ts",
-      "default": "./dist/pointer.js"
-    },
-    "./power": {
-      "types": "./dist/power.d.ts",
-      "default": "./dist/power.js"
-    },
-    "./presence": {
-      "types": "./dist/presence.d.ts",
-      "default": "./dist/presence.js"
-    },
-    "./press": {
-      "types": "./dist/press.d.ts",
-      "default": "./dist/press.js"
-    },
-    "./reduced-motion": {
-      "types": "./dist/reduced-motion.d.ts",
-      "default": "./dist/reduced-motion.js"
+    "./core": {
+      "types": "./dist/groups/core.d.ts",
+      "default": "./dist/groups/core.js"
     },
     "./scroll": {
-      "types": "./dist/scroll.d.ts",
-      "default": "./dist/scroll.js"
+      "types": "./dist/groups/scroll.d.ts",
+      "default": "./dist/groups/scroll.js"
     },
-    "./scrollfx": {
-      "types": "./dist/scrollfx.d.ts",
-      "default": "./dist/scrollfx.js"
+    "./pointer": {
+      "types": "./dist/groups/pointer.d.ts",
+      "default": "./dist/groups/pointer.js"
     },
-    "./scrollspy": {
-      "types": "./dist/scrollspy.d.ts",
-      "default": "./dist/scrollspy.js"
+    "./gesture": {
+      "types": "./dist/groups/gesture.d.ts",
+      "default": "./dist/groups/gesture.js"
     },
-    "./scrub": {
-      "types": "./dist/scrub.d.ts",
-      "default": "./dist/scrub.js"
-    },
-    "./sheet": {
-      "types": "./dist/sheet.d.ts",
-      "default": "./dist/sheet.js"
-    },
-    "./skeleton": {
-      "types": "./dist/skeleton.d.ts",
-      "default": "./dist/skeleton.js"
-    },
-    "./social": {
-      "types": "./dist/social.d.ts",
-      "default": "./dist/social.js"
-    },
-    "./spring": {
-      "types": "./dist/spring.d.ts",
-      "default": "./dist/spring.js"
-    },
-    "./stagger": {
-      "types": "./dist/stagger.d.ts",
-      "default": "./dist/stagger.js"
-    },
-    "./stream": {
-      "types": "./dist/stream.d.ts",
-      "default": "./dist/stream.js"
-    },
-    "./text": {
-      "types": "./dist/text.d.ts",
-      "default": "./dist/text.js"
-    },
-    "./timeline": {
-      "types": "./dist/timeline.d.ts",
-      "default": "./dist/timeline.js"
-    },
-    "./toast": {
-      "types": "./dist/toast.d.ts",
-      "default": "./dist/toast.js"
-    },
-    "./trail": {
-      "types": "./dist/trail.d.ts",
-      "default": "./dist/trail.js"
-    },
-    "./tween": {
-      "types": "./dist/tween.d.ts",
-      "default": "./dist/tween.js"
+    "./cartoon": {
+      "types": "./dist/groups/cartoon.d.ts",
+      "default": "./dist/groups/cartoon.js"
     },
     "./typography": {
-      "types": "./dist/typography.d.ts",
-      "default": "./dist/typography.js"
+      "types": "./dist/groups/typography.d.ts",
+      "default": "./dist/groups/typography.js"
     },
-    "./variants": {
-      "types": "./dist/variants.d.ts",
-      "default": "./dist/variants.js"
+    "./motion-graphics": {
+      "types": "./dist/groups/motion-graphics.d.ts",
+      "default": "./dist/groups/motion-graphics.js"
     },
-    "./velocity": {
-      "types": "./dist/velocity.d.ts",
-      "default": "./dist/velocity.js"
-    },
-    "./voice": {
-      "types": "./dist/voice.d.ts",
-      "default": "./dist/voice.js"
+    "./ai": {
+      "types": "./dist/groups/ai.d.ts",
+      "default": "./dist/groups/ai.js"
     },
     "./web3": {
-      "types": "./dist/web3.d.ts",
-      "default": "./dist/web3.js"
+      "types": "./dist/groups/web3.d.ts",
+      "default": "./dist/groups/web3.js"
     },
-    "./web3data": {
-      "types": "./dist/web3data.d.ts",
-      "default": "./dist/web3data.js"
+    "./fun": {
+      "types": "./dist/groups/fun.d.ts",
+      "default": "./dist/groups/fun.js"
+    },
+    "./utilities": {
+      "types": "./dist/groups/utilities.d.ts",
+      "default": "./dist/groups/utilities.js"
+    },
+    "./offline": {
+      "types": "./dist/groups/offline.d.ts",
+      "default": "./dist/groups/offline.js"
+    },
+    "./social": {
+      "types": "./dist/groups/social.d.ts",
+      "default": "./dist/groups/social.js"
+    },
+    "./network": {
+      "types": "./dist/groups/network.d.ts",
+      "default": "./dist/groups/network.js"
+    },
+    "./browser": {
+      "types": "./dist/groups/browser.d.ts",
+      "default": "./dist/groups/browser.js"
+    },
+    "./auth": {
+      "types": "./dist/groups/auth.d.ts",
+      "default": "./dist/groups/auth.js"
+    },
+    "./analytics": {
+      "types": "./dist/groups/analytics.d.ts",
+      "default": "./dist/groups/analytics.js"
+    },
+    "./easings": {
+      "types": "./dist/groups/easings.d.ts",
+      "default": "./dist/groups/easings.js"
     }
   },
   "files": [
@@ -270,5 +122,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "0.42.0"
+  "version": "0.43.0"
 }

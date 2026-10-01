@@ -6,12 +6,27 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
 ## [Unreleased]
 
-### Added
-- `package.json` `exports` now maps every family module as a subpath
-  (`solid-drift/web3`, `solid-drift/ai`, ...), additive alongside the
-  root import. README documents subpath imports under "Bundle size".
+## [0.43.0] - 2026-10-01
 
-## [0.42.0] - 2026-10-01
+### Added
+- Subpath exports for the 18 README families: `solid-drift/core`,
+  `solid-drift/scroll`, `solid-drift/pointer`, `solid-drift/gesture`,
+  `solid-drift/cartoon`, `solid-drift/typography`,
+  `solid-drift/motion-graphics`, `solid-drift/ai`, `solid-drift/web3`,
+  `solid-drift/fun`, `solid-drift/utilities`, `solid-drift/offline`,
+  `solid-drift/social`, `solid-drift/network`, `solid-drift/browser`,
+  `solid-drift/auth`, `solid-drift/analytics`, `solid-drift/easings`.
+  Each has a dedicated entry file under `src/groups/` re-exporting the
+  family's primitives. The root import is unchanged. Internal modules
+  (engine, color, directive, etc.) are not exposed as subpaths.
+- Publish workflow now verifies the version appears on npm after
+  publishing (retries for 3 minutes, fails the workflow if missing).
+
+### Fixed
+- README "Bundle size" section: sizes re-measured minified + gzipped
+  per the 18 README families (full lib ~53 KB, not 118 KB); subpath
+  docs corrected to note root and subpath imports bundle identically
+  thanks to `sideEffects: false`.
 
 ### Added
 - New `create*` names for the three `use*` primitives: `createConsent`
