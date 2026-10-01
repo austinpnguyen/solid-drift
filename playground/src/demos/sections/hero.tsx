@@ -1,6 +1,7 @@
 import { createSignal, onMount, createEffect, onCleanup } from "solid-js";
 import { createSpring, createTween, createStagger } from "solid-drift";
 import { DemoShell } from "../../framework/DemoShell";
+import { Button } from "../../framework/controls";
 
 /* Section demo: hero. A landing hero with spring entrance. */
 
@@ -37,9 +38,16 @@ export function HeroSectionDemo() {
     };
   });
 
+  let replayTimer: ReturnType<typeof setTimeout> | undefined;
+
+  onCleanup(() => {
+    if (replayTimer) clearTimeout(replayTimer);
+  });
+
   const replay = () => {
     setMounted(false);
-    setTimeout(() => setMounted(true), 100);
+    if (replayTimer) clearTimeout(replayTimer);
+    replayTimer = setTimeout(() => setMounted(true), 100);
   };
 
   return (
@@ -48,9 +56,9 @@ export function HeroSectionDemo() {
       description="Copy-paste landing hero. Springs drive the entrance; a stagger cascades the blocks. See docs/sections/hero.md for the full version with Tailwind."
       snippet={`const [mounted, setMounted] = createSignal(false)\nonMount(() => setMounted(true))\nconst rise = createSpring(() => (mounted() ? 0 : 36))\nconst fade = createTween(() => (mounted() ? 1 : 0), { duration: 500 })`}
       controls={
-        <button class="demo-btn" onClick={replay}>
+        <Button onClick={replay}>
           Replay entrance
-        </button>
+        </Button>
       }
     >
       <div style={{ "text-align": "center", padding: "2rem 1rem" }}>

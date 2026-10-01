@@ -19,7 +19,7 @@ export function ScrollStorySectionDemo() {
   return (
     <DemoShell
       title="Scroll story section"
-      description="Chapters advance with page scroll (createScrollProgress + createTween). Drag the slider to preview without scrolling the page."
+      description="Chapters advance with the slider. In production, wire activeIndex to createScrollProgress (see docs/sections/scroll-story.md)."
       snippet={`const progress = createScrollProgress()\nconst smooth = createTween(progress, { duration: 200 })\nconst active = Math.floor(smooth() * CHAPTERS.length)`}
       controls={
         <label style={{ display: "flex", "align-items": "center", gap: "0.5rem" }}>

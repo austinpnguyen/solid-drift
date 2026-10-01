@@ -1,6 +1,7 @@
-import { onMount } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import { createMarquee } from "solid-drift";
 import { DemoShell } from "../../framework/DemoShell";
+import { Button } from "../../framework/controls";
 
 /* Section demo: testimonial marquee. Infinite scrolling testimonials. */
 
@@ -14,10 +15,21 @@ const QUOTES = [
 export function MarqueeSectionDemo() {
   let trackRef!: HTMLDivElement;
   const marquee = createMarquee({ speed: 60, direction: "left" });
+  const [userPaused, setUserPaused] = createSignal(false);
 
   onMount(() => {
     marquee.setContentSize(trackRef.scrollWidth / 2);
   });
+
+  const toggle = () => {
+    if (marquee.running()) {
+      marquee.stop();
+      setUserPaused(true);
+    } else {
+      marquee.start();
+      setUserPaused(false);
+    }
+  };
 
   const card = (q: (typeof QUOTES)[number]) => (
     <div
@@ -44,17 +56,16 @@ export function MarqueeSectionDemo() {
       description="Infinite testimonial ticker (createMarquee). Hover to pause."
       snippet={`const marquee = createMarquee({ speed: 60 })\nonMount(() => marquee.setContentSize(track.scrollWidth / 2))\n<div style={{ transform: \`translateX(\${-marquee.offset()}px)\` }}>`}
       controls={
-        <button
-          class="demo-btn"
-          onClick={() => (marquee.running() ? marquee.stop() : marquee.start())}
-        >
+        <Button onClick={toggle}>
           {marquee.running() ? "Pause" : "Play"}
-        </button>
+        </Button>
       }
     >
       <div
         onMouseEnter={marquee.stop}
-        onMouseLeave={marquee.start}
+        onMouseLeave={() => {
+          if (!userPaused()) marquee.start();
+        }}
         style={{ overflow: "hidden", padding: "1rem 0" }}
       >
         <div

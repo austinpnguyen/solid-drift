@@ -1,6 +1,7 @@
 import { createSignal } from "solid-js";
 import { createCountUp, createSpring } from "solid-drift";
 import { DemoShell } from "../../framework/DemoShell";
+import { Button } from "../../framework/controls";
 
 /* Section demo: pricing. Toggle monthly/yearly, prices count up. */
 
@@ -20,20 +21,18 @@ export function PricingSectionDemo() {
       snippet={`const price = () => (yearly() ? tier.yearly : tier.monthly)\nconst display = createCountUp(price, { duration: 600 })`}
       controls={
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button
-            class="demo-btn"
+          <Button
             onClick={() => setYearly(false)}
-            style={!yearly() ? { background: "#111", color: "#fff" } : {}}
+            kind={yearly() ? "ghost" : "primary"}
           >
             Monthly
-          </button>
-          <button
-            class="demo-btn"
+          </Button>
+          <Button
             onClick={() => setYearly(true)}
-            style={yearly() ? { background: "#111", color: "#fff" } : {}}
+            kind={yearly() ? "primary" : "ghost"}
           >
             Yearly
-          </button>
+          </Button>
         </div>
       }
     >
