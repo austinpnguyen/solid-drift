@@ -11,6 +11,10 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
   tree-shake unused primitives.
 - README gains a "Bundle size" section with a per-family gzipped size
   table.
+- New `docs/recipes.md` with six multi-primitive recipes: price ticker
+  with trend flash, staggered scroll entrance, spring toast, draggable
+  snap-back card, AI thinking-to-typing sequence, and eased scroll
+  progress bar.
 
 ## [0.41.9] - 2026-10-01
 

@@ -121,6 +121,13 @@ npm install
 npm run dev
 ```
 
+## Recipes
+
+Real-world patterns combining multiple primitives: animated price
+tickers, staggered scroll entrances, spring toasts, draggable cards,
+AI typing sequences, and eased scroll progress. See
+[docs/recipes.md](docs/recipes.md).
+
 ## License
 
 MIT © Austin Nguyen
