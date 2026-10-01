@@ -38,9 +38,9 @@ export function PricingSectionDemo() {
       }
     >
       <div
+        class="pricing-grid"
         style={{
           display: "grid",
-          "grid-template-columns": "repeat(3, 1fr)",
           gap: "1rem",
           padding: "1rem",
         }}

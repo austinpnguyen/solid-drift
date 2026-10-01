@@ -476,6 +476,17 @@ input:focus-visible {
   }
 }
 
+/* Pricing section demo: 3 columns on desktop, 1 column on mobile. */
+.pricing-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 600px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
