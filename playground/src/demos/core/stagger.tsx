@@ -65,7 +65,12 @@ export function StaggerDemo() {
             style={{
               width: "64px",
               height: "64px",
+              display: "flex",
+              "align-items": "center",
               "justify-content": "center",
+              color: "#fff",
+              "font-weight": "700",
+              "font-size": "1.25rem",
               opacity: shown() ? 1 : 0,
               transform: `translateY(${shown() ? 0 : 16}px)`,
               transition: reduced

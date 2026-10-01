@@ -14,6 +14,17 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
   imperatively on mount and rebuilds it explicitly when the duration
   slider changes.
 
+## [0.41.9] - 2026-10-01
+
+### Fixed
+- `createTicker`: digit strip wrappers now have a fixed one-line height
+  (`1em` with `line-height: 1` and `overflow: hidden`), so only the
+  current digit shows instead of all ten digits rendering as a column.
+- Playground: `core/createStagger` demo numbers are now centered in each
+  square with white bold text instead of overlapping the top-left corner.
+- Playground: `core/createTween` demo box is now always visible; only its
+  position tweens, so the motion reads clearly from v = 0.
+
 ## [0.41.8] - 2026-09-30
 
 ### Added

@@ -542,6 +542,10 @@ export function createTicker(
   const makeStrip = (doc: Document, digit: number): HTMLElement => {
     const wrap = doc.createElement("span") as HTMLElement;
     wrap.style.display = "inline-block";
+    /* Fixed to exactly one line height: without this the wrapper grows
+       to fit the whole 0-9 strip and all ten digits show as a column. */
+    wrap.style.height = "1em";
+    wrap.style.lineHeight = "1";
     wrap.style.overflow = "hidden";
     wrap.style.verticalAlign = "top";
     const strip = doc.createElement("span") as HTMLElement;
@@ -552,6 +556,10 @@ export function createTicker(
       const cell = doc.createElement("span") as HTMLElement;
       cell.textContent = String(d);
       cell.style.display = "block";
+      /* Each cell exactly one line tall, so the strip is 10em and
+         translateY(-n * 10%) lands on exactly one digit. */
+      cell.style.height = "1em";
+      cell.style.lineHeight = "1";
       cell.setAttribute("aria-hidden", "true");
       strip.appendChild(cell);
     }

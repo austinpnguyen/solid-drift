@@ -55,7 +55,6 @@ export function TweenDemo() {
     `// travel is the measured stage width minus the box\n` +
     `<div\n` +
     `  style={{\n` +
-    `    opacity: v(),\n` +
     `    transform: \`translateX(\${v() * ${travel()}}px)\`,\n` +
     `  }}\n` +
     `/>`;
@@ -93,9 +92,10 @@ export function TweenDemo() {
           <div
             class="stage-box"
             style={{
-              opacity: shown(),
+              /* The box stays fully visible: only its position tweens,
+                 so the motion reads clearly from v = 0. */
               transform: `translateX(${shown() * travel()}px)`,
-              "will-change": "transform, opacity",
+              "will-change": "transform",
             }}
           />
         </div>
