@@ -122,6 +122,9 @@ export default function App() {
             >
               GitHub
             </a>
+            <a href="/solid-drift/llms.txt" target="_blank" rel="noreferrer" title="API list for AI coding tools">
+              llms.txt
+            </a>
             <a
               href="https://www.npmjs.com/package/solid-drift"
               target="_blank"

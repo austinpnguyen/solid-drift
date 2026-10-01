@@ -89,7 +89,10 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "llms.txt",
+    "SKILL.md",
+    "README.md"
   ],
   "funding": [
     {

@@ -1,0 +1,89 @@
+# solid-drift
+
+> `solid-drift` is a signal-native animation library for SolidJS: zero dependencies, SSR-safe, and respectful of `prefers-reduced-motion`. One shared `requestAnimationFrame` clock drives every animation in the app.
+
+## Install
+
+```bash
+npm install solid-drift
+```
+
+```ts
+import { createSpring } from "solid-drift";
+```
+
+Import from the package root only. Never deep-import from `solid-drift/dist`.
+
+## API
+
+Signal-native: primitives return signals you bind with `style={{ transform: x() }}`. One shared requestAnimationFrame clock drives everything. SSR-safe. Respects `prefers-reduced-motion`.
+
+### Core
+
+`createSpring`, `createTween`, `animate`, `drift`, `springPresets`, `createStagger`, `createTimeline`
+
+### Scroll
+
+`createScrollProgress`, `createHorizontalScroll`, `createScrub`, `createScrollColor`, `createScrollTracking`, `createScrollLine`, `createInView`
+
+### Pointer and physics
+
+`createVelocity`, `createMagnetic`, `createTilt`, `createTiltCard`, `createTrail`, `createGravity`, `createPendulum`, `createFling`, `animateFlip`
+
+### Gesture
+
+`createDrag`, `createSwipe`, `createSharedLayout`
+
+### Cartoon
+
+`createSquashStretch`, `createFollowThrough`, `createAnticipation`, `createWobble`
+
+### Typography
+
+`createFontSwap`, `createTyping`, `createTextPhysics`, `createTextTunnel`, `createTextCutout`, `createTextGradient`, `createTextScramble`, `createTextWave`, `createCountUp`
+
+### Motion graphics
+
+`createKineticType`, `createScenePlayer`, `createShowreel`, `createCamera`, `createColorShift`, `createTransition`, `createBeat`, `createBeatCuts`
+
+### Agent UI
+
+`createStreamReveal`, `createAgentState`, `parseDriftSpec`, `createSpecPlayer`
+
+### Web3
+
+`createTxLifecycle`, `createTicker`, `createMintReveal`, `createDepixelate`, `createConnectButton`, `createAgentTx`
+
+### Web3 data
+
+`createPoll`, `createTokenPrice`, `createPriceChange`, `createPriceCompare`, `createGasPrice`, `createBalance`, `createTxReceipt`, `createBlockNumber`, `createChainlinkPrice`, `createNFTMetadata`, `createENS`, `createIdenticon`, `CHAINS`, `shortenAddress`
+
+### Feedback
+
+`createToast`
+
+### Fun
+
+`createSlotMachine`, `createRedPacket`, `createConfetti`, `createEmojiBurst`, `createScratch`, `createDebounced`, `createLocalStorage`, `createMediaQuery`, `createClickOutside`, `createScrollLock`, `createInfiniteScroll`, `createHaptic`, `createHapticBeat`, `createBottomSheet`, `createChatModel`, `createSSE`, `createVoiceState`, `createMicLevel`, `createSpeech`, `createWaveform`, `createTTS`, `createThinking`, `createPrompt`, `createBattery`, `createNetwork`, `createWakeLock`, `createContactPick`, `createOTP`, `createShare`, `createNFC`, `createTorch`, `createGyro`, `createShake`, `createScanline`, `createOptimistic`, `createSkeleton`, `createScrollSpy`, `createCopy`, `createCountdown`, `createMarquee`, `createVariants`, `createPathDraw`, `createPress`, `createHover`, `createColorScheme`, `createIdle`, `createOnline`, `createInstallPrompt`, `createUndo`, `createFullscreen`
+
+### Utilities
+
+`createPrefersReducedMotion`, `createLowPowerMode`
+
+## Rules
+
+- Every primitive is SSR-safe: on the server, animations do not run and signals hold their final or initial static value.
+- Under `prefers-reduced-motion`, motion primitives jump to their end state.
+- `createBeat` keeps ticking under reduced motion; callbacks decide what that means visually..
+- Test with fake timers and a stubbed `requestAnimationFrame`; keep the rAF queue module-level and never clear it between tests, or the shared engine strands..
+- Do not animate layout properties (`width`, `top`, `left`).
+- Do not create your own `requestAnimationFrame` loops.
+- Do not write your own text splitter.
+- Do not pass a new options object on every render to a primitive created once; create the primitive once and drive it through signals..
+- Do not deep-import from `solid-drift/dist`.
+
+## Full docs
+
+- SKILL.md in this repo: full API descriptions, recipes, DriftSpec format.
+- README.md: per-primitive docs with examples.
+- docs/: family guides, recipes, migration, comparison.
