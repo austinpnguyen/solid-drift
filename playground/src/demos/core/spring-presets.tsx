@@ -101,6 +101,7 @@ export function SpringPresetsDemo() {
           ref={setStage}
           style={{
             position: "relative",
+            width: "100%",
             height: "120px",
             background: "var(--stage)",
             "border-radius": "12px",
