@@ -1,7 +1,8 @@
-import { createSignal, createMemo, For } from "solid-js";
+import { createSignal, createMemo, For, onMount } from "solid-js";
 import { easings, createTween, type EasingName } from "solid-drift";
 import { DemoShell } from "../../framework/DemoShell";
 import { Button } from "../../framework/controls";
+import { animationsDisabled } from "../../framework/motion";
 
 /* Easing comparison: race four easings side by side. */
 
@@ -18,11 +19,10 @@ const PAD = 10;
 
 export function EasingCompareDemo() {
   const [runId, setRunId] = createSignal(0);
-  const [playing, setPlaying] = createSignal(false);
+  const reduced = animationsDisabled();
 
   const play = () => {
     setRunId((id) => id + 1);
-    setPlaying(true);
   };
 
   return (
@@ -40,19 +40,25 @@ export function EasingCompareDemo() {
         }}
       >
         <For each={COMPARE}>
-          {(name) => <EasingLane name={name} runId={runId()} />}
+          {(name) => (
+            <EasingLane name={name} runId={runId()} reduced={reduced} />
+          )}
         </For>
       </div>
     </DemoShell>
   );
 }
 
-function EasingLane(props: { name: EasingName; runId: number }) {
+function EasingLane(props: { name: EasingName; runId: number; reduced: boolean }) {
   const [target, setTarget] = createSignal(0);
+
+  // Rebuild the tween on every race. Reset to 0 first so the button
+  // works on repeat clicks.
   const tweened = createMemo(() => {
     const id = props.runId;
+    setTarget(0);
     const t = createTween(target, {
-      duration: 1200,
+      duration: props.reduced ? 0 : 1200,
       easing: props.name,
     });
     if (id > 0) queueMicrotask(() => setTarget(1));
@@ -67,11 +73,24 @@ function EasingLane(props: { name: EasingName; runId: number }) {
 
   let canvas: HTMLCanvasElement | undefined;
 
+  // Scale the backing store for sharp rendering on hidpi displays.
+  onMount(() => {
+    const el = canvas;
+    if (!el) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    el.width = W * dpr;
+    el.height = H * dpr;
+    draw();
+  });
+
   const draw = () => {
     const el = canvas;
     if (!el) return;
     const ctx = el.getContext("2d");
     if (!ctx) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // setTransform is idempotent: ensures 1 CSS px = dpr device px.
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     ctx.clearRect(0, 0, W, H);
 

@@ -92,25 +92,24 @@ export function SpringPresetsDemo() {
         style={{
           position: "relative",
           height: "120px",
-          background: "#f8f7f4",
+          background: "var(--stage)",
           "border-radius": "12px",
           overflow: "hidden",
         }}
       >
         <div
+          class="stage-box"
           style={{
             position: "absolute",
             top: "32px",
             left: "24px",
             width: `${BOX}px`,
             height: `${BOX}px`,
-            "border-radius": "12px",
-            background: "linear-gradient(135deg, #b3541e, #d97706)",
             transform: `translateX(${x()() * 240}px)`,
           }}
         />
       </div>
-      <p style={{ "font-size": "0.85rem", color: "#737373", "margin-top": "0.75rem" }}>
+      <p style={{ "font-size": "0.85rem", color: "var(--muted)", "margin-top": "0.75rem" }}>
         {PRESETS.find((p) => p.name === presetName())?.hint ||
           "Custom settings. Tune the sliders."}
       </p>
