@@ -69,7 +69,11 @@ function EasingLane(props: { name: EasingName; runId: number; reduced: boolean }
   const fn = easings[props.name];
 
   const plotX = (u: number) => PAD + u * (W - 2 * PAD);
-  const plotY = (v: number) => H - PAD - v * (H - 2 * PAD);
+  // Headroom for overshoot: easeOutElastic peaks at ~1.37, easeOutBack at ~1.1.
+  const V_MIN = -0.2;
+  const V_MAX = 1.5;
+  const plotY = (v: number) =>
+    H - PAD - ((v - V_MIN) / (V_MAX - V_MIN)) * (H - 2 * PAD);
 
   let canvas: HTMLCanvasElement | undefined;
 
@@ -123,14 +127,16 @@ function EasingLane(props: { name: EasingName; runId: number; reduced: boolean }
 
   return (
     <div>
-      <p style={{ "font-size": "0.8rem", "font-weight": 600, "margin-bottom": "0.25rem" }}>
+      <p style={{ "font-size": "0.8rem", "font-weight": 600, margin: "0 0 0.25rem 0" }}>
         {props.name}
       </p>
       <canvas
         ref={canvas}
         width={W}
         height={H}
-        style={{ width: "100%", height: "auto", background: "#f8f7f4", "border-radius": "8px" }}
+        role="img"
+        aria-label={`${props.name} easing curve`}
+        style={{ width: "100%", height: "auto", background: "var(--stage)", "border-radius": "8px" }}
       />
     </div>
   );

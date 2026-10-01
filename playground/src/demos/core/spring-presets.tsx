@@ -1,5 +1,5 @@
 import { createSignal, createMemo } from "solid-js";
-import { createSpring } from "solid-drift";
+import { createSpring, createElementSize } from "solid-drift";
 import { DemoShell } from "../../framework/DemoShell";
 import { Slider, Button } from "../../framework/controls";
 
@@ -14,12 +14,18 @@ const PRESETS = [
 ] as const;
 
 const BOX = 56;
+const PAD = 24;
 
 export function SpringPresetsDemo() {
   const [presetName, setPresetName] = createSignal("Default");
   const [stiffness, setStiffness] = createSignal(170);
   const [damping, setDamping] = createSignal(26);
   const [target, setTarget] = createSignal(0);
+  const [stage, setStage] = createSignal<HTMLDivElement>();
+
+  // Measure the stage so the box never runs off on narrow screens.
+  const size = createElementSize(stage);
+  const travel = () => Math.max(0, size.width() - BOX - PAD * 2);
 
   const applyPreset = (name: string) => {
     const preset = PRESETS.find((p) => p.name === name);
@@ -37,7 +43,7 @@ export function SpringPresetsDemo() {
     }),
   );
 
-  const toggle = () => setTarget((t) => (t === 0 ? 1 : 0));
+  const toggle = () => setTarget((t) => (t === 0 ? travel() : 0));
 
   const snippet = () =>
     `// Preset: ${presetName()}\n` +
@@ -45,7 +51,7 @@ export function SpringPresetsDemo() {
     `  stiffness: ${stiffness()},\n` +
     `  damping: ${damping()},\n` +
     `})\n\n` +
-    `<div style={{ transform: \`translateX(\${x() * 240}px)\` }} />`;
+    `<div style={{ transform: \`translateX(\${x()}px)\` }} />`;
 
   return (
     <DemoShell
@@ -84,35 +90,40 @@ export function SpringPresetsDemo() {
               setPresetName("Custom");
             }}
           />
-          <Button onClick={toggle}>Toggle position</Button>
+          <Button onClick={toggle}>
+            {target() === 0 ? "Move to end" : "Move to start"}
+          </Button>
         </>
       }
     >
-      <div
-        style={{
-          position: "relative",
-          height: "120px",
-          background: "var(--stage)",
-          "border-radius": "12px",
-          overflow: "hidden",
-        }}
-      >
+      <div class="stage-col" style={{ width: "100%" }}>
         <div
-          class="stage-box"
+          ref={setStage}
           style={{
-            position: "absolute",
-            top: "32px",
-            left: "24px",
-            width: `${BOX}px`,
-            height: `${BOX}px`,
-            transform: `translateX(${x()() * 240}px)`,
+            position: "relative",
+            height: "120px",
+            background: "var(--stage)",
+            "border-radius": "12px",
+            overflow: "hidden",
           }}
-        />
+        >
+          <div
+            class="stage-box"
+            style={{
+              position: "absolute",
+              top: "32px",
+              left: `${PAD}px`,
+              width: `${BOX}px`,
+              height: `${BOX}px`,
+              transform: `translateX(${x()()}px)`,
+            }}
+          />
+        </div>
+        <p style={{ "font-size": "0.85rem", color: "var(--muted)", margin: 0 }}>
+          {PRESETS.find((p) => p.name === presetName())?.hint ||
+            "Custom settings. Tune the sliders."}
+        </p>
       </div>
-      <p style={{ "font-size": "0.85rem", color: "var(--muted)", "margin-top": "0.75rem" }}>
-        {PRESETS.find((p) => p.name === presetName())?.hint ||
-          "Custom settings. Tune the sliders."}
-      </p>
     </DemoShell>
   );
 }
