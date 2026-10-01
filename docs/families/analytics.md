@@ -8,9 +8,9 @@ Use when you need lightweight, consent-aware analytics.
 ### Analytics
 
 ```tsx
-import { createTracker, useConsent, createFunnel } from "solid-drift";
+import { createTracker, createConsent, createFunnel } from "solid-drift";
 
-const consent = useConsent({ storageKey: "my-app:consent" });
+const consent = createConsent({ storageKey: "my-app:consent" });
 // consent.grant(), consent.deny(), consent.reset()
 
 const tracker = createTracker({
@@ -36,5 +36,5 @@ funnel.advance(); // cart -> details
 ```
 
 - `createTracker({ sink?, batchMs?, batchSize?, consent?, blockProps?, sampleRate?, now?, maxQueue? })`: `{ track, identify, page, queue, flush, reset, enabled, setEnabled }`. Events batch by time (`batchMs`, default 5000) or size (`batchSize`, default 50) and go to `sink`; the default sink keeps them in the in-memory `queue()` for inspection. The library never sends data anywhere itself. While `consent` is false, events are held (not dropped) and flush when consent is granted. `blockProps` strips sensitive keys, `sampleRate` downsamples, `identify` attaches a user id, `page` tracks a `$page` event.
-- `useConsent({ storageKey?, storage? })`: `{ consent, granted, grant, deny, reset }`. Consent state (`"unknown"`, `"granted"`, `"denied"`) persisted to localStorage when `storageKey` is given. `granted()` plugs straight into the tracker's `consent` option. [Try it](https://austinpnguyen.github.io/solid-drift/#/analytics/useConsent)
+- `createConsent({ storageKey?, storage? })`: `{ consent, granted, grant, deny, reset }`. Consent state (`"unknown"`, `"granted"`, `"denied"`) persisted to localStorage when `storageKey` is given. `granted()` plugs straight into the tracker's `consent` option. [Try it](https://austinpnguyen.github.io/solid-drift/#/analytics/createConsent)
 - `createFunnel({ name, steps, tracker?, windowMs?, now? })`: `{ step, current, completed, history, enter, advance, abandon, reset }`. Emits `funnel_enter`, `funnel_step`, `funnel_complete` (with `durationMs`), and `funnel_abandon` (with `reason` and last step) through the tracker. `advance()` goes to the next step, `advance("payment")` jumps forward; advancing after `windowMs` auto-abandons with reason `"expired"`.

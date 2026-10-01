@@ -214,7 +214,7 @@ export function createLocalStorage<T>(
 /**
  * A boolean signal tracking a CSS media query, updating live when the
  * query starts or stops matching. The primitive behind
- * `usePrefersReducedMotion`, generalized.
+ * `createPrefersReducedMotion`, generalized.
  *
  * SSR-safe (and safe where `matchMedia` is missing): constant `false`.
  *

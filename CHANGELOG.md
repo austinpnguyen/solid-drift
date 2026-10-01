@@ -6,7 +6,16 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-10-01
+
 ### Added
+- New `create*` names for the three `use*` primitives: `createConsent`
+  (was `useConsent`), `createLowPowerMode` (was `useLowPowerMode`),
+  `createPrefersReducedMotion` (was `usePrefersReducedMotion`). The old
+  `use*` names remain as `@deprecated` aliases and keep working exactly
+  as before; they will be removed in v1.0. No console warnings are
+  emitted. Docs, README, SKILL.md, and the playground now use the new
+  names.
 - `package.json` now declares `sideEffects: false`, so bundlers can
   tree-shake unused primitives.
 - README gains a "Bundle size" section with a per-family gzipped size

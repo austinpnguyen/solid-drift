@@ -1,6 +1,6 @@
 import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js";
 import { createSpring } from "./spring.js";
-import { usePrefersReducedMotion } from "./reduced-motion.js";
+import { createPrefersReducedMotion } from "./reduced-motion.js";
 
 function clamp01(v: number): number {
   return v < 0 ? 0 : v > 1 ? 1 : v;
@@ -139,7 +139,7 @@ export function createHorizontalScroll(
   const s0 = clamp01(start);
   const e0 = clamp01(end);
 
-  const reduced = usePrefersReducedMotion();
+  const reduced = createPrefersReducedMotion();
   const [raw, setRaw] = createSignal(0);
   const [travel, setTravel] = createSignal(0);
   // Reading reduced() in the source keeps the spring reactive to the OS

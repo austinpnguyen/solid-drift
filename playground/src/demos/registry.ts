@@ -421,7 +421,7 @@ export const families: DemoFamily[] = [
     useWhen: "Lightweight, consent-aware analytics.",
     demos: [
       entry(
-        "useConsent",
+        "createConsent",
         "Consent banner",
         "A cookie consent banner: accept, decline, persist the choice, reset.",
         ConsentDemo,

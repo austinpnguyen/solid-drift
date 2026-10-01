@@ -28,11 +28,11 @@ export function prefersReducedMotion(): boolean {
  * SSR-safe: `false` on the server.
  *
  * ```tsx
- * const reduced = usePrefersReducedMotion()
+ * const reduced = createPrefersReducedMotion()
  * const duration = () => (reduced() ? 0 : 400)
  * ```
  */
-export function usePrefersReducedMotion(): Accessor<boolean> {
+export function createPrefersReducedMotion(): Accessor<boolean> {
   const [reduced, setReduced] = createSignal(queryMatches());
 
   if (
@@ -47,3 +47,9 @@ export function usePrefersReducedMotion(): Accessor<boolean> {
 
   return reduced;
 }
+
+/**
+ * @deprecated Use {@link createPrefersReducedMotion} instead. This alias
+ * will be removed in v1.0.
+ */
+export const usePrefersReducedMotion = createPrefersReducedMotion;

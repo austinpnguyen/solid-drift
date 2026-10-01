@@ -1,5 +1,5 @@
 import { Show } from "solid-js";
-import { useConsent } from "solid-drift";
+import { createConsent } from "solid-drift";
 import { DemoShell } from "../../framework/DemoShell";
 import { Button } from "../../framework/controls";
 
@@ -9,11 +9,11 @@ import { Button } from "../../framework/controls";
 const STORAGE_KEY = "playground-consent-demo";
 
 export function ConsentDemo() {
-  const consent = useConsent({ storageKey: STORAGE_KEY });
+  const consent = createConsent({ storageKey: STORAGE_KEY });
 
-  const snippet = `import { useConsent } from "solid-drift";
+  const snippet = `import { createConsent } from "solid-drift";
 
-const consent = useConsent({ storageKey: "${STORAGE_KEY}" });
+const consent = createConsent({ storageKey: "${STORAGE_KEY}" });
 
 consent.consent(); // "unknown" | "granted" | "denied"
 consent.grant();   // accept: flips to "granted"

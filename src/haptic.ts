@@ -6,7 +6,7 @@ export type HapticPattern = number | number[];
 export interface HapticOptions {
   /**
    * Master switch. Accepts a plain boolean or a signal, so it can be
-   * wired to `useLowPowerMode()`. Default true.
+   * wired to `createLowPowerMode()`. Default true.
    */
   enabled?: Accessor<boolean> | boolean;
 }
@@ -58,7 +58,7 @@ export const hapticPatterns: Record<string, HapticPattern> = {
  *
  * Haptics are tactile, not visual, so they still fire under reduced
  * motion. Gate them with `enabled` (a boolean or a signal) when the
- * user asks for quiet, e.g. wired to `useLowPowerMode()`.
+ * user asks for quiet, e.g. wired to `createLowPowerMode()`.
  *
  * SSR-safe and unsupported-device safe: everything is a no-op and
  * `supported()` is false.

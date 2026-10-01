@@ -84,7 +84,7 @@ const beat = createHapticBeat(haptic, {
 </button>
 ```
 
-- `createHaptic(options?)` returns `{ supported, vibrate, light, medium, heavy, success, warning, error, morse }`. `vibrate(pattern)` fires a raw ms pattern; `morse(code, unit?)` encodes `"."`, `"-"`, `" "` (letter gap), `"/"` (word gap) with a configurable dot length (default 60ms). `hapticPatterns` holds the one-shot presets (`tap`, `doubleTap`, `longPress`, `tick`, `heartbeat`, `success`, `warning`, `error`). `options.enabled` is a boolean or a signal master switch (wire it to `useLowPowerMode()`). [Try it](https://austinpnguyen.github.io/solid-drift/#/utilities/createHaptic)
+- `createHaptic(options?)` returns `{ supported, vibrate, light, medium, heavy, success, warning, error, morse }`. `vibrate(pattern)` fires a raw ms pattern; `morse(code, unit?)` encodes `"."`, `"-"`, `" "` (letter gap), `"/"` (word gap) with a configurable dot length (default 60ms). `hapticPatterns` holds the one-shot presets (`tap`, `doubleTap`, `longPress`, `tick`, `heartbeat`, `success`, `warning`, `error`). `options.enabled` is a boolean or a signal master switch (wire it to `createLowPowerMode()`). [Try it](https://austinpnguyen.github.io/solid-drift/#/utilities/createHaptic)
 - `createHapticBeat(haptic, options?)` returns `{ playing, bpm, step, start, stop, toggle, setBpm }`. The 16-step pattern uses `"x"` for a hit, `"X"` for an accent, anything else for a rest; steps run as 16th notes at `bpm` (live-changeable via `setBpm`), the downbeat fires immediately on `start()`, and `onStep(i)` reports each step index. `hapticBeatPresets` ships `heartbeat`, `metronome`, `ticks`, and `pulse`.
 - Haptics are tactile, not visual, so they fire under reduced motion too; the `enabled` switch is the way to offer quiet. Everything is a no-op where vibration is unsupported, and SSR-safe.
 
@@ -247,14 +247,14 @@ const fs = createFullscreen(() => stage); // fullscreen toggle
 - `createUndo(initial, options?)`: undoable state: `{ value, set, undo, redo, clear, reset, canUndo, canRedo, past, future }`. `set()` (value or updater) records history trimmed to `capacity` (default 50); a new `set()` discards the redo stack. Pure logic, SSR-safe.
 - `createFullscreen(ref, options?)`: `{ fullscreen, enter, exit, toggle }`. Tracks `document.fullscreenElement` so Escape and external changes stay in sync; failures go to `onError` instead of throwing. SSR-safe.
 
-### `useLowPowerMode(options?)`
+### `createLowPowerMode(options?)`
 
 One reactive signal for mobile-first degradation. It combines the OS `prefers-reduced-motion` and `prefers-reduced-data` media queries with low-end device signals (`navigator.deviceMemory`, `navigator.hardwareConcurrency`), so a single check covers user preference, network thrift, and weak hardware. The media queries update live; the device signals are sampled once. There is also a one-shot `isLowPowerMode(options?)` for non-reactive checks.
 
 ```tsx
-import { useLowPowerMode } from "solid-drift"
+import { createLowPowerMode } from "solid-drift"
 
-const lowPower = useLowPowerMode()
+const lowPower = createLowPowerMode()
 // Degrade gracefully: shorter, cheaper motion on weak devices.
 const duration = () => (lowPower() ? 0 : 400)
 const confettiCount = () => (lowPower() ? 20 : 150)
@@ -262,13 +262,13 @@ const confettiCount = () => (lowPower() ? 20 : 150)
 
 Options: `maxDeviceMemory` (GB, default `4`), `maxHardwareConcurrency` (default `4`): a device at or below either threshold counts as low-end. Where the device signals are unsupported they degrade to "not low-end". SSR-safe: always `false` on the server.
 
-### `usePrefersReducedMotion()` / `prefersReducedMotion()`
+### `createPrefersReducedMotion()` / `prefersReducedMotion()`
 
-Reduced-motion checks for the `(prefers-reduced-motion: reduce)` media query. `prefersReducedMotion()` is a one-shot boolean (always `false` on the server); `usePrefersReducedMotion()` is a reactive signal that updates live if the OS preference changes. `createSpring`, `createTween`, and `animate` already respect this automatically and jump straight to the target when reduced motion is preferred.
+Reduced-motion checks for the `(prefers-reduced-motion: reduce)` media query. `prefersReducedMotion()` is a one-shot boolean (always `false` on the server); `createPrefersReducedMotion()` is a reactive signal that updates live if the OS preference changes. `createSpring`, `createTween`, and `animate` already respect this automatically and jump straight to the target when reduced motion is preferred.
 
 ```tsx
-import { usePrefersReducedMotion } from "solid-drift";
+import { createPrefersReducedMotion } from "solid-drift";
 
-const reduced = usePrefersReducedMotion();
+const reduced = createPrefersReducedMotion();
 const duration = () => (reduced() ? 0 : 400);
 ```

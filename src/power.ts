@@ -72,15 +72,15 @@ export function isLowPowerMode(options: LowPowerOptions = {}): boolean {
  * sampled once. SSR-safe: `false` on the server.
  *
  * ```tsx
- * import { isLowPowerMode, useLowPowerMode } from "solid-drift"
+ * import { isLowPowerMode, createLowPowerMode } from "solid-drift"
  *
- * const lowPower = useLowPowerMode()
+ * const lowPower = createLowPowerMode()
  * // Degrade gracefully: shorter, cheaper motion on weak devices.
  * const duration = () => (lowPower() ? 0 : 400)
  * const confettiCount = () => (lowPower() ? 20 : 150)
  * ```
  */
-export function useLowPowerMode(
+export function createLowPowerMode(
   options: LowPowerOptions = {},
 ): Accessor<boolean> {
   const lowEnd = isLowEndDevice(options);
@@ -105,3 +105,9 @@ export function useLowPowerMode(
 
   return lowPower;
 }
+
+/**
+ * @deprecated Use {@link createLowPowerMode} instead. This alias will be
+ * removed in v1.0.
+ */
+export const useLowPowerMode = createLowPowerMode;

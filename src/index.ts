@@ -16,11 +16,13 @@ export { drift, type DriftProps } from "./directive.js";
 export { createScrollProgress, type ScrollTarget } from "./scroll.js";
 export { createInView, type InViewOptions } from "./inview.js";
 export {
+  createPrefersReducedMotion,
   usePrefersReducedMotion,
   prefersReducedMotion,
 } from "./reduced-motion.js";
 export {
   isLowPowerMode,
+  createLowPowerMode,
   useLowPowerMode,
   type LowPowerOptions,
 } from "./power.js";
@@ -572,7 +574,12 @@ export type {
   AuthStatus,
   AuthSessionControls,
 } from "./auth.js";
-export { createTracker, useConsent, createFunnel } from "./analytics.js";
+export {
+  createTracker,
+  createConsent,
+  useConsent,
+  createFunnel,
+} from "./analytics.js";
 export type {
   TrackEvent,
   TrackerOptions,

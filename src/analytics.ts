@@ -199,7 +199,7 @@ export interface ConsentControls {
  * Consent state for analytics gating. Persists to localStorage when
  * `storageKey` is given. SSR-safe: starts "unknown" on the server.
  */
-export function useConsent(options: ConsentOptions = {}): ConsentControls {
+export function createConsent(options: ConsentOptions = {}): ConsentControls {
   const { storageKey } = options;
   const storage =
     options.storage ??
@@ -228,6 +228,12 @@ export function useConsent(options: ConsentOptions = {}): ConsentControls {
     reset: () => persist("unknown"),
   };
 }
+
+/**
+ * @deprecated Use {@link createConsent} instead. This alias will be
+ * removed in v1.0.
+ */
+export const useConsent = createConsent;
 
 /* ------------------------------------------------------------------ */
 /* createFunnel                                                          */
