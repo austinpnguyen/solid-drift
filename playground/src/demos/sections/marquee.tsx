@@ -41,9 +41,17 @@ export function MarqueeSectionDemo() {
         padding: "1rem",
         background: "#fff",
         margin: "0 0.5rem",
+        overflow: "hidden",
       }}
     >
-      <p style={{ "font-size": "0.9rem", "margin-bottom": "0.5rem" }}>
+      <p
+        style={{
+          "font-size": "0.9rem",
+          "margin-bottom": "0.5rem",
+          "overflow-wrap": "break-word",
+          "word-wrap": "break-word",
+        }}
+      >
         "{q.text}"
       </p>
       <p style={{ "font-weight": 600, "font-size": "0.85rem" }}>{q.name}</p>

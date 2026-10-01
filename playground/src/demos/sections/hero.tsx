@@ -16,7 +16,8 @@ export function HeroSectionDemo() {
 
   // Each block gets its own spring/tween with a stagger delay.
   // The spring target is delayed via a per-item signal; the tween
-  // uses its built-in delay option.
+  // uses its built-in delay option. Styles must be getters so they
+  // stay reactive.
   const items = [0, 1, 2].map((index) => {
     const [delayed, setDelayed] = createSignal(false);
     createEffect(() => {
@@ -33,8 +34,12 @@ export function HeroSectionDemo() {
     });
     const fade = createTween(() => (delayed() ? 1 : 0), { duration: 500 });
     return {
-      transform: `translateY(${rise()}px)`,
-      opacity: fade(),
+      get transform() {
+        return `translateY(${rise()}px)`;
+      },
+      get opacity() {
+        return fade();
+      },
     };
   });
 
@@ -72,7 +77,7 @@ export function HeroSectionDemo() {
               "font-size": "0.875rem",
             }}
           >
-            New: v0.44.0 is out
+            New: solid-drift is out
           </span>
         </p>
         <h2

@@ -34,9 +34,11 @@ What is *not* public API:
 
 ## Deprecated aliases
 
-The `use*` aliases (e.g. `useSpring` for `createSpring`) are
-deprecated. They still work in 0.x but will be removed in v1.0.
-Migrate to the `create*` names now; they are the canonical API.
+The `use*` aliases (e.g. `useConsent` for `createConsent`,
+`useLowPowerMode` for `createLowPowerMode`, `usePrefersReducedMotion`
+for `createPrefersReducedMotion`) are deprecated. They still work in
+0.x but will be removed in v1.0. Migrate to the `create*` names now;
+they are the canonical API.
 
 ## Solid 2 plan
 

@@ -1,0 +1,21 @@
+name: Test starter template
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "templates/solidstart-starter/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+        working-directory: templates/solidstart-starter
+      - run: npm run build
+        working-directory: templates/solidstart-starter

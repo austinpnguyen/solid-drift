@@ -256,7 +256,6 @@ tolerates truncation, and to close any dangling fence before parsing.
 ```tsx
 import { createSignal, createMemo } from "solid-js";
 import { createChatModel } from "solid-drift";
-// npm install @anthropic-ai/sdk  (used server-side or via your proxy)
 
 function AnthropicChat() {
   const [input, setInput] = createSignal("");
@@ -266,7 +265,7 @@ function AnthropicChat() {
     // Browser calls must go through your own /api/anthropic proxy route:
     // api.anthropic.com sends no CORS headers for browser origins.
     baseUrl: "/api/anthropic",
-    model: "claude-sonnet-4-5",
+    model: "claude-sonnet-5",
     maxTokens: 1024,
     system: "You are a concise assistant.",
   });
@@ -317,26 +316,53 @@ stream the response body straight back. `createChatModel` parses the
 
 ### Stream from the Vercel AI SDK
 
-If you already use the Vercel AI SDK (`ai` package), its
-`streamText`/`useChat` transport is OpenAI-compatible. Point
-`createChatModel` at your existing `/api/chat` route with the
-`"openai"` provider kind: it parses the `data:` chunks and the
-`[DONE]` terminator.
+The Vercel AI SDK (`ai` package) uses its own stream protocol by
+default, not the OpenAI SSE format. If your `/api/chat` route uses
+`streamText(...).toDataStreamResponse()`, point `createChatModel` at
+it with a custom provider that parses the AI SDK's text chunks.
 
 ```tsx
 import { createChatModel } from "solid-drift";
 
+// Parses the Vercel AI SDK's data stream: lines like
+// `0:"Hello"` (text chunks) and `d:{...}` (done metadata).
+const vercelProvider = {
+  buildRequest: (messages: { role: string; content: string }[]) => ({
+    url: "/api/chat",
+    init: {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages }),
+    },
+  }),
+  parseDelta: (data: string) => {
+    // AI SDK data stream: `0:"text"` for content, `d:` for done.
+    if (data.startsWith("0:")) {
+      try {
+        return { text: JSON.parse(data.slice(2)) };
+      } catch {
+        return {};
+      }
+    }
+    if (data.startsWith("d:")) return { done: true };
+    return {};
+  },
+};
+
 const chat = createChatModel({
-  provider: "openai",
-  baseUrl: "/api/chat", // your existing Vercel AI SDK route
+  provider: vercelProvider,
   model: "gpt-4o-mini",
-  apiKey: "", // not needed when the route is same-origin
 });
 
 // chat.streamingText() updates as chunks arrive; chat.messages()
 // holds the finished history. Same markdown-fence guard as above
 // applies when rendering streamingText().
 ```
+
+Note: this parses the AI SDK v4/v5 data stream format. If Vercel
+changes the protocol, update `parseDelta` to match. For a plain
+OpenAI-compatible SSE endpoint (with `data:` chunks and `[DONE]`),
+use `provider: "openai"` instead.
 
 The same dangling-fence guard from the Anthropic recipe applies: count
 ` ``` ` occurrences in `streamingText()` and append a closing fence when
