@@ -71,3 +71,40 @@ const { lastSwipe } = createSwipe(() => deck, {
 | `onSwipeLeft` / `onSwipeRight` / `onSwipeUp` / `onSwipeDown` | none | Per-direction callbacks |
 
 Returns `{ lastSwipe, reset }`. A swipe counts when travel passes `threshold` inside `maxDuration`, or velocity passes `minVelocity`; slow long drags are not swipes. Recognition is not animation, so it works identically under reduced motion; the host decides how to animate the response. SSR-safe: `lastSwipe()` stays null and callbacks never fire.
+
+## Mobile notes
+
+### iOS Safari
+
+- **300ms tap delay is gone** in modern iOS (viewport `width=device-width`), but `touch-action` still matters for gestures. Without it, Safari may scroll or zoom instead of delivering pointer events to your drag.
+- **Pointer Events work** on iOS 13+. `createDrag` and `createSwipe` use Pointer Events, so touch, mouse, and pen share one code path. No touch-event fallback needed.
+- **`touch-action` values**: use `none` for free-form drags (cards, sliders), `pan-x` for vertical drags (bottom sheets) so horizontal page scroll still works, `pan-y` for horizontal swipes (carousels).
+- **Rubber-banding**: iOS scrolls the whole page with an elastic effect. If your drag surface is inside a scrollable area, set `overscroll-behavior: none` on the container to prevent the page from stealing the gesture at the edges.
+- **Visual viewport**: when the keyboard opens, `window.innerHeight` shrinks but the layout viewport does not. Bottom sheets should use `100dvh` (dynamic viewport height) so they track the visible area.
+
+### Scroll-lock pitfalls
+
+Locking body scroll while a bottom sheet is open is a common source of bugs:
+
+```tsx
+// Do this: lock scroll when the sheet opens, restore on close.
+createEffect(() => {
+  document.body.style.overflow = sheet.open() ? "hidden" : "";
+  onCleanup(() => (document.body.style.overflow = ""));
+});
+```
+
+Pitfalls:
+- **iOS ignores `overflow: hidden` on body** during momentum scroll. Add `position: fixed` to the body as well, or use a scroll-lock library that handles it.
+- **Restore scroll position**: `position: fixed` resets the scroll. Save `window.scrollY` before locking and restore after.
+- **Nested scrollers**: if the sheet content itself scrolls, stop propagation on its touchmove so the lock does not fight inner scrolling.
+
+### Low-power mode
+
+iOS Low Power Mode and Android battery saver throttle `requestAnimationFrame` and may pause it entirely in background tabs. solid-drift handles this:
+
+- The shared clock uses `visibilitychange` to pause when the tab is hidden and resume on visible, so animations do not jump forward after a throttle gap.
+- Springs and tweens converge to their targets even with sparse frames; they just take more wall-clock time.
+- `createBattery()` exposes the battery level; consider reducing non-essential animation when `level() < 0.2 && !charging()`.
+
+For PWA guidance (install prompts, offline), see the browser family docs.

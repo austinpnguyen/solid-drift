@@ -72,3 +72,40 @@ scanline.start();
 - `createGyro()` wraps `deviceorientation`: `{ supported, needsPermission, alpha, beta, gamma, absolute, listening, error, requestPermission, start, stop }`. On iOS, call `requestPermission()` from a tap handler before `start()`; `start()` also requests it if needed.
 - `createShake(options?)` detects shake gestures from `devicemotion`: `{ supported, needsPermission, listening, shakes, error, requestPermission, start, stop }`. A shake counts when the acceleration delta exceeds `threshold` (default 15 m/s^2), rate-limited by `cooldown` (default 800ms); `onShake` fires per shake.
 - `createScanline(options?)` is the animated line of a QR/barcode viewfinder: `{ progress, running, start, stop }`. `progress()` sweeps 0..1 on the shared clock (`direction: "down" | "up" | "alternate"`); bind it to the line's position. Under reduced motion it freezes mid-frame. Every primitive is SSR-safe: server renders get `supported: false` and safe no-op actions.
+
+## Mobile and PWA notes
+
+### Dismissible bottom sheets
+
+On mobile, bottom sheets are the primary dialog pattern. Combine
+`createBottomSheet` (snap points, drag physics) with `createSwipe`
+(fast-dismiss) for a native feel. See the [bottom sheet recipe](../recipes.md#bottom-sheet-with-swipe-to-close-on-mobile).
+
+Key points:
+- Use `100dvh` for sheet height so it tracks the iOS Safari toolbar.
+- `touch-action: pan-x` on the sheet: vertical drags belong to the sheet, horizontal swipes still scroll inner content.
+- Always include a visible close button; swipe-to-dismiss alone is not accessible.
+
+### iOS Safari quirks
+
+- **Permissions**: `createGyro` and `createShake` need
+  `requestPermission()` called from a user tap on iOS. Call it in the
+  same handler that calls `start()`.
+- **WebOTP**: requires a secure origin and an origin-bound SMS format.
+  Test with a real device; simulators do not receive SMS.
+- **getBattery**: not supported on iOS Safari. `createBattery().supported()` is false; degrade gracefully.
+- **Wake Lock**: supported on iOS 16.4+. Older versions silently fail; check `supported()`.
+
+### Low-power behavior
+
+When the OS throttles the device (Low Power Mode, battery saver):
+
+- `requestAnimationFrame` may drop to 30fps or pause in background tabs. The shared clock pauses on `visibilitychange` and resumes cleanly.
+- Consider reducing particle counts, marquee speeds, or disabling non-essential motion when `createBattery().level()` is low.
+- `createNetwork().saveData` indicates the user wants reduced data usage; skip heavy animated assets.
+
+### PWA checklist
+
+- Animations must not block the install prompt or first paint. Defer non-critical entrances until after `onMount`.
+- Test on real devices: iOS Safari and Chrome on Android behave differently around viewports, permissions, and throttling.
+- See [Accessibility](../accessibility.md) for reduced-motion and live-region guidance that applies doubly on mobile.
