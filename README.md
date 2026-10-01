@@ -71,6 +71,34 @@ Full documentation lives in the [docs folder](https://github.com/austinpnguyen/s
 
 One shared `requestAnimationFrame` loop drives every animation in the app, so hundreds of springs cost a single rAF tick per frame. Springs integrate with semi-implicit Euler, tweens sample an easing curve. When the tab becomes hidden the engine pauses the loop and freezes its clock, so nothing burns battery in the background; on return the clock continues where it left off and in-flight animations resume seamlessly. Everything is SSR-safe (animations simply don't run on the server).
 
+## Bundle size
+
+The package ships `sideEffects: false`, so bundlers tree-shake unused
+primitives away. Import only what you use; the table below shows the
+gzipped cost per family (measured from the built `dist/` output).
+
+| Family | Gzip |
+|---|---|
+| web3data | 8.4 KB |
+| ai | 7.6 KB |
+| fun | 7.2 KB |
+| web3 | 7.1 KB |
+| typography | 6.8 KB |
+| motion | 6.5 KB |
+| voice | 5.4 KB |
+| hardware | 4.8 KB |
+| stream | 4.2 KB |
+| cartoon | 4.0 KB |
+| network | 4.0 KB |
+| color | 3.6 KB |
+| gesture | 3.6 KB |
+| physics | 3.5 KB |
+| apputils | 3.2 KB |
+| remaining families | ~1-3 KB each |
+
+Full library (all families): ~466 KB raw, ~118 KB gzipped. A typical app
+importing one or two families pays only a few kilobytes.
+
 ## Support the project
 
 solid-drift is free and MIT-licensed, maintained by Austin Nguyen. If it saves you time, you can support its continued development.

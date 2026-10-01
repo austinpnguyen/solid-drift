@@ -6,6 +6,12 @@ Release history before 0.30.0 is summarized; per-version notes start at 0.30.0.
 
 ## [Unreleased]
 
+### Added
+- `package.json` now declares `sideEffects: false`, so bundlers can
+  tree-shake unused primitives.
+- README gains a "Bundle size" section with a per-family gzipped size
+  table.
+
 ## [0.41.9] - 2026-10-01
 
 ### Fixed

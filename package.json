@@ -33,6 +33,7 @@
   "license": "MIT",
   "main": "./dist/index.js",
   "name": "solid-drift",
+  "sideEffects": false,
   "peerDependencies": {
     "solid-js": "^1.0.0"
   },
