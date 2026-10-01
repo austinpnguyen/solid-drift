@@ -115,7 +115,7 @@ export function SpringPresetsDemo() {
               left: `${PAD}px`,
               width: `${BOX}px`,
               height: `${BOX}px`,
-              transform: `translateX(${x()()}px)`,
+              transform: `translateX(${x()}px)`,
             }}
           />
         </div>
