@@ -97,7 +97,7 @@ const validation = validatePost(draft, [${selected()
       }
     >
       <div class="stage-col">
-        <div class="stage-box">
+        <div class="stage-panel">
           <div class="stage-row">
             <span class="kbd">valid</span>
             <b style={{ color: result().valid ? "var(--success)" : "var(--error)" }}>

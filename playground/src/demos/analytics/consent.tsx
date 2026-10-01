@@ -32,7 +32,7 @@ consent.reset();   // back to "unknown", clears storage`;
           <span class="kbd">tracking: {consent.granted() ? "on" : "off"}</span>
         </div>
         <Show when={consent.consent() === "unknown"}>
-          <div class="stage-box">
+          <div class="stage-panel">
             <p>
               We use cookies to measure traffic. You can change your mind
               any time with the reset button below.

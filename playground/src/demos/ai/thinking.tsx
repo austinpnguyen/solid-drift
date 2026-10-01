@@ -85,7 +85,7 @@ thinking.stop();
       }
     >
       <div class="stage-col">
-        <div class="stage-box" style={{ "min-height": "64px" }}>
+        <div class="stage-panel" style={{ "min-height": "64px" }}>
           {REDUCED ? (
             <p aria-live="polite" style={{ "font-size": "1.25rem" }}>
               {thinking.running() ? parsePhrases()[0] ?? "Thinking" : ""}

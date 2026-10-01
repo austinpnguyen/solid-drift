@@ -34,7 +34,7 @@ function TimeAgoStage(props: { updateIntervalMs: number; locale: string }) {
         {(row) => (
           <div class="stage-row">
             <span class="kbd">{row.label}</span>
-            <span class="stage-box">{row.ago()}</span>
+            <span class="stage-badge">{row.ago()}</span>
           </div>
         )}
       </For>

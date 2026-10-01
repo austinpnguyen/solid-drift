@@ -18,10 +18,9 @@ function RevealCard(props: { once: boolean; label: string; color: string }) {
   return (
     <div
       ref={card}
-      class="stage-box"
+      class="stage-panel"
       style={{
         "min-height": "90px",
-        width: "100%",
         "justify-content": "center",
         background: props.color,
         opacity: shown() ? 1 : 0,

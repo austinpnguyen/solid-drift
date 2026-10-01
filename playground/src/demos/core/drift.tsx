@@ -35,20 +35,22 @@ export function DriftDemo() {
     `</div>`;
 
   const liveBox = (
-    <div class="stage-box" use:drift={props}>
-      use:drift
+    <div class="stage-col">
+      <div class="stage-box" use:drift={props} />
+      <span class="kbd">use:drift</span>
     </div>
   );
 
   const staticBox = (
-    <div
-      class="stage-box"
-      style={{
-        transform: `translate3d(${x()}px, ${y()}px, 0) scale(${scale()})`,
-        opacity: opacity(),
-      }}
-    >
-      use:drift
+    <div class="stage-col">
+      <div
+        class="stage-box"
+        style={{
+          transform: `translate3d(${x()}px, ${y()}px, 0) scale(${scale()})`,
+          opacity: opacity(),
+        }}
+      />
+      <span class="kbd">use:drift</span>
     </div>
   );
 

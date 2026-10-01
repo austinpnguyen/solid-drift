@@ -33,7 +33,7 @@ const columns = () => (isNarrow() ? 1 : 3);`;
           {({ query, on }) => (
             <div class="stage-row">
               <span class="kbd">{query}</span>
-              <span class="stage-box">{on() ? "true" : "false"}</span>
+              <span class="stage-badge">{on() ? "true" : "false"}</span>
             </div>
           )}
         </For>

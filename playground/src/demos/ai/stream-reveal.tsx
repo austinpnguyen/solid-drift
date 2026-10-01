@@ -161,7 +161,7 @@ stream.complete();
       }
     >
       <div class="stage-col">
-        <div class="stage-box" style={{ "min-height": "120px" }}>
+        <div class="stage-panel" style={{ "min-height": "120px" }}>
           <div ref={out} aria-live="polite" style={{ "line-height": "1.7" }} />
         </div>
         <span class="kbd">status: {stream.status()}</span>

@@ -92,9 +92,8 @@ export function AnimateDemo() {
           style={{
             width: `${60 + progress() * 120}px`,
           }}
-        >
-          {value().toFixed(1)}
-        </div>
+        />
+        <span class="kbd">value = {value().toFixed(1)}</span>
         <div
           style={{
             width: "100%",

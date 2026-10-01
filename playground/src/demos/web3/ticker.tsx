@@ -111,7 +111,7 @@ setPrice(48302.17);
       }
     >
       <div class="stage-col">
-        <div class="stage-box">
+        <div class="stage-panel" style={{ "text-align": "center" }}>
           <span
             ref={el}
             style={{

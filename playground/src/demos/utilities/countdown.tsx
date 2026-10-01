@@ -20,8 +20,8 @@ function CountdownStage(props: { interval: number; autoStart: boolean }) {
   return (
     <div class="stage-col">
       <div class="stage-row">
-        <div class="stage-box">
-          <span class="kbd">
+        <div class="stage-panel" style={{ "text-align": "center" }}>
+          <span class="kbd" style={{ "font-size": "1.25rem" }}>
             {pad(c.days())}d {pad(c.hours())}h {pad(c.minutes())}m{" "}
             {pad(c.seconds())}s
           </span>

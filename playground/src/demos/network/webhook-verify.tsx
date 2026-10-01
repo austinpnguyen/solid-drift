@@ -117,7 +117,7 @@ const ok = await verifyWebhookSignature({
       }
     >
       <div class="stage-col">
-        <div class="stage-box">
+        <div class="stage-panel">
           <span class="kbd">signature</span>
           <code
             style={{

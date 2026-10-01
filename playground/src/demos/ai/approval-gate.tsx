@@ -73,7 +73,7 @@ gate.deny("Not yet");     // or denied with a reason
       }
     >
       <div class="stage-col">
-        <div class="stage-box">
+        <div class="stage-panel">
           <span class="kbd">status</span>
           <p
             style={{

@@ -69,7 +69,7 @@ formatUnits("${amount()}", 18);    // "${formatted()}"`;
       }
     >
       <div class="stage-col">
-        <div class="stage-box">
+        <div class="stage-panel">
           <div class="stage-row">
             <span class="kbd">isAddress</span>
             <b style={{ color: valid() ? "var(--success)" : "var(--error)" }}>

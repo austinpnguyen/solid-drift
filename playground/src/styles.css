@@ -408,6 +408,34 @@ input:focus-visible {
   box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
 }
 
+/* Content container for demos that display text, readouts, or controls
+   output. Unlike .stage-box (a fixed 72px decorative square), this panel
+   grows with its content and keeps text readable. */
+.stage-panel {
+  width: 100%;
+  max-width: 560px;
+  border-radius: 16px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  padding: 20px 24px;
+  text-align: left;
+  color: var(--ink);
+  box-shadow: none;
+}
+
+/* Small inline value badge, for readouts that used to sit inside a
+   72px gradient box (e.g. time-ago rows, media-query flags). */
+.stage-badge {
+  display: inline-block;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+  padding: 4px 10px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
 .stage-row {
   display: flex;
   gap: 16px;
