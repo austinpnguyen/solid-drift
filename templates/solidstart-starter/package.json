@@ -1,0 +1,1 @@
+{"dependencies":{"@solidjs/start":"^1.1.0","solid-drift":"^0.44.0","solid-js":"^1.9.0","vinxi":"^0.5.0"},"devDependencies":{"@tailwindcss/vite":"^4.0.0","tailwindcss":"^4.0.0","typescript":"^5.6.0","vite":"^6.0.0"},"name":"solidstart-starter","private":true,"scripts":{"build":"vinxi build","dev":"vinxi dev","start":"vinxi start"},"type":"module","version":"0.1.0"}
