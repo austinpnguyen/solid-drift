@@ -8,24 +8,35 @@ subcopy follows, CTAs pop with a stagger. Copy, paste, change the words.
 ## Vanilla version
 
 ```tsx
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onMount, createEffect, onCleanup } from "solid-js";
 import { createSpring, createTween, createStagger } from "solid-drift";
 
 export function Hero() {
   const [mounted, setMounted] = createSignal(false);
   onMount(() => setMounted(true));
 
-  const rise = createSpring(() => (mounted() ? 0 : 36), {
-    stiffness: 260,
-    damping: 24,
-  });
-  const fade = createTween(() => (mounted() ? 1 : 0), { duration: 500 });
   const delays = createStagger(3, 110);
 
-  const item = (index: number) => ({
-    transform: `translateY(${rise()}px)`,
-    opacity: fade(),
-    "transition-delay": `${delays(index)}ms`,
+  // Each block gets its own spring/tween with a stagger delay.
+  const items = [0, 1, 2].map((index) => {
+    const [delayed, setDelayed] = createSignal(false);
+    createEffect(() => {
+      if (mounted()) {
+        const t = setTimeout(() => setDelayed(true), delays(index));
+        onCleanup(() => clearTimeout(t));
+      } else {
+        setDelayed(false);
+      }
+    });
+    const rise = createSpring(() => (delayed() ? 0 : 36), {
+      stiffness: 260,
+      damping: 24,
+    });
+    const fade = createTween(() => (delayed() ? 1 : 0), { duration: 500 });
+    return {
+      transform: `translateY(${rise()}px)`,
+      opacity: fade(),
+    };
   });
 
   return (
@@ -37,7 +48,7 @@ export function Hero() {
         "text-align": "center",
       }}
     >
-      <p style={item(0)}>
+      <p style={items[0]}>
         <span
           style={{
             display: "inline-block",
@@ -52,7 +63,7 @@ export function Hero() {
       </p>
       <h1
         style={{
-          ...item(1),
+          ...items[1],
           "font-size": "3.5rem",
           "font-weight": 800,
           "letter-spacing": "-0.02em",
@@ -61,10 +72,10 @@ export function Hero() {
       >
         Motion that feels alive
       </h1>
-      <p style={{ ...item(2), "font-size": "1.25rem", color: "#525252" }}>
+      <p style={{ ...items[2], "font-size": "1.25rem", color: "#525252" }}>
         Signal-native animation for SolidJS. Animate values, not elements.
       </p>
-      <div style={{ ...item(2), marginTop: "2rem" }}>
+      <div style={{ ...items[2], marginTop: "2rem" }}>
         <a
           href="#"
           style={{
@@ -103,43 +114,53 @@ Same behavior, Tailwind classes for layout. The animated values still
 bind via `style` because they change every frame.
 
 ```tsx
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onMount, createEffect, onCleanup } from "solid-js";
 import { createSpring, createTween, createStagger } from "solid-drift";
 
 export function Hero() {
   const [mounted, setMounted] = createSignal(false);
   onMount(() => setMounted(true));
 
-  const rise = createSpring(() => (mounted() ? 0 : 36), {
-    stiffness: 260,
-    damping: 24,
-  });
-  const fade = createTween(() => (mounted() ? 1 : 0), { duration: 500 });
   const delays = createStagger(3, 110);
 
-  const item = (index: number) => ({
-    transform: `translateY(${rise()}px)`,
-    opacity: fade(),
-    "transition-delay": `${delays(index)}ms`,
+  const items = [0, 1, 2].map((index) => {
+    const [delayed, setDelayed] = createSignal(false);
+    createEffect(() => {
+      if (mounted()) {
+        const t = setTimeout(() => setDelayed(true), delays(index));
+        onCleanup(() => clearTimeout(t));
+      } else {
+        setDelayed(false);
+      }
+    });
+    const rise = createSpring(() => (delayed() ? 0 : 36), {
+      stiffness: 260,
+      damping: 24,
+    });
+    const fade = createTween(() => (delayed() ? 1 : 0), { duration: 500 });
+    return {
+      transform: `translateY(${rise()}px)`,
+      opacity: fade(),
+    };
   });
 
   return (
     <header class="mx-auto max-w-6xl px-6 py-24 text-center">
-      <p style={item(0)}>
+      <p style={items[0]}>
         <span class="inline-block rounded-full bg-neutral-100 px-4 py-1 text-sm">
           New: v0.44.0 is out
         </span>
       </p>
       <h1
         class="mb-6 mt-6 text-6xl font-extrabold tracking-tight"
-        style={item(1)}
+        style={items[1]}
       >
         Motion that feels alive
       </h1>
-      <p class="text-xl text-neutral-600" style={item(2)}>
+      <p class="text-xl text-neutral-600" style={items[2]}>
         Signal-native animation for SolidJS. Animate values, not elements.
       </p>
-      <div class="mt-8 flex justify-center gap-4" style={item(2)}>
+      <div class="mt-8 flex justify-center gap-4" style={items[2]}>
         <a
           href="#"
           class="rounded-xl bg-black px-7 py-3 font-semibold text-white transition-transform hover:scale-105"

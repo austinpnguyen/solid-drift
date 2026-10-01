@@ -1,4 +1,4 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onMount, createEffect, onCleanup } from "solid-js";
 import { createSpring, createTween, createStagger } from "solid-drift";
 import { DemoShell } from "../../framework/DemoShell";
 
@@ -11,17 +11,30 @@ export function HeroSectionDemo() {
     return () => clearTimeout(t);
   });
 
-  const rise = createSpring(() => (mounted() ? 0 : 36), {
-    stiffness: 260,
-    damping: 24,
-  });
-  const fade = createTween(() => (mounted() ? 1 : 0), { duration: 500 });
   const delays = createStagger(3, 110);
 
-  const item = (index: number) => ({
-    transform: `translateY(${rise()}px)`,
-    opacity: fade(),
-    "transition-delay": `${delays(index)}ms`,
+  // Each block gets its own spring/tween with a stagger delay.
+  // The spring target is delayed via a per-item signal; the tween
+  // uses its built-in delay option.
+  const items = [0, 1, 2].map((index) => {
+    const [delayed, setDelayed] = createSignal(false);
+    createEffect(() => {
+      if (mounted()) {
+        const t = setTimeout(() => setDelayed(true), delays(index));
+        onCleanup(() => clearTimeout(t));
+      } else {
+        setDelayed(false);
+      }
+    });
+    const rise = createSpring(() => (delayed() ? 0 : 36), {
+      stiffness: 260,
+      damping: 24,
+    });
+    const fade = createTween(() => (delayed() ? 1 : 0), { duration: 500 });
+    return {
+      transform: `translateY(${rise()}px)`,
+      opacity: fade(),
+    };
   });
 
   const replay = () => {
@@ -41,7 +54,7 @@ export function HeroSectionDemo() {
       }
     >
       <div style={{ "text-align": "center", padding: "2rem 1rem" }}>
-        <p style={item(0)}>
+        <p style={items[0]}>
           <span
             style={{
               display: "inline-block",
@@ -56,7 +69,7 @@ export function HeroSectionDemo() {
         </p>
         <h2
           style={{
-            ...item(1),
+            ...items[1],
             "font-size": "2.5rem",
             "font-weight": 800,
             "letter-spacing": "-0.02em",
@@ -65,7 +78,7 @@ export function HeroSectionDemo() {
         >
           Motion that feels alive
         </h2>
-        <p style={{ ...item(2), color: "#525252" }}>
+        <p style={{ ...items[2], color: "#525252" }}>
           Signal-native animation for SolidJS.
         </p>
       </div>

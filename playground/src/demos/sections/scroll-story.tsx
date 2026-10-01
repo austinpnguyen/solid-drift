@@ -1,4 +1,4 @@
-import { createMemo, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { createScrollProgress, createTween } from "solid-drift";
 import { DemoShell } from "../../framework/DemoShell";
 
@@ -13,11 +13,6 @@ const CHAPTERS = [
 export function ScrollStorySectionDemo() {
   const progress = createScrollProgress();
   const smooth = createTween(progress, { duration: 200 });
-
-  // Map page scroll to the three chapters.
-  const activeIndex = createMemo(() =>
-    Math.min(CHAPTERS.length - 1, Math.floor(smooth() * CHAPTERS.length)),
-  );
 
   const [manual, setManual] = createSignal(1);
 
@@ -54,7 +49,7 @@ export function ScrollStorySectionDemo() {
                 color: distance() === 0 ? "#fff" : "#111",
                 opacity: Math.max(0.4, 1 - distance() * 0.5),
                 transform: `translateY(${(i - manual()) * 12}px)`,
-                transition: "all 300ms ease",
+                transition: "transform 300ms ease, opacity 300ms ease, background-color 300ms ease",
               }}
             >
               <h3 style={{ "font-weight": 700 }}>{chapter.title}</h3>
