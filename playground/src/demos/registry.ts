@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 
 import { SpringDemo } from "./core/spring";
+import { SpringPresetsDemo } from "./core/spring-presets";
 import { TweenDemo } from "./core/tween";
 import { AnimateDemo } from "./core/animate";
 import { StaggerDemo } from "./core/stagger";
@@ -8,6 +9,7 @@ import { DriftDemo } from "./core/drift";
 import { ScrollProgressDemo } from "./scroll/scroll-progress";
 import { InViewDemo } from "./scroll/in-view";
 import { EasingCurvesDemo } from "./easings/easing-curves";
+import { EasingCompareDemo } from "./easings/easing-compare";
 import { TiltCardDemo } from "./pointer/tilt-card";
 import { MagneticDemo } from "./pointer/magnetic";
 import { DragDemo } from "./gesture/drag";
@@ -89,6 +91,12 @@ export const families: DemoFamily[] = [
         "createSpring",
         "A signal that chases its target with spring physics.",
         SpringDemo,
+      ),
+      entry(
+        "spring-presets",
+        "Spring presets",
+        "Named spring configurations with live stiffness and damping sliders.",
+        SpringPresetsDemo,
       ),
       entry(
         "createTween",
@@ -442,6 +450,12 @@ export const families: DemoFamily[] = [
         "Easing curves",
         "Plot every easing in the library and ride a dot along the curve.",
         EasingCurvesDemo,
+      ),
+      entry(
+        "easing-compare",
+        "Easing comparison",
+        "Four easings racing side by side: same duration, same distance.",
+        EasingCompareDemo,
       ),
     ],
   },
