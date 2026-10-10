@@ -33,6 +33,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `springPresets` - `gentle`, `default`, `snappy`, `wobbly`, `molasses`.
 - `createStagger(count, options?)` - staggered delays.
 - `createTimeline(steps)` - sequential animation steps.
+- `createSequence(steps?)` - choreographed timeline: overlap (`at: "-=200"`), labels, nesting, `seek()`, `reverse()`, `timeScale()`.
 
 **Scroll**
 

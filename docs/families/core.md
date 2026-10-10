@@ -99,6 +99,51 @@ Returns `{ start, stop, replay, status }`:
 
 Under reduced motion every step jumps straight to its end value (each step's `onUpdate(to)` still runs, so the final state is always correct). SSR-safe: steps apply their end values instantly.
 
+### `createSequence(steps?)`
+
+Choreographed timeline with overlap, labels, and nesting. Unlike `createTimeline` (strictly sequential), steps can overlap using GSAP-style position parameters.
+
+```ts
+import { createSequence } from "solid-drift";
+
+const intro = createSequence();
+intro.addLabel("headlineIn", 0);
+intro.add({
+  target: () => titleEl,
+  props: { y: [24, 0], opacity: [0, 1] },
+  duration: 500,
+  at: "headlineIn",
+});
+intro.add({
+  target: () => ctaEl,
+  props: { y: [16, 0], opacity: [0, 1] },
+  duration: 400,
+  at: "-=200", // overlap the previous step by 200ms
+});
+await intro.play();
+```
+
+Position parameter (`at`) follows GSAP semantics:
+
+- `">"` (default) end of the previous step, `"<"` start of the previous step.
+- `"<+=100"` / `">-=200"`: offset from previous step start/end.
+- `"-=300"` / `"+=100"`: offset relative to the timeline end so far.
+- `number`: absolute milliseconds from the sequence start.
+- `"label"` / `"label+=100"`: a label registered with `addLabel()`.
+
+Props are `[from, to]` pairs or keyframes arrays (3+ values, evenly spaced). Transform shortcuts `x`, `y`, `z` (px), `scale`, `scaleX`, `scaleY`, `rotation` (deg) compose into the transform string. Other numeric props become CSS properties (px except unitless like `opacity`).
+
+Returns `{ play, pause, resume, reverse, seek, timeScale, addLabel, add, duration, status, dispose }`:
+
+- `play()` / `reverse()` return a promise that resolves at the end.
+- `seek(ms)` jumps to any time; every step renders its correct state. Wire scroll progress straight into `seek` for scrub-driven storytelling.
+- `timeScale(n)` sets playback speed.
+- Nested sequences can be added as steps; parent `seek`/`reverse` map down.
+
+Under reduced motion `play()` applies every end value immediately and still resolves. SSR-safe: renders end values with no timers.
+
+Try it: [Sequence demo](https://austinpnguyen.github.io/solid-drift/#/core/sequence)
+
 ### `springPresets`
 
 Named spring configurations for common feels. Spread into `createSpring`, `createMagnetic`, or `createTilt` options.

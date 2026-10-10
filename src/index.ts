@@ -122,6 +122,14 @@ export {
   type TimelineControls,
 } from "./timeline.js";
 export {
+  createSequence,
+  type SequenceAt,
+  type SequenceStep,
+  type SequenceStatus,
+  type SequenceControls,
+  type NestedSequence,
+} from "./sequence.js";
+export {
   animateFlip,
   type FlipOptions,
   createSharedLayout,
