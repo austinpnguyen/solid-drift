@@ -12,6 +12,10 @@ export {
   type AnimateOptions,
   type AnimationControls,
 } from "./animate.js";
+export {
+  killTweensOf,
+  type OverwriteMode,
+} from "./overwrite.js";
 export { drift, type DriftProps } from "./directive.js";
 export { createScrollProgress, type ScrollTarget } from "./scroll.js";
 export { createInView, type InViewOptions } from "./inview.js";

@@ -1,6 +1,10 @@
 import { now, schedule } from "./engine.js";
 import { resolveEasing, type Easing, type EasingName } from "./easing.js";
 import { prefersReducedMotion } from "./reduced-motion.js";
+import {
+  registerTween,
+  type OverwriteMode,
+} from "./overwrite.js";
 
 export interface AnimateOptions {
   /** Duration in milliseconds. Default 300. */
@@ -13,6 +17,22 @@ export interface AnimateOptions {
   onUpdate?: (value: number) => void;
   /** Called when the animation completes (not when stopped). */
   onComplete?: () => void;
+  /**
+   * Called when the animation is killed by overwrite or killTweensOf
+   * (not when it completes or is stopped manually).
+   */
+  onInterrupt?: () => void;
+  /**
+   * Groups this tween for overwrite management. With
+   * `overwrite: "auto"`, starting a new tween with the same id kills
+   * every active tween under that id first.
+   */
+  id?: string;
+  /**
+   * `"auto"` kills active tweens with the same `id` when this one
+   * starts. `"none"` (default) keeps the current behavior.
+   */
+  overwrite?: OverwriteMode;
 }
 
 export interface AnimationControls {
@@ -39,7 +59,15 @@ export function animate(
   to: number,
   options: AnimateOptions = {},
 ): AnimationControls {
-  const { duration = 300, delay = 0, onUpdate, onComplete } = options;
+  const {
+    duration = 300,
+    delay = 0,
+    onUpdate,
+    onComplete,
+    onInterrupt,
+    id,
+    overwrite = "none",
+  } = options;
   const easing = resolveEasing(options.easing ?? "easeOutCubic");
 
   let resolveFinished!: () => void;
@@ -48,10 +76,14 @@ export function animate(
   });
 
   let done = false;
-  const finish = (completed: boolean) => {
+  let unregister: (() => void) | null = null;
+  const finish = (completed: boolean, interrupted = false) => {
     if (done) return;
     done = true;
+    unregister?.();
+    unregister = null;
     if (completed) onComplete?.();
+    else if (interrupted) onInterrupt?.();
     resolveFinished();
   };
 
@@ -75,11 +107,18 @@ export function animate(
     return true;
   });
 
-  return {
-    stop: () => {
-      cancel();
-      finish(false);
-    },
-    finished,
+  const stop = () => {
+    cancel();
+    finish(false);
   };
+
+  if (id !== undefined) {
+    unregister = registerTween(
+      id,
+      { kill: stop, onInterrupt },
+      overwrite,
+    );
+  }
+
+  return { stop, finished };
 }

@@ -3,6 +3,7 @@ import type { Component } from "solid-js";
 import { SpringDemo } from "./core/spring";
 import { SpringPresetsDemo } from "./core/spring-presets";
 import { SequenceDemo } from "./core/sequence";
+import { OverwriteDemo } from "./core/overwrite";
 import { TweenDemo } from "./core/tween";
 import { AnimateDemo } from "./core/animate";
 import { StaggerDemo } from "./core/stagger";
@@ -104,6 +105,12 @@ export const families: DemoFamily[] = [
         "Sequence",
         "Choreographed timeline with overlap, labels, and a seek scrubber.",
         SequenceDemo,
+      ),
+      entry(
+        "overwrite",
+        "Overwrite",
+        "Spam 20 rapid triggers; with overwrite auto only the latest survives.",
+        OverwriteDemo,
       ),
       entry(
         "createTween",

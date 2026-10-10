@@ -47,6 +47,26 @@ const ctl = animate(0, 1, {
 await ctl.finished; // or ctl.stop()
 ```
 
+**Overwrite management.** Rapid retriggers (hover spam) are the number one source of animation bugs. Pass `id` plus `overwrite: "auto"` and starting a new tween kills every active tween under the same id first. The killed tween gets `onInterrupt` (not `onComplete`).
+
+```ts
+el.addEventListener("mouseenter", () => {
+  animate(0, 1, {
+    id: "card-hover",
+    overwrite: "auto",
+    duration: 200,
+    onUpdate: (v) => (el.style.opacity = String(v)),
+    onInterrupt: () => console.log("superseded"),
+  });
+});
+
+// Or kill manually:
+import { killTweensOf } from "solid-drift";
+killTweensOf("card-hover");
+```
+
+`createTween` accepts the same `id` / `overwrite` / `onInterrupt` options; retargeting with `overwrite: "auto"` interrupts the in-flight tween.
+
 ### `drift` directive
 
 [Try it](https://austinpnguyen.github.io/solid-drift/#/core/drift)
