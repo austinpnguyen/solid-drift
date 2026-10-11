@@ -1,6 +1,7 @@
 import { onCleanup } from "solid-js";
 import { schedule } from "./engine.js";
 import { prefersReducedMotion } from "./reduced-motion.js";
+import { damp } from "./math.js";
 
 /**
  * Per-frame setter for 60fps pointer-driven motion.
@@ -72,8 +73,8 @@ export function createQuickTo(
       const dt = Math.min((t - lastT) / 1000, 0.1);
       lastT = t;
       if (current === null) current = goal;
-      // Frame-rate independent exponential damping.
-      const next = current + (goal - current) * (1 - Math.exp(-damping * dt));
+      // Frame-rate independent exponential damping (shared math util).
+      const next = damp(current, goal, damping, dt);
       // Snap when close enough to avoid endless micro-ticks.
       current = Math.abs(next - goal) < 0.01 ? goal : next;
       writer.set(current);

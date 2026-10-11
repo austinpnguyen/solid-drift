@@ -5,3 +5,4 @@ export * from "../haptic.js";
 export * from "../copy.js";
 export { prefersReducedMotion, createPrefersReducedMotion } from "../reduced-motion.js";
 export { isLowPowerMode, createLowPowerMode, type LowPowerOptions } from "../power.js";
+export { clamp, mapRange, snap, snapTo, wrap, lerp, damp, random } from "../math.js";

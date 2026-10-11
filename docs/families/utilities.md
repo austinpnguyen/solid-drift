@@ -272,3 +272,22 @@ import { createPrefersReducedMotion } from "solid-drift";
 const reduced = createPrefersReducedMotion();
 const duration = () => (reduced() ? 0 : 400);
 ```
+
+### Math utils
+
+Pure functions for everyday animation math. No DOM, no state, SSR-safe.
+
+```ts
+import { clamp, mapRange, snap, snapTo, wrap, lerp, damp, random } from "solid-drift";
+
+clamp(0, 100, 150);                    // 100
+mapRange(0, 1, 0, 500, 0.5);            // 250 (scroll progress to px)
+snap(10, 23);                          // 20
+snapTo([0, 100, 250], 90);             // 100
+wrap(0, 3, 4);                         // 1 (carousel index)
+lerp(0, 100, 0.25);                    // 25
+damp(current, target, 12, dt);         // frame-rate independent glide
+random(5, 10);                         // [5, 10)
+```
+
+`damp` uses `lerp(current, target, 1 - exp(-lambda * dt))`: higher lambda is snappier, and the result does not depend on frame rate. It powers `createQuickTo` and is the recommended formula for custom smooth-follow effects.

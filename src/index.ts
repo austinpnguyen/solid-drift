@@ -608,3 +608,13 @@ export type {
   FunnelStepRecord,
   FunnelControls,
 } from "./analytics.js";
+export {
+  clamp,
+  mapRange,
+  snap,
+  snapTo,
+  wrap,
+  lerp,
+  damp,
+  random,
+} from "./math.js";
