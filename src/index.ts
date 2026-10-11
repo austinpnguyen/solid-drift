@@ -16,6 +16,11 @@ export {
   killTweensOf,
   type OverwriteMode,
 } from "./overwrite.js";
+export {
+  createQuickSetter,
+  createQuickTo,
+  type QuickToOptions,
+} from "./quicksetter.js";
 export { drift, type DriftProps } from "./directive.js";
 export { createScrollProgress, type ScrollTarget } from "./scroll.js";
 export { createInView, type InViewOptions } from "./inview.js";

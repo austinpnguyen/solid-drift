@@ -35,6 +35,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createTimeline(steps)` - sequential animation steps.
 - `createSequence(steps?)` - choreographed timeline: overlap (`at: "-=200"`), labels, nesting, `seek()`, `reverse()`, `timeScale()`.
 - `killTweensOf(id)` - kill active tweens by id; `animate`/`createTween` accept `id`, `overwrite: "auto"`, `onInterrupt`.
+- `createQuickSetter(target, prop)` / `createQuickTo(target, prop, { damping })` - per-frame direct style writes, batched to one write per frame.
 
 **Scroll**
 

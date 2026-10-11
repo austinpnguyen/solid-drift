@@ -240,3 +240,22 @@ const { x, y, moving, stop } = createFling(() => card, {
 ```
 
 Returns `{ x, y, vx, vy, moving, stop }`. Under reduced motion dragging still works but release has no momentum.
+
+### `createQuickSetter(target, prop)` / `createQuickTo(target, prop, options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/pointer/quicksetter)
+
+Per-frame setters for 60fps pointer-driven motion. Cursor followers, drag-linked values, and parallax need a new value every frame; creating a tween per frame is overhead. `createQuickSetter` writes directly to the element's style, batching multiple sets in the same frame into a single write on the shared rAF tick.
+
+```ts
+import { createQuickSetter, createQuickTo } from "solid-drift";
+
+// Direct: one style write per frame, no tween objects.
+const setX = createQuickSetter(() => el, "x");
+window.addEventListener("pointermove", (e) => setX(e.clientX));
+
+// Smoothed: glides toward each target with exponential damping.
+const setSmoothX = createQuickTo(() => el, "x", { damping: 10 });
+```
+
+Transform shortcuts (`x`, `y`, `scale`, `rotation`, ...) compose into the transform string without clobbering each other. Other numeric props become px (except unitless like `opacity`). Null targets are no-ops; SSR-safe. Under reduced motion `createQuickTo` sets directly with no glide.

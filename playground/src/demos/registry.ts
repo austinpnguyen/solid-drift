@@ -14,6 +14,7 @@ import { EasingCurvesDemo } from "./easings/easing-curves";
 import { EasingCompareDemo } from "./easings/easing-compare";
 import { TiltCardDemo } from "./pointer/tilt-card";
 import { MagneticDemo } from "./pointer/magnetic";
+import { QuickSetterDemo } from "./pointer/quicksetter";
 import { DragDemo } from "./gesture/drag";
 import { SwipeDemo } from "./gesture/swipe";
 import { PressHoverDemo } from "./gesture/press-hover";
@@ -173,6 +174,12 @@ export const families: DemoFamily[] = [
         "Magnetic Button",
         "A button that gets pulled toward the pointer and springs back on release.",
         MagneticDemo,
+      ),
+      entry(
+        "quicksetter",
+        "QuickSetter",
+        "Per-frame cursor follower: direct writes vs damped glide, no tweens.",
+        QuickSetterDemo,
       ),
     ],
   },

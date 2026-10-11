@@ -3,3 +3,4 @@ export * from "../pointer.js";
 export * from "../physics.js";
 export { createVelocity, type VelocityOptions } from "../velocity.js";
 export { createTrail, type TrailOptions } from "../trail.js";
+export { createQuickSetter, createQuickTo, type QuickToOptions } from "../quicksetter.js";
