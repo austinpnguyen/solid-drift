@@ -31,7 +31,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `animate(from, to, options?)` - imperative animation, returns `{ stop, finished }`.
 - `drift` - directive applying a spring/tween to an element.
 - `springPresets` - `gentle`, `default`, `snappy`, `wobbly`, `molasses`.
-- `createStagger(count, options?)` - staggered delays.
+- `createStagger(count, delayMs, opts?)` - stagger delays with `from` (first/last/center/index), `grid`, `axis`, `ease`.
 - `createTimeline(steps)` - sequential animation steps.
 - `createSequence(steps?)` - choreographed timeline: overlap (`at: "-=200"`), labels, nesting, `seek()`, `reverse()`, `timeScale()`.
 - `killTweensOf(id)` - kill active tweens by id; `animate`/`createTween` accept `id`, `overwrite: "auto"`, `onInterrupt`.

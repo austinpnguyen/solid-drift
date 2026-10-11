@@ -182,11 +182,11 @@ const x = createSpring(target, { ...springPresets.wobbly });
 | `wobbly`   | Loose and playful, with a visible overshoot     |
 | `molasses` | Heavy and deliberate, like moving through syrup |
 
-### `createStagger(count, delayMs)`
+### `createStagger(count, delayMs, opts?)`
 
 [Try it](https://austinpnguyen.github.io/solid-drift/#/core/createStagger)
 
-Builds a stagger-delay lookup for cascading animations across a list. Given an item index, returns its delay in milliseconds (`index * delayMs`). Pair with `createTween`'s `delay` option (or `animate`) so items enter one after another instead of all at once. Pure function, no reactivity involved.
+Builds a stagger-delay lookup for cascading animations across a list. Given an item index, returns its delay in milliseconds. Pair with `createTween`'s `delay` option (or `animate`) so items enter one after another instead of all at once. Pure function, no reactivity involved.
 
 ```tsx
 import { createStagger } from "solid-drift";
@@ -194,4 +194,17 @@ import { createStagger } from "solid-drift";
 const at = createStagger(5, 80); // 5 items, 80ms apart
 at(0); // 0
 at(3); // 240
+
+// From the center outward:
+const at2 = createStagger(5, 80, { from: "center" });
+
+// 3x3 grid, center-out:
+const at3 = createStagger(9, 100, { grid: [3, 3], from: "center" });
 ```
+
+Options:
+
+- `from`: `"first"` (default), `"last"`, `"center"`, or a specific index.
+- `grid`: `[cols, rows]` for 2D stagger by Euclidean distance.
+- `axis`: `"x"` or `"y"` to measure distance along one axis only.
+- `ease`: ease the delay distribution.
