@@ -5,4 +5,5 @@ export { createStagger } from "../stagger.js";
 export { createTimeline, type TimelineStep, type TimelineControls, type TimelineStatus } from "../timeline.js";
 export { createSequence, type SequenceAt, type SequenceStep, type SequenceControls, type SequenceStatus, type NestedSequence } from "../sequence.js";
 export { animate, type AnimateOptions, type AnimationControls } from "../animate.js";
-export { drift, type DriftProps } from "../directive.js";
+export { drift, type DriftProps, type DriftWithControls } from "../directive.js";
+export { pauseAll, resumeAll, isPaused, setGlobalTimeScale, globalTimeScale } from "../global.js";

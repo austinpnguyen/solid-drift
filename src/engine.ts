@@ -32,6 +32,10 @@ let pausedMs = 0;
 let hiddenAt: number | null = null;
 let visibilityHooked = false;
 
+// Manual pause via drift.pauseAll(). When set, now() freezes; resumeAll()
+// folds the paused duration into pausedMs so the clock continues seamlessly.
+let manualPauseAt: number | null = null;
+
 function rawNow(): number {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
 }
@@ -108,9 +112,11 @@ export function schedule(task: AnimationTask): () => void {
 /**
  * Monotonic clock in milliseconds. Freezes while the tab is hidden and
  * resumes where it left off, so animations never observe the hidden gap.
+ * Also freezes while manually paused via pauseAll().
  */
 export function now(): number {
-  return (hiddenAt ?? rawNow()) - pausedMs;
+  const effectiveRaw = manualPauseAt ?? (hiddenAt ?? rawNow());
+  return effectiveRaw - pausedMs;
 }
 
 /**
@@ -129,7 +135,7 @@ function scaledNow(): number {
  * never import devtools always run at scale 1.
  */
 export function setTimeScale(scale: number): void {
-  if (!(scale > 0) || !Number.isFinite(scale)) return;
+  if (!(scale >= 0) || !Number.isFinite(scale)) return;
   const current = scaledNow();
   scaleAnchorVirtual = current;
   scaleAnchorRaw = now();
@@ -141,6 +147,46 @@ export function setTimeScale(scale: number): void {
  */
 export function getTimeScale(): number {
   return timeScale;
+}
+
+/**
+ * Pause every animation on the shared clock. Tasks stay registered but
+ * the clock freezes, so in-flight promises stay pending until resumeAll().
+ * Idempotent.
+ */
+export function pauseAll(): void {
+  if (manualPauseAt !== null) return;
+  manualPauseAt = rawNow();
+  if (rafId) {
+    if (typeof cancelAnimationFrame !== "undefined") {
+      cancelAnimationFrame(rafId);
+    }
+    rafId = 0;
+  }
+}
+
+/**
+ * Resume after pauseAll(). The paused duration is folded into the clock
+ * so animations continue seamlessly. Idempotent.
+ */
+export function resumeAll(): void {
+  if (manualPauseAt === null) return;
+  pausedMs += rawNow() - manualPauseAt;
+  manualPauseAt = null;
+  if (
+    tasks.size > 0 &&
+    !rafId &&
+    typeof requestAnimationFrame !== "undefined"
+  ) {
+    const hidden =
+      typeof document !== "undefined" && document.hidden === true;
+    if (!hidden) rafId = requestAnimationFrame(tick);
+  }
+}
+
+/** Whether the engine is currently paused via pauseAll(). */
+export function isPaused(): boolean {
+  return manualPauseAt !== null;
 }
 
 /**

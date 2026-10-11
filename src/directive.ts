@@ -1,4 +1,11 @@
 import { createEffect, type Accessor } from "solid-js";
+import {
+  pauseAll,
+  resumeAll,
+  isPaused,
+  setGlobalTimeScale,
+  globalTimeScale,
+} from "./global.js";
 
 type MaybeAccessor<T> = T | Accessor<T>;
 
@@ -48,7 +55,7 @@ function resolve<T>(value: MaybeAccessor<T>): T {
  *
  * Note: importing this module registers the `drift` directive type globally.
  */
-export function drift(el: HTMLElement, props: Accessor<DriftProps>): void {
+function drift(el: HTMLElement, props: Accessor<DriftProps>): void {
   createEffect(() => {
     const p = props();
 
@@ -81,3 +88,31 @@ export function drift(el: HTMLElement, props: Accessor<DriftProps>): void {
     }
   });
 }
+
+/**
+ * The drift directive, augmented with global animation controls.
+ * `drift.pauseAll()` freezes every animation; `drift.resumeAll()` resumes.
+ * `drift.setGlobalTimeScale(n)` sets playback speed (1 normal, 0 freeze).
+ */
+export interface DriftWithControls {
+  (el: HTMLElement, props: Accessor<DriftProps>): void;
+  /** Freeze every animation; in-flight promises stay pending. */
+  pauseAll: () => void;
+  /** Resume after pauseAll(). */
+  resumeAll: () => void;
+  /** Whether animations are paused. */
+  isPaused: () => boolean;
+  /** Set global playback speed (1 normal, 0.2 slow-mo, 0 freeze). */
+  setGlobalTimeScale: (n: number) => void;
+  /** Current global time scale. */
+  globalTimeScale: () => number;
+}
+
+const driftWithControls = drift as DriftWithControls;
+driftWithControls.pauseAll = pauseAll;
+driftWithControls.resumeAll = resumeAll;
+driftWithControls.isPaused = isPaused;
+driftWithControls.setGlobalTimeScale = setGlobalTimeScale;
+driftWithControls.globalTimeScale = globalTimeScale;
+
+export { driftWithControls as drift };

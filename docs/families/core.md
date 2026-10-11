@@ -208,3 +208,21 @@ Options:
 - `grid`: `[cols, rows]` for 2D stagger by Euclidean distance.
 - `axis`: `"x"` or `"y"` to measure distance along one axis only.
 - `ease`: ease the delay distribution.
+
+### Global controls
+
+A master switch for every animation on the shared engine. Useful for pause menus, slow-motion debug, and as a final reduced-motion kill switch.
+
+```ts
+import { drift } from "solid-drift";
+
+// Freeze everything; in-flight promises stay pending.
+drift.pauseAll();
+drift.resumeAll();
+
+// Slow motion: 0.2 = 5x slower, 1 = normal, 0 = freeze.
+drift.setGlobalTimeScale(0.2);
+drift.globalTimeScale(); // 0.2
+```
+
+Standalone functions are also exported: `pauseAll`, `resumeAll`, `isPaused`, `setGlobalTimeScale`, `globalTimeScale`.

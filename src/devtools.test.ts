@@ -27,13 +27,13 @@ describe("setTimeScale / getTimeScale", () => {
     setTimeScale(0.5);
     expect(getTimeScale()).toBe(0.5);
     setTimeScale(0);
-    expect(getTimeScale()).toBe(0.5);
+    expect(getTimeScale()).toBe(0);
     setTimeScale(-1);
-    expect(getTimeScale()).toBe(0.5);
+    expect(getTimeScale()).toBe(0);
     setTimeScale(NaN);
-    expect(getTimeScale()).toBe(0.5);
+    expect(getTimeScale()).toBe(0);
     setTimeScale(Infinity);
-    expect(getTimeScale()).toBe(0.5);
+    expect(getTimeScale()).toBe(0);
     setTimeScale(1);
     expect(getTimeScale()).toBe(1);
   });

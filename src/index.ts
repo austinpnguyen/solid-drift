@@ -21,7 +21,14 @@ export {
   createQuickTo,
   type QuickToOptions,
 } from "./quicksetter.js";
-export { drift, type DriftProps } from "./directive.js";
+export { drift, type DriftProps, type DriftWithControls } from "./directive.js";
+export {
+  pauseAll,
+  resumeAll,
+  isPaused,
+  setGlobalTimeScale,
+  globalTimeScale,
+} from "./global.js";
 export { createScrollProgress, type ScrollTarget } from "./scroll.js";
 export { createInView, type InViewOptions } from "./inview.js";
 export {
