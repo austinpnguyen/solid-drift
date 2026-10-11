@@ -261,3 +261,33 @@ const reveal = createScrollReveal(3, { stagger: 90 });
 - `createPresence({ when, exitDuration?, onExitStart?, onExitComplete? })`: `{ mounted, status, exiting, forceExit }`. When `when` flips false, content stays mounted for `exitDuration` ms (default 300) so the exit animation finishes, then unmounts; flipping back mid-exit cancels it. `forceExit()` unmounts immediately. Skips the exit phase under reduced motion. SSR-safe.
 - `createViewTransition()`: `{ supported, transitioning, transition }`. Wraps `document.startViewTransition`: `transition(update)` animates between old and new DOM when supported, otherwise runs the update directly. SSR-safe (`supported()` is false on the server).
 - `createScrollReveal(count, options?)`: `{ items, replay, reset }`. Each `items[i]` has `ref`, `revealed`, and `style` (empty on the server so content stays visible without JS). Staggered entrance (`stagger`, default 60ms), variants (`fade`, `fade-up`, `fade-down`, `fade-left`, `fade-right`, `scale`, `none`), `once` semantics (default true), and instant reveal under reduced motion.
+
+### `createScrollPin(target, opts?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/scroll/pin)
+
+Pin an element in place while the user scrolls through a range. The signature primitive of scrollytelling sites.
+
+```ts
+import { createScrollPin, createSequence } from "solid-drift";
+
+const seq = createSequence();
+// ... add steps ...
+createScrollPin(() => section, {
+  end: "+=1000",
+  scrub: (p) => seq.seek(p * seq.duration()),
+});
+```
+
+When scroll enters `[start, end]`, a spacer preserves the layout and the target becomes `position: fixed` at its natural position. Leaving the range restores the DOM exactly.
+
+Options:
+
+- `start`: scrollY where pinning starts (number or `() => number`). Default: element top at viewport top.
+- `end`: scrollY where pinning ends. Supports `"+=500"` for a scroll distance. Default: start + target height.
+- `scrub(progress)`: called every frame while pinned with 0..1.
+- `onEnter` / `onLeave` / `onEnterBack` / `onLeaveBack`: directional callbacks.
+
+Returns `{ progress, active, refresh, dispose }`. Call `refresh()` after fonts or images load. Window scrolling only in v1.
+
+Under reduced motion the pin still engages (structural), but scrub-driven animations inside follow each primitive's reduced-motion rules.

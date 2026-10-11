@@ -625,3 +625,8 @@ export {
   damp,
   random,
 } from "./math.js";
+export {
+  createScrollPin,
+  type ScrollPinOptions,
+  type ScrollPinControls,
+} from "./scrollpin.js";

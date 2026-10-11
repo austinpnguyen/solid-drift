@@ -10,6 +10,7 @@ import { StaggerDemo } from "./core/stagger";
 import { DriftDemo } from "./core/drift";
 import { ScrollProgressDemo } from "./scroll/scroll-progress";
 import { InViewDemo } from "./scroll/in-view";
+import { ScrollPinDemo } from "./scroll/pin";
 import { EasingCurvesDemo } from "./easings/easing-curves";
 import { EasingCompareDemo } from "./easings/easing-compare";
 import { TiltCardDemo } from "./pointer/tilt-card";
@@ -155,6 +156,12 @@ export const families: DemoFamily[] = [
         "createInView",
         "A boolean signal reporting whether an element is visible.",
         InViewDemo,
+      ),
+      entry(
+        "pin",
+        "ScrollPin",
+        "Pinned section with a scrub-driven sequence inside.",
+        ScrollPinDemo,
       ),
     ],
   },
