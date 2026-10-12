@@ -29,6 +29,7 @@ import { KineticTypeDemo } from "./typography/kinetic-type";
 import { SplitTextDemo } from "./typography/split-text";
 import { PathDrawDemo } from "./motion-graphics/path-draw";
 import { MorphDemo } from "./motion-graphics/morph";
+import { MotionPathDemo } from "./motion-graphics/motion-path";
 import { MarqueeDemo } from "./motion-graphics/marquee";
 import { HeroSectionDemo } from "./sections/hero";
 import { ScrollStorySectionDemo } from "./sections/scroll-story";
@@ -296,6 +297,12 @@ export const families: DemoFamily[] = [
         "Morph",
         "An SVG square melts into a circle, scrubbable.",
         MorphDemo,
+      ),
+      entry(
+        "createMotionPath",
+        "Motion Path",
+        "A dot flies along an SVG curve, rotating with the tangent.",
+        MotionPathDemo,
       ),
       entry(
         "createMarquee",

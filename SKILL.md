@@ -97,6 +97,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createScenePlayer(scenes)` - ordered scene orchestrator.
 - `createShowreel(scenes)` - scene player with `kind` labels (`title`, `camera`, `color`, `cut`, `custom`).
 - `createMorph(pathEl, options)` - SVG path morphing via resampled point interpolation; `seek(t)` for scrub.
+- `createMotionPath(target, options)` - move an element along an SVG path with autoRotate; `seek(t)` for scrub.
 - `createCamera(keyframes, options)` - pan/zoom through keyframes.
 - `createColorShift(stops, options?)` - time-based color interpolation.
 - `createTransition(options?)` - match-cut scene handoffs (`cut`, `fade`, `slide`, `wipe`).

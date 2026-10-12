@@ -3,3 +3,4 @@ export * from "../motion.js";
 export * from "../pathdraw.js";
 export * from "../variants.js";
 export * from "../morph.js";
+export * from "../motionpath.js";

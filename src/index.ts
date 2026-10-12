@@ -253,6 +253,11 @@ export {
   type MorphOptions,
   type MorphControls,
 } from "./morph.js";
+export {
+  createMotionPath,
+  type MotionPathOptions,
+  type MotionPathControls,
+} from "./motionpath.js";
 export type {
   KineticTypeFrom,
   KineticTypeOptions,

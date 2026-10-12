@@ -138,3 +138,25 @@ morph.seek(0.5); // scrub to halfway
 Both paths are resampled to N points (`points`, default 100) with `getPointAtLength` and interpolated per point. Point i maps to point i, so the two paths should share winding direction and similar complexity for a beautiful morph; very different shapes still run, they just "melt". Optional `fill`/`stroke` target colors are interpolated from the element's current colors. No smart rotational matching (that is v2).
 
 Returns `{ play, progress, seek }`.
+
+### `createMotionPath(target, options)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/motion-graphics/createMotionPath)
+
+Move an element along an SVG path.
+
+```ts
+import { createMotionPath } from "solid-drift";
+
+const flight = createMotionPath(() => plane, {
+  path: "M0,100 C 100,0 200,0 300,100",
+  duration: 3000,
+  autoRotate: true,
+});
+await flight.play();
+flight.seek(0.5); // scrub to halfway
+```
+
+`path` accepts an SVG path data string or a function returning an `SVGPathElement`. `autoRotate: true` follows the path tangent (a number adds a degree offset). `align: "center"` (default) rides the element's center on the path; `"top-left"` rides its corner. While running, the primitive owns the element's `transform`.
+
+Returns `{ play, progress, seek }`.
