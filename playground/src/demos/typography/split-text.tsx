@@ -81,29 +81,31 @@ revert() // restores the exact original HTML`;
         </>
       }
     >
-      <div
-        style={{
-          "min-height": "180px",
-          display: "flex",
-          "align-items": "center",
-          "justify-content": "center",
-          background: "var(--stage)",
-          "border-radius": "12px",
-          padding: "1.5rem",
-        }}
-      >
-        <h1
-          ref={title}
-          style={{ "font-size": "2rem", "line-height": 1.3, margin: 0, width: "100%" }}
-          // eslint-disable-next-line solid/no-innerhtml
-          innerHTML={HEADLINE_HTML}
-        />
+      <div style={{ width: "100%" }}>
+        <div
+          style={{
+            "min-height": "180px",
+            display: "flex",
+            "align-items": "center",
+            "justify-content": "center",
+            background: "var(--stage)",
+            "border-radius": "12px",
+            padding: "1.5rem",
+          }}
+        >
+          <h1
+            ref={title}
+            style={{ "font-size": "2rem", "line-height": 1.3, margin: 0, width: "100%" }}
+            // eslint-disable-next-line solid/no-innerhtml
+            innerHTML={HEADLINE_HTML}
+          />
+        </div>
+        <p style={{ "font-size": "0.85rem", color: "var(--muted)" }}>
+          {split()
+            ? `Split into chars/words${lineCount() ? ` and ${lineCount()} line(s)` : ""}. The <strong> keeps its styling.`
+            : "Original HTML, untouched."}
+        </p>
       </div>
-      <p style={{ "font-size": "0.85rem", color: "var(--muted)" }}>
-        {split()
-          ? `Split into chars/words${lineCount() ? ` and ${lineCount()} line(s)` : ""}. The <strong> keeps its styling.`
-          : "Original HTML, untouched."}
-      </p>
     </DemoShell>
   );
 }
