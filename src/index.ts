@@ -248,6 +248,11 @@ export {
   createBeat,
   createBeatCuts,
 } from "./motion.js";
+export {
+  createMorph,
+  type MorphOptions,
+  type MorphControls,
+} from "./morph.js";
 export type {
   KineticTypeFrom,
   KineticTypeOptions,

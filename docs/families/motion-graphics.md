@@ -117,3 +117,24 @@ stopCuts();
 ```
 
 Cuts only fire while the player is running, so pausing the reel pauses the cuts too. Beat timing is not motion, so cuts keep firing under reduced motion (pair with a reduced-motion-safe `onEnter` if the cut itself animates).
+
+### `createMorph(pathEl, options)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/motion-graphics/createMorph)
+
+Morph one SVG path into another.
+
+```ts
+import { createMorph } from "solid-drift";
+
+const morph = createMorph(() => pathEl, {
+  to: "M50,5 a45,45 0 1,0 0.1,0 Z",
+  duration: 800,
+});
+await morph.play();
+morph.seek(0.5); // scrub to halfway
+```
+
+Both paths are resampled to N points (`points`, default 100) with `getPointAtLength` and interpolated per point. Point i maps to point i, so the two paths should share winding direction and similar complexity for a beautiful morph; very different shapes still run, they just "melt". Optional `fill`/`stroke` target colors are interpolated from the element's current colors. No smart rotational matching (that is v2).
+
+Returns `{ play, progress, seek }`.
