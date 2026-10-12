@@ -20,11 +20,11 @@ Signal-native: primitives return signals you bind with `style={{ transform: x() 
 
 ### Core
 
-`createSpring`, `createTween`, `animate`, `drift`, `springPresets`, `createStagger`, `createTimeline`
+`createSpring`, `createTween`, `animate`, `drift`, `springPresets`, `createStagger`, `createTimeline`, `createSequence`, `createQuickSetter`, `createQuickTo`, `killTweensOf`
 
 ### Scroll
 
-`createScrollProgress`, `createHorizontalScroll`, `createScrub`, `createScrollColor`, `createScrollTracking`, `createScrollLine`, `createInView`
+`createScrollProgress`, `createHorizontalScroll`, `createScrub`, `createScrollColor`, `createScrollTracking`, `createScrollLine`, `createInView`, `createScrollPin`, `createScrollSnap`, `createSmoothScroll`
 
 ### Pointer and physics
 
@@ -40,11 +40,11 @@ Signal-native: primitives return signals you bind with `style={{ transform: x() 
 
 ### Typography
 
-`createFontSwap`, `createTyping`, `createTextPhysics`, `createTextTunnel`, `createTextCutout`, `createTextGradient`, `createTextScramble`, `createTextWave`, `createCountUp`
+`createFontSwap`, `createTyping`, `createTextPhysics`, `createTextTunnel`, `createTextCutout`, `createTextGradient`, `createTextScramble`, `createTextWave`, `createCountUp`, `createSplitText`
 
 ### Motion graphics
 
-`createKineticType`, `createScenePlayer`, `createShowreel`, `createCamera`, `createColorShift`, `createTransition`, `createBeat`, `createBeatCuts`
+`createKineticType`, `createScenePlayer`, `createShowreel`, `createCamera`, `createColorShift`, `createTransition`, `createBeat`, `createBeatCuts`, `createMorph`, `createMotionPath`
 
 ### Agent UI
 
@@ -68,7 +68,11 @@ Signal-native: primitives return signals you bind with `style={{ transform: x() 
 
 ### Utilities
 
-`createPrefersReducedMotion`, `createLowPowerMode`
+`createPrefersReducedMotion`, `createLowPowerMode`, `clamp`, `mapRange`, `snap`, `snapTo`, `wrap`, `lerp`, `damp`, `random`
+
+### Easings
+
+`createCustomEase` (SVG path to easing function)
 
 ## Rules
 

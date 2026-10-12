@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import { createRoot, createSignal } from "solid-js";
 import { animate } from "./animate.js";
+import { createTween } from "./tween.js";
 import {
   killTweensOf,
   activeOverwriteIds,
@@ -120,5 +122,48 @@ describe("overwrite", () => {
     expect(kill2).not.toHaveBeenCalled();
     unregister1();
     killTweensOf("r");
+  });
+
+  it("createTween overwrite fires onInterrupt exactly once", async () => {
+    const onInterrupt1 = vi.fn();
+    createRoot(() => {
+      const [t1, setT1] = createSignal(0);
+      createTween(t1, {
+        id: "ct",
+        overwrite: "auto",
+        duration: 10000,
+        onInterrupt: onInterrupt1,
+      });
+      setT1(100); // start the first tween so it registers
+      const [t2, setT2] = createSignal(0);
+      createTween(t2, {
+        id: "ct",
+        overwrite: "auto",
+        duration: 10000,
+      });
+      setT2(200); // start the second tween, overwriting the first
+    });
+    await Promise.resolve(); // flush effects
+    await Promise.resolve();
+    expect(onInterrupt1).toHaveBeenCalledTimes(1);
+    killTweensOf("ct");
+  });
+
+  it("createTween killTweensOf fires onInterrupt exactly once", async () => {
+    const onInterrupt = vi.fn();
+    createRoot(() => {
+      const [t, setT] = createSignal(0);
+      createTween(t, {
+        id: "ct2",
+        overwrite: "auto",
+        duration: 10000,
+        onInterrupt,
+      });
+      setT(100); // start the tween so it registers
+    });
+    await Promise.resolve(); // flush effects
+    await Promise.resolve();
+    killTweensOf("ct2");
+    expect(onInterrupt).toHaveBeenCalledTimes(1);
   });
 });

@@ -95,7 +95,8 @@ export function createTween(
     if (id !== undefined) {
       unregister = registerTween(
         id,
-        { kill: () => killCurrent(true), onInterrupt },
+        // Contract: kill() stops silently; the registry fires onInterrupt.
+        { kill: () => killCurrent(false), onInterrupt },
         overwrite,
       );
     }
