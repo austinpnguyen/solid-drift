@@ -291,3 +291,23 @@ Options:
 Returns `{ progress, active, refresh, dispose }`. Call `refresh()` after fonts or images load. Window scrolling only in v1.
 
 Under reduced motion the pin still engages (structural), but scrub-driven animations inside follow each primitive's reduced-motion rules.
+
+### `createScrollSnap(opts)`
+
+Snap to the nearest point after scrolling stops (fullpage feel).
+
+```ts
+import { createScrollSnap } from "solid-drift";
+
+createScrollSnap({
+  points: [0, 800, 1600], // or element getters, or () => numbers
+  duration: 500,
+  onSnap: (i) => console.log("snapped to", i),
+});
+```
+
+Listens for scroll end (150ms after the last scroll event), finds the nearest point, and animates scrollY there. If the user flings fast (velocity above `velocityThreshold`), the snap is skipped so they can fly past.
+
+Do not combine with CSS scroll-snap on the same container. Under reduced motion the snap jumps immediately.
+
+Returns `{ dispose }`.

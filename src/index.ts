@@ -630,3 +630,8 @@ export {
   type ScrollPinOptions,
   type ScrollPinControls,
 } from "./scrollpin.js";
+export {
+  createScrollSnap,
+  type ScrollSnapOptions,
+  type ScrollSnapControls,
+} from "./scrollsnap.js";

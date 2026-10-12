@@ -34,6 +34,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createStagger(count, delayMs, opts?)` - stagger delays with `from` (first/last/center/index), `grid`, `axis`, `ease`.
 - `drift.pauseAll()` / `drift.resumeAll()` / `drift.setGlobalTimeScale(n)` - master switch for all animations (also exported standalone).
 - `createScrollPin(target, opts)` - pin an element while scrolling through a range, with scrub callback.
+- `createScrollSnap(opts)` - snap to nearest point after scroll stops (points as numbers, element getters, or function).
 - `createTimeline(steps)` - sequential animation steps.
 - `createSequence(steps?)` - choreographed timeline: overlap (`at: "-=200"`), labels, nesting, `seek()`, `reverse()`, `timeScale()`.
 - `killTweensOf(id)` - kill active tweens by id; `animate`/`createTween` accept `id`, `overwrite: "auto"`, `onInterrupt`.
@@ -271,4 +272,3 @@ No MCP server ships with the library. When one is built, it exposes two tools:
 - `drift_lookup(name)` - return the README documentation section for one primitive (signature, example, reduced-motion note).
 - `drift_spec_validate(spec)` - validate a DriftSpec JSON object; return `{ ok: true }` or `{ ok: false, path, message }` with the exact scene/option path of the first error.
 
-Both tools are pure and stateless; the server needs no browser and no wallet connection.
