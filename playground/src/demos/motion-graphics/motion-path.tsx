@@ -24,6 +24,7 @@ export function MotionPathDemo() {
 
   onMount(() => {
     build();
+    flight?.seek(0);
   });
 
   const play = () => {
