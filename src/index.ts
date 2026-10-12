@@ -237,6 +237,7 @@ export {
   type Easing,
   type EasingName,
 } from "./easing.js";
+export { createCustomEase } from "./customease.js";
 
 export {
   createKineticType,

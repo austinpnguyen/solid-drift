@@ -198,7 +198,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 
 - `createPrefersReducedMotion()` / `prefersReducedMotion()` - reactive / one-shot reduced-motion check.
 - `createLowPowerMode(options?)` / `isLowPowerMode(options?)` - reactive / one-shot low-power signal: reduced motion + reduced data + low-end device.
-- Easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, `easeInBack`, `easeInOutBack`, `easeOutElastic`, `easeOutBounce`, plus `cubicBezier(x1, y1, x2, y2)`.
+- Easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeInQuart`, `easeOutQuart`, `easeInOutQuart`, `easeOutExpo`, `easeOutBack`, `easeInBack`, `easeInOutBack`, `easeOutElastic`, `easeOutBounce`, plus `cubicBezier(x1, y1, x2, y2)` and `createCustomEase(path)` (SVG path in the 0..1 box, x must be monotonic).
 
 ## 4. Recipes
 

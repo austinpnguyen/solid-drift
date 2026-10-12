@@ -14,6 +14,7 @@ import { ScrollPinDemo } from "./scroll/pin";
 import { SmoothScrollDemo } from "./scroll/smooth";
 import { EasingCurvesDemo } from "./easings/easing-curves";
 import { EasingCompareDemo } from "./easings/easing-compare";
+import { CustomEaseDemo } from "./easings/custom-ease";
 import { TiltCardDemo } from "./pointer/tilt-card";
 import { MagneticDemo } from "./pointer/magnetic";
 import { QuickSetterDemo } from "./pointer/quicksetter";
@@ -512,6 +513,12 @@ export const families: DemoFamily[] = [
         "Easing comparison",
         "Four easings racing side by side: same duration, same distance.",
         EasingCompareDemo,
+      ),
+      entry(
+        "createCustomEase",
+        "Custom Ease",
+        "Draw an SVG curve, get a real easing function.",
+        CustomEaseDemo,
       ),
     ],
   },
