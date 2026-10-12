@@ -26,6 +26,7 @@ import { AnticipationDemo } from "./cartoon/anticipation";
 import { TypingDemo } from "./typography/typing";
 import { CountUpDemo } from "./typography/count-up";
 import { KineticTypeDemo } from "./typography/kinetic-type";
+import { SplitTextDemo } from "./typography/split-text";
 import { PathDrawDemo } from "./motion-graphics/path-draw";
 import { MarqueeDemo } from "./motion-graphics/marquee";
 import { HeroSectionDemo } from "./sections/hero";
@@ -269,6 +270,12 @@ export const families: DemoFamily[] = [
         "Kinetic Type",
         "Characters fly in with blur, scale and position on one master clock.",
         KineticTypeDemo,
+      ),
+      entry(
+        "createSplitText",
+        "Split Text",
+        "SplitType-grade chars/words/lines splitting with exact revert.",
+        SplitTextDemo,
       ),
     ],
   },

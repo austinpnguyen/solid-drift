@@ -187,3 +187,21 @@ onMount(() => kinetic.play());
 Returns `{ play, stop, replay, status }`. `play()` resolves when the last unit arrives. Under reduced motion every unit jumps to its final state, so the text is fully readable.
 
 `from` also accepts `variance` (0 to 1, default 0) and `seed`. Each unit jitters `y`, `blur`, `scale`, and `rotate` around the `from` values by up to `variance`, so a headline feels hand-set instead of mechanical. The jitter uses a seeded PRNG, so the same `seed` renders the exact same layout on every run (stable across SSR and replays). `variance: 0` keeps the classic uniform behavior.
+
+### `createSplitText(ref, options?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/typography/createSplitText)
+
+SplitType-grade splitting into chars, words, and lines.
+
+```ts
+import { createSplitText } from "solid-drift";
+
+const { chars, words, lines, revert } = createSplitText(() => title, {
+  types: ["chars", "words", "lines"], // default: all three
+});
+```
+
+Unlike `createKineticType` (chars/words only), this preserves nested markup: text nodes are split in place, so `<strong>` and `<em>` keep working. Lines are detected from real layout and re-split on resize (debounced). The root keeps `aria-label` with the full text while split spans get `aria-hidden="true"`.
+
+`revert()` restores the exact original HTML, for cleanup, unmount, and reduced-motion toggles. Returns `{ chars, words, lines, revert }`.

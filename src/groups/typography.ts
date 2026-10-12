@@ -3,3 +3,4 @@ export * from "../typography.js";
 export * from "../text.js";
 export * from "../marquee.js";
 export * from "../countdown.js";
+export * from "../splittext.js";

@@ -88,10 +88,12 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `createTextScramble(ref, options?)` - scramble decode effect.
 - `createTextWave(ref, options?)` - wave motion across text.
 - `createCountUp(source, options?)` - eased number tween as a formatted string.
+- `createSplitText(ref, options?)` - SplitType-grade chars/words/lines splitting; `revert()` restores exact original HTML.
 
 **Motion graphics**
 
 - `createKineticType(ref, options?)` - staggered kinetic typography. `from` accepts `variance` (0 to 1) and `seed` for deterministic per-unit jitter.
+- `createSplitText(ref, options?)` - SplitType-grade chars/words/lines splitting that preserves nested markup; `revert()` restores the exact original HTML.
 - `createScenePlayer(scenes)` - ordered scene orchestrator.
 - `createShowreel(scenes)` - scene player with `kind` labels (`title`, `camera`, `color`, `cut`, `custom`).
 - `createCamera(keyframes, options)` - pan/zoom through keyframes.
@@ -262,7 +264,7 @@ Rules: `primitive` is one of `kineticType`, `streamReveal`, `camera`, `colorShif
 
 - Do not animate layout properties (`width`, `top`, `left`). Use `transform` and `opacity`; they stay on the compositor.
 - Do not create your own `requestAnimationFrame` loops. Use the shared engine (`schedule` from the library, or any primitive); hundreds of animations cost one rAF tick per frame.
-- Do not write your own text splitter. `createKineticType`, `createStreamReveal`, and the typography family split text for you, deterministically.
+- Do not write your own text splitter. `createKineticType`, `createSplitText`, `createStreamReveal`, and the typography family split text for you, deterministically.
 - Do not pass a new options object on every render to a primitive created once; create the primitive once and drive it through signals.
 - Do not deep-import from `solid-drift/dist`. Import from the package root.
 

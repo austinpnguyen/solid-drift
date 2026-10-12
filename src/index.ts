@@ -210,6 +210,11 @@ export {
   type CountUpOptions,
 } from "./typography.js";
 export {
+  createSplitText,
+  type SplitTextOptions,
+  type SplitTextResult,
+} from "./splittext.js";
+export {
   easings,
   cubicBezier,
   linear,
