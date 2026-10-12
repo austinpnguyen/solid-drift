@@ -109,6 +109,9 @@ describe("createSplitText", () => {
     expect(lines).toHaveLength(2);
     expect(lines[0].querySelectorAll(".drift-word")).toHaveLength(2);
     expect(lines[1].querySelectorAll(".drift-word")).toHaveLength(2);
+    // Whitespace travels with the words so spaces don't collapse.
+    expect(lines[0].textContent).toContain(" ");
+    expect(lines[1].textContent).toContain(" ");
 
     // Resize re-splits: now three lines.
     mockLineTops(words, [0, 24, 24, 48]);

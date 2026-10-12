@@ -139,9 +139,10 @@ export function createSplitText(
   // Accessibility: root announces the full text.
   element.setAttribute("aria-label", fullText);
 
-  // Line detection: wrap each word, measure, group by top.
+  // Line detection: group words by vertical position, then wrap each
+  // line's words (plus the whitespace between them) in a block box.
   function detectLines(): void {
-    // Clear old lines.
+    // Clear old lines: unwrap.
     lines.length = 0;
     element.querySelectorAll(".drift-line").forEach((l) => {
       const parent = l.parentNode;
@@ -150,31 +151,51 @@ export function createSplitText(
     });
     if (!wantLines) return;
 
-    const wordEls = element.querySelectorAll(".drift-word");
+    const wordEls = [
+      ...element.querySelectorAll(".drift-word"),
+    ] as HTMLElement[];
     if (wordEls.length === 0) return;
 
     // Group words by their vertical position.
     const groups = new Map<number, HTMLElement[]>();
     wordEls.forEach((w) => {
-      const top = (w as HTMLElement).offsetTop;
       // Round to handle sub-pixel differences.
-      const key = Math.round(top);
+      const key = Math.round(w.offsetTop);
       const g = groups.get(key) ?? [];
-      g.push(w as HTMLElement);
+      g.push(w);
       groups.set(key, g);
     });
 
-    // Wrap each group in a line element, in document order.
+    // Wrap each group in a line element, in document order. Move every
+    // sibling from the first word through the last (inclusive) so the
+    // whitespace text nodes between words travel with them; otherwise
+    // spaces collapse between the block-level line boxes.
     const sortedKeys = [...groups.keys()].sort((a, b) => a - b);
     for (const key of sortedKeys) {
       const group = groups.get(key)!;
+      const first = group[0];
+      const last = group[group.length - 1];
       const lineEl = document.createElement("span");
       lineEl.className = "drift-line";
       lineEl.setAttribute("aria-hidden", "true");
       lineEl.style.display = "block";
-      const first = group[0];
-      first.parentNode?.insertBefore(lineEl, first);
-      for (const w of group) lineEl.appendChild(w);
+      const parent = first.parentNode;
+      if (!parent) continue;
+      parent.insertBefore(lineEl, first);
+      let node: Node | null = first;
+      const ElCtor =
+        typeof Element !== "undefined" ? Element : null;
+      while (node) {
+        const next: Node | null = node.nextSibling;
+        const done =
+          node === last ||
+          (ElCtor !== null &&
+            node instanceof ElCtor &&
+            (node as Element).contains(last));
+        lineEl.appendChild(node);
+        if (done) break;
+        node = next;
+      }
       lines.push(lineEl);
     }
   }
