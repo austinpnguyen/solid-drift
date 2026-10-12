@@ -311,3 +311,33 @@ Listens for scroll end (150ms after the last scroll event), finds the nearest po
 Do not combine with CSS scroll-snap on the same container. Under reduced motion the snap jumps immediately.
 
 Returns `{ dispose }`.
+
+### `createSmoothScroll(opts?)`
+
+[Try it](https://austinpnguyen.github.io/solid-drift/#/scroll/smooth)
+
+Buttery smooth scrolling, Lenis-grade. Keeps native scroll position real so `position: sticky`, anchors, find-in-page, and IntersectionObserver keep working.
+
+```ts
+import { createSmoothScroll } from "solid-drift";
+
+const smooth = createSmoothScroll({ lerp: 0.1 });
+smooth.onScroll(({ scroll, velocity, progress }) => {
+  // drive parallax, progress bars, scrub primitives
+});
+await smooth.scrollTo("#features");
+smooth.dispose();
+```
+
+Wheel input is intercepted and smoothed with frame-rate independent damping; touch stays native. `scrollTo` accepts a number, selector, or element and animates with duration/easing (user wheel input interrupts it; the user's hand always wins).
+
+Required CSS:
+
+```css
+.drift-smooth { scroll-behavior: auto !important; }
+.drift-stopped { overflow: clip; }
+```
+
+Do not combine with CSS scroll-snap. `stop()`/`start()` lock scrolling for modals. Under reduced motion, wheel tracks 1:1 and `scrollTo` jumps immediately.
+
+Returns `{ scroll, velocity, direction, progress, scrollTo, stop, start, onScroll, dispose }`.

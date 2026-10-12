@@ -635,3 +635,10 @@ export {
   type ScrollSnapOptions,
   type ScrollSnapControls,
 } from "./scrollsnap.js";
+export {
+  createSmoothScroll,
+  type SmoothScrollOptions,
+  type ScrollToOptions,
+  type ScrollState,
+  type SmoothScrollControls,
+} from "./smoothscroll.js";

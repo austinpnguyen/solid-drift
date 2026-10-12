@@ -35,6 +35,7 @@ One line per primitive. Full docs with examples live in `README.md`.
 - `drift.pauseAll()` / `drift.resumeAll()` / `drift.setGlobalTimeScale(n)` - master switch for all animations (also exported standalone).
 - `createScrollPin(target, opts)` - pin an element while scrolling through a range, with scrub callback.
 - `createScrollSnap(opts)` - snap to nearest point after scroll stops (points as numbers, element getters, or function).
+- `createSmoothScroll(opts?)` - Lenis-grade wheel smoothing with onScroll, scrollTo, stop/start.
 - `createTimeline(steps)` - sequential animation steps.
 - `createSequence(steps?)` - choreographed timeline: overlap (`at: "-=200"`), labels, nesting, `seek()`, `reverse()`, `timeScale()`.
 - `killTweensOf(id)` - kill active tweens by id; `animate`/`createTween` accept `id`, `overwrite: "auto"`, `onInterrupt`.

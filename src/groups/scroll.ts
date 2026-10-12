@@ -6,3 +6,10 @@ export { createScrollPin, type ScrollPinOptions, type ScrollPinControls } from "
 export * from "../scrollfx.js";
 export * from "../scrollspy.js";
 export { createScrollSnap, type ScrollSnapOptions, type ScrollSnapControls } from "../scrollsnap.js";
+export {
+  createSmoothScroll,
+  type SmoothScrollOptions,
+  type ScrollToOptions,
+  type ScrollState,
+  type SmoothScrollControls,
+} from "../smoothscroll.js";

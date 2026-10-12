@@ -11,6 +11,7 @@ import { DriftDemo } from "./core/drift";
 import { ScrollProgressDemo } from "./scroll/scroll-progress";
 import { InViewDemo } from "./scroll/in-view";
 import { ScrollPinDemo } from "./scroll/pin";
+import { SmoothScrollDemo } from "./scroll/smooth";
 import { EasingCurvesDemo } from "./easings/easing-curves";
 import { EasingCompareDemo } from "./easings/easing-compare";
 import { TiltCardDemo } from "./pointer/tilt-card";
@@ -162,6 +163,12 @@ export const families: DemoFamily[] = [
         "ScrollPin",
         "Pinned section with a scrub-driven sequence inside.",
         ScrollPinDemo,
+      ),
+      entry(
+        "smooth",
+        "SmoothScroll",
+        "Lenis-grade wheel smoothing with onScroll-driven parallax.",
+        SmoothScrollDemo,
       ),
     ],
   },
