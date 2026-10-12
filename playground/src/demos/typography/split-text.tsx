@@ -81,10 +81,20 @@ revert() // restores the exact original HTML`;
         </>
       }
     >
-      <div class="stage-row">
+      <div
+        style={{
+          "min-height": "180px",
+          display: "flex",
+          "align-items": "center",
+          "justify-content": "center",
+          background: "var(--stage)",
+          "border-radius": "12px",
+          padding: "1.5rem",
+        }}
+      >
         <h1
           ref={title}
-          style={{ "font-size": "2rem", "line-height": 1.3, margin: 0 }}
+          style={{ "font-size": "2rem", "line-height": 1.3, margin: 0, width: "100%" }}
           // eslint-disable-next-line solid/no-innerhtml
           innerHTML={HEADLINE_HTML}
         />
